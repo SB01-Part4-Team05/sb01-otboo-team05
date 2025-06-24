@@ -31,9 +31,6 @@ public class Ootd  extends BaseEntity {
 	private Ootd(Feed feed) {
 		//todo 생성자 내 검증 로직 추가 필요
 		this.feed = feed;
-
-		if (!feed.getOotds().contains(this)) {
-			feed.addOotd(this);
-		}
+		feed.addOotd(this);
 	}
 }

@@ -55,6 +55,9 @@ public class Feed extends BaseEntity {
 
   public void addOotd(Ootd ootd) {
     this.ootds.add(ootd);
+    if (!this.ootds.contains(this)) {
+      ootds.add(ootd);
+    }
   }
 
   public void removeOotd(Ootd ootd) {
