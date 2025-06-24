@@ -38,4 +38,7 @@ public class Attribute {
   @JoinColumn(name = "definition_id")
   private AttributeDefinition definition;
 
+  public void setValue(String value) {
+    this.value = value;
+  }
 }

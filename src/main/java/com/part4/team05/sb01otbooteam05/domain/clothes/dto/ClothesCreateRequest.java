@@ -8,7 +8,7 @@ public record ClothesCreateRequest(
     UUID ownerId,
     String name,
     String type,
-    List<Attribute> attributes
+    List<ClothesAttributeDto> attributes
 ) {
 
 }

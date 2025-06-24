@@ -5,9 +5,10 @@ import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeDefinit
 import com.part4.team05.sb01otbooteam05.domain.attribute.exception.NoSuchDefException;
 import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeDefinitionRepository;
 import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeRepository;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import java.util.List;
-import java.util.UUID;
+import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,17 +19,33 @@ public class AttributeService {
   private final AttributeRepository attributeRepository;
   private final AttributeDefinitionRepository definitionRepository;
 
-  public List<Attribute> createAndReturnList(List<Attribute> attributes, Clothes clothes){
+  @Transactional
+  public List<Attribute> createAndReturnList(List<ClothesAttributeDto> attributes, Clothes clothes){
     return attributes.stream().map(attribute ->{
-      AttributeDefinition def = definitionRepository.findById(attribute.getDefinition().getId())
+      AttributeDefinition def = definitionRepository.findById(attribute.definitionId())
           .orElseThrow(()-> new NoSuchDefException("해당하는 선택 가능 항목이 없습니다."));
 
-      return Attribute.builder()
+      Attribute att = Attribute.builder()
           .definition(def)
-          .value(attribute.getValue())
+          .value(attribute.value())
           .clothes(clothes)
           .build();
+      attributeRepository.save(att);
+
+      return att;
     }).toList();
+  }
+
+  @Transactional
+  public void updateValue(Long id, String value){
+    Attribute attribute = attributeRepository.findById(id).orElseThrow(NoSuchElementException::new);
+
+    attribute.setValue(value);
+  }
+
+  @Transactional
+  public void delete(List<Attribute> attributes){
+    attributeRepository.deleteAll(attributes);
   }
 
 }
