@@ -5,6 +5,8 @@ import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeDefinit
 import com.part4.team05.sb01otbooteam05.domain.attribute.exception.NoSuchDefException;
 import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeDefinitionRepository;
 import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeRepository;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDefCreateRequest;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDefUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import java.util.List;
@@ -46,6 +48,28 @@ public class AttributeService {
   @Transactional
   public void delete(List<Attribute> attributes){
     attributeRepository.deleteAll(attributes);
+  }
+
+  @Transactional
+  public AttributeDefinition createDef(ClothesAttributeDefCreateRequest request){
+      AttributeDefinition attributeDefinition = AttributeDefinition.builder()
+          .name(request.name())
+          .selectableValues(request.selectableValues())
+          .build();
+
+      definitionRepository.save(attributeDefinition);
+
+      return attributeDefinition;
+  }
+
+  @Transactional
+  public AttributeDefinition updateDef(ClothesAttributeDefUpdateRequest request){
+    AttributeDefinition attributeDefinition = definitionRepository.findByName(request.name())
+        .orElseThrow(() -> new NoSuchDefException("해당하는 속성이 없습니다."));
+
+    attributeDefinition.setSelectableValues(request.selectableValues());
+
+    return attributeDefinition;
   }
 
 }

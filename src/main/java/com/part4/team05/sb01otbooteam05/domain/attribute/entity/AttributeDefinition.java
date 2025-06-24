@@ -34,4 +34,8 @@ public class AttributeDefinition {
     name = n;
     selectableValues = list;
   }
+
+  public void setSelectableValues(List<String> selectableValues) {
+    this.selectableValues = selectableValues;
+  }
 }
