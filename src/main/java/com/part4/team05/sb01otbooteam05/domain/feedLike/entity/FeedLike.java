@@ -1,5 +1,35 @@
 package com.part4.team05.sb01otbooteam05.domain.feedLike.entity;
 
-public class FeedLike {
+import com.part4.team05.sb01otbooteam05.domain.base.BaseEntity;
+import com.part4.team05.sb01otbooteam05.domain.feed.entity.Feed;
+import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@Entity
+@Table(name = "feed_likes")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class FeedLike extends BaseEntity {
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "feed_id")
+	private Feed feed;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
+	private User user;
+
+	public FeedLike(Feed feed, User user) {
+		//todo 생성자 내 검증 로직 추가 필요
+		this.feed = feed;
+		this.user = user;
+	}
 }
