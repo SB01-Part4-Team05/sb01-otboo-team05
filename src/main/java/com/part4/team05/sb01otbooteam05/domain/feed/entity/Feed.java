@@ -37,7 +37,7 @@ public class Feed extends BaseEntity {
 
   // feed의 ootds 필드를 통해 ootd의 생성, 삭제 등을 모두 관리하므로 ootd 레포지토리는 만들지 않을 예정임.
   // ootd 객체 생성 시 ootds 리스트에도 자동으로 반영된다.
-  @OneToMany(mappedBy = "feed_id", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Ootd> ootds = new ArrayList<>();
 
   @Getter
