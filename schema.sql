@@ -1,28 +1,6 @@
-create type size_type as ENUM(
-  'S','M','L','XL','XXL'
-);
-
-create type style_type as ENUM(
-    'CASUAL','STREET','SPORTY',
-    'MINIMAL','CHIC','RETRO';
-);
-
-create type color_type as ENUM(
-    'WHITE','GRAY','BLACK',
-    'BURGUNDY','PINK','CREAM';
-);
-
-create type touch_type as ENUM(
-    'SOFT','HARD'
-);
-
-create type thickness_type as ENUM(
-    'THICK','SLIMTHICK','SLIMTHIN','THIN';
-);
-
 create type clothes_type as ENUM(
     'TOP','BOTTOM','DRESS','OUTER','UNDERWEAR','ACC',
-    'SHOES','SOCKS','CAP','BAG','SCARF';
+    'SHOES','SOCKS','CAP','BAG','SCARF'
 );
 
 create type user_role as ENUM(
@@ -110,24 +88,30 @@ CREATE TABLE weathers
 CREATE TABLE clothes
 (
     id UUID primary key,
-    attributes UUID not null,
     owner_id UUID not null,
     name varchar(225) not null,
     image_url varchar(225),
     type clothes_type not null,
 
-    foreign key (owner_id) references users(id) on delete cascade,
-    foreign key (attributes) references attribute(id)
+    foreign key (owner_id) references users(id) on delete cascade
 );
 
 create table attributes
 (
     id UUID primary key ,
-    size size_type not null ,
-    style style_type not null,
-    color color_type not null,
-    touch touch_type not null,
-    thickness thickness_type not null
+    value varchar(225) not null,
+    clothes_id UUID not null,
+    definition_id UUID not null,
+
+    foreign key (clothes_id) references clothes(id),
+    foreign key (definition_id) references attribute_definition(id)
+
+);
+
+create table attribute_definition
+(
+  id UUID primary key ,
+  name varchar(225) not null
 );
 
 CREATE TABLE notifications
@@ -177,7 +161,7 @@ CREATE TABLE feeds
 CREATE TABLE ootds
 (
     id UUID PRIMARY KEY,
-    feed_id UUID NOT NULL REFERENCES feeds(id)
+    feed_id UUID NOT NULL REFERENCES feeds(id),
     clothes_id UUID NOT NULL REFERENCES clothes(id)
 );
 
