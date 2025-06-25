@@ -1,16 +1,13 @@
 package com.part4.team05.sb01otbooteam05.domain.attribute.entity;
 
-import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,27 +15,27 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "attribute")
+@Table(name = "attribute_definition")
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Attribute {
-
+public class AttributeDefinition {
   @Id @GeneratedValue(strategy = GenerationType.AUTO)
-  private Long id;
+  private UUID id;
 
-  private String value;
+  @Column
+  private String name;
 
-  @ManyToOne
-  @JoinColumn(name = "clothes_id")
-  private Clothes clothes;
+  @ElementCollection
+  private List<String> selectableValues;
 
-  @ManyToOne
-  @JoinColumn(name = "definition_id")
-  private AttributeDefinition definition;
+  public AttributeDefinition(String n, List<String> list) {
+    name = n;
+    selectableValues = list;
+  }
 
-  public void setValue(String value) {
-    this.value = value;
+  public void setSelectableValues(List<String> selectableValues) {
+    this.selectableValues = selectableValues;
   }
 }
