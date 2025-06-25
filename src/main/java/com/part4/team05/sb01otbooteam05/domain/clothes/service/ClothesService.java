@@ -77,18 +77,27 @@ public class ClothesService {
   public ClothesDto update(UUID clothesId, ClothesUpdateRequest request, MultipartFile image){
     Clothes clothes = repository.findById(clothesId).orElseThrow(NoSuchElementException::new);
 
-    clothes.setName(request.name());
-    clothes.setType(ClothesType.valueOf(request.type()));
+    if(request.name() != null) {
+      clothes.setName(request.name());
+    }
+    if(request.type() != null){
+      clothes.setType(ClothesType.valueOf(request.type()));
+    }
+
     if(!image.isEmpty()){
       String url = storeImage(image);
       clothes.setImageUrl(url);
     }
-    clothes.setAttributeValues(request.selectableValues().stream()
-        .map(attributeDto -> AttributeValue.builder()
-            .value(attributeDto.getValue())
-            .definition(attributeService.findByDefName(attributeDto.getDefinitionName()))
-            .clothes(clothes)
-            .build()).toList());
+
+    if(request.selectableValues() != null){
+      clothes.setAttributeValues(request.selectableValues().stream()
+          .map(attributeDto -> AttributeValue.builder()
+              .value(attributeDto.getValue())
+              .definition(attributeService.findByDefName(attributeDto.getDefinitionName()))
+              .clothes(clothes)
+              .build()).toList());
+    }
+
     return mapper.toDto(clothes);
   }
 
