@@ -1,22 +1,29 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.service;
 
-import com.part4.team05.sb01otbooteam05.domain.attribute.entity.Attribute;
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.AttributeDto;
+import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDefUpdateRequest;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeUpdateRequest;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
-import java.util.Collections;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +33,20 @@ public class ClothesService {
   private final AttributeService attributeService;
 
   public List<ClothesDto> get(UUID ownerId){
-    return repository.findByOwnerId(ownerId);
+    List<Clothes> clothes = repository.findByOwnerId(ownerId);
+    List<ClothesDto> result = new ArrayList<>();
+
+    for(Clothes c : clothes){
+      List<AttributeValue> attributeValues = c.getAttributeValues();
+
+      ClothesDto cd = mapper.toDto(c);
+      cd.setAttributes(attributeValues.stream()
+          .map(AttributeDto::new)
+          .toList());
+      result.add(cd);
+    }
+
+    return result;
   }
 
   @Transactional
@@ -37,8 +57,8 @@ public class ClothesService {
         .name(request.name())
         .build();
 
-    List<Attribute> list = attributeService.createAndReturnList(request.attributes(),clothes);
-    clothes.setAttributes(list);
+    List<AttributeValue> list = attributeService.createAndReturnList(request.attributes(),clothes);
+    clothes.setAttributeValues(list);
 
     repository.save(clothes);
 
@@ -48,23 +68,45 @@ public class ClothesService {
   @Transactional
   public void delete(UUID id){
     Clothes clothes = repository.findById(id).orElseThrow(NoSuchElementException::new);
-    attributeService.delete(clothes.getAttributes());
+    attributeService.delete(clothes.getAttributeValues());
 
     repository.delete(clothes);
   }
 
   @Transactional
-  public ClothesDto updateAttributes(ClothesAttributeUpdateRequest request){
-    Clothes clothes = repository.findById(request.id()).orElseThrow(NoSuchElementException::new);
-    List<Attribute> list = clothes.getAttributes();
+  public ClothesDto update(UUID clothesId, ClothesUpdateRequest request, MultipartFile image){
+    Clothes clothes = repository.findById(clothesId).orElseThrow(NoSuchElementException::new);
 
-    for(Attribute a : list){
-      if(a.getDefinition().getId().equals(request.definitionId())){
-        attributeService.updateValue(a.getId(),request.value());
-        break;
-      }
+    clothes.setName(request.name());
+    clothes.setType(ClothesType.valueOf(request.type()));
+    if(!image.isEmpty()){
+      String url = storeImage(image);
+      clothes.setImageUrl(url);
+    }
+    clothes.setAttributeValues(request.selectableValues().stream()
+        .map(attributeDto -> AttributeValue.builder()
+            .value(attributeDto.getValue())
+            .definition(attributeService.findByDefName(attributeDto.getDefinitionName()))
+            .clothes(clothes)
+            .build()).toList());
+    return mapper.toDto(clothes);
+  }
+
+  private String storeImage(MultipartFile file){
+    try{
+      String fileName = UUID.randomUUID() + ".jpg";
+      Path path = Paths.get("/home/ubuntu/app/images", fileName);
+      Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+
+      return ServletUriComponentsBuilder.fromCurrentContextPath()
+          .path("/images/")
+          .path(fileName)
+          .toUriString();
+
+    }catch (IOException e){
+      e.printStackTrace();
     }
 
-    return mapper.toDto(clothes);
+    throw new RuntimeException("이미지 파일 저장에 실패하였습니다.");
   }
 }

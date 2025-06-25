@@ -96,9 +96,9 @@ CREATE TABLE clothes
     foreign key (owner_id) references users(id) on delete cascade
 );
 
-create table attributes
+create table attributeValues
 (
-    id UUID primary key ,
+    id bigint primary key ,
     value varchar(225) not null,
     clothes_id UUID not null,
     definition_id UUID not null,
