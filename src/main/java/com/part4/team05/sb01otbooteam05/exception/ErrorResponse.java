@@ -24,7 +24,7 @@ public class ErrorResponse {
 
 	// OtbooException를 통한 명시적인 에러처리
 	public ErrorResponse(OtbooException exception, int status) {
-		this(Instant.now(), exception.getErrorCode().name(), exception.getMessage(),
+		this(exception.getTimestamp(), exception.getErrorCode().name(), exception.getMessage(),
 			exception.getDetails(), exception.getClass().getSimpleName(), status);
 	}
 
