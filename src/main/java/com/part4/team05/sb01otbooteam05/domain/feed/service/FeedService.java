@@ -14,19 +14,19 @@ import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FindFeedsRequest
 
 public interface FeedService {
 
-	FeedsPageResponse findFeeds(FindFeedsRequest request);
+	FeedsPageResponse findFeeds(UUID userId, FindFeedsRequest request);
 
-	FeedDto createFeed(FeedCreateRequest request);
+	FeedDto createFeed(UUID userId, FeedCreateRequest request);
 
-	FeedDto likeFeed(UUID feedId);
+	FeedDto likeFeed(UUID userId, UUID feedId);
 
-	FeedDto unlikeFeed(UUID feedId);
+	FeedDto unlikeFeed(UUID userId, UUID feedId);
 
-	CommentDto createFeedComment(UUID feedId, CommentCreateRequest request);
+	CommentDto createFeedComment(UUID userId, UUID feedId, CommentCreateRequest request);
 
-	FeedDto deleteFeed(UUID feedId);
+	FeedDto deleteFeed(UUID userId, UUID feedId);
 
-	FeedDto updateFeed(UUID feedId, FeedUpdateRequest request);
+	FeedDto updateFeed(UUID userId, UUID feedId, FeedUpdateRequest request);
 
-	CommentsPageResponse findComments(FindCommentsRequest request);
+	CommentsPageResponse findComments(UUID userId, FindCommentsRequest request);
 }

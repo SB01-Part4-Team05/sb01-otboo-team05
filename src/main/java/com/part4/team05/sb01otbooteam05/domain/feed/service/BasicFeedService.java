@@ -26,42 +26,42 @@ public class BasicFeedService implements FeedService {
 	private final FeedRepository feedRepository;
 
 	@Override
-	public FeedsPageResponse findFeeds(FindFeedsRequest request) {
+	public FeedsPageResponse findFeeds(UUID userId, FindFeedsRequest request) {
 		return null;
 	}
 
 	@Override
-	public FeedDto createFeed(FeedCreateRequest request) {
+	public FeedDto createFeed(UUID userId, FeedCreateRequest request) {
 		return null;
 	}
 
 	@Override
-	public FeedDto likeFeed(UUID feedId) {
+	public FeedDto likeFeed(UUID userId, UUID feedId) {
 		return null;
 	}
 
 	@Override
-	public FeedDto unlikeFeed(UUID feedId) {
+	public FeedDto unlikeFeed(UUID userId, UUID feedId) {
 		return null;
 	}
 
 	@Override
-	public CommentDto createFeedComment(UUID feedId, CommentCreateRequest request) {
+	public CommentDto createFeedComment(UUID userId, UUID feedId, CommentCreateRequest request) {
 		return null;
 	}
 
 	@Override
-	public FeedDto deleteFeed(UUID feedId) {
+	public FeedDto deleteFeed(UUID userId, UUID feedId) {
 		return null;
 	}
 
 	@Override
-	public FeedDto updateFeed(UUID feedId, FeedUpdateRequest request) {
+	public FeedDto updateFeed(UUID userId, UUID feedId, FeedUpdateRequest request) {
 		return null;
 	}
 
 	@Override
-	public CommentsPageResponse findComments(FindCommentsRequest request) {
+	public CommentsPageResponse findComments(UUID userId, FindCommentsRequest request) {
 		return null;
 	}
 }
