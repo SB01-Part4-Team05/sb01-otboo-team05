@@ -66,6 +66,9 @@ public class GlobalExceptionHandler {
 
 			// 500 Internal Server Error
 			case INTERNAL_SERVER_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
+
+			// 안정성을 위해 500 Internal Server Error를 기본값으로 설정
+			default -> HttpStatus.INTERNAL_SERVER_ERROR;
 		};
 	}
 
