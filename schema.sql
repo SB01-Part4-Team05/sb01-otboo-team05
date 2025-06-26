@@ -52,7 +52,8 @@ CREATE TABLE weathers
     id         UUID PRIMARY KEY,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    user_id UUID NOT NULL,
+    location_x INTEGER,
+    location_y INTEGER,
     forecastedAt TIMESTAMP NOT NULL,
     forecastAt TIMESTAMP NOT NULL,
     skyStatus VARCHAR(20) NOT NULL,
@@ -66,10 +67,7 @@ CREATE TABLE weathers
     temperatureMin real NOT NULL,
     temperatureMax real NOT NULL,
     windSpeed real NOT NULL,
-    windSpeedAsWord VARCHAR(20) NOT NULL,
-    CONSTRAINT fk_weathers_user Foreign Key (user_id) REFERENCES
-        profiles(user_id) ON DELETE CASCADE,
-    CONSTRAINT unique_weather UNIQUE (user_id, forecastAt)
+    windSpeedAsWord VARCHAR(20) NOT NULL
 );
 
 CREATE TABLE clothes
@@ -174,5 +172,3 @@ CREATE TABLE feed_likes
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
-
-CREATE INDEX idx_weathers_user_forecast ON weathers(user_id, forecastAt);
