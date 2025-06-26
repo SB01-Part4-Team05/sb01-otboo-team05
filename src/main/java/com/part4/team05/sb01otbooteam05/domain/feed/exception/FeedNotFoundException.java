@@ -9,7 +9,7 @@ public class FeedNotFoundException extends FeedException {
 		super(ErrorCode.FEED_NOT_FOUND);
 	}
 
-	public FeedNotFoundException withId(UUID id) {
+	public static FeedNotFoundException withId(UUID id) {
 		FeedNotFoundException exception = new FeedNotFoundException();
 		exception.addDetail("id", id);
 		return exception;
