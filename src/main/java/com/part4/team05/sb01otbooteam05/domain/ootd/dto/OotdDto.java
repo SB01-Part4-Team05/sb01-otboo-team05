@@ -1,5 +1,15 @@
 package com.part4.team05.sb01otbooteam05.domain.ootd.dto;
 
-public class OotdDto {
+import java.util.List;
+import java.util.UUID;
 
+import com.part4.team05.sb01otbooteam05.domain.attribute.entity.Attribute;
+
+public record OotdDto(
+	UUID clothesID,
+	String name,
+	String imageUrl,
+	String type,
+	List<Attribute> attributes
+) {
 }
