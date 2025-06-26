@@ -1,16 +1,19 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.dto;
 
 
-import com.part4.team05.sb01otbooteam05.domain.attribute.entity.Attribute;
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.AttributeDto;
 import java.util.List;
 import java.util.UUID;
+import lombok.Getter;
+import lombok.Setter;
 
-public record ClothesDto(
-    UUID id,
-    String name,
-    String imageUrl,
-    List<Attribute> attributes,
-    UUID ownerId,
-    String type
-) {
+@Getter
+@Setter
+public class ClothesDto{
+  UUID id;
+  String name;
+  String imageUrl;
+  List<AttributeDto> attributes;
+  UUID ownerId;
+  String type;
 }

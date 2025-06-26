@@ -17,6 +17,12 @@ spring:
         jdbc:
           time_zone: UTC
 
+  web:
+    resources:
+      static-locations:
+        - classpath:/static/
+        - file:/home/ubuntu/app/images/
+
 # 로깅 레벨 설정
 logging:
   level:
