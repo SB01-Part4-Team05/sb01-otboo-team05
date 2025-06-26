@@ -14,19 +14,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedsPageResponse;
-import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.CreateFeedRequest;
-import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.UpdateFeedRequest;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.FeedCommentDto;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.FeedCommentsPageResponse;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CreateFeedCommentRequest;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindFeedCommentsRequest;
+import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedCreateRequest;
+import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedUpdateRequest;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDto;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentsPageResponse;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCreateRequest;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindCommentsRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FindFeedsRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.service.FeedService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/feeds")
@@ -44,7 +42,7 @@ public class FeedController {
 	}
 
 	@PostMapping("/")
-	public ResponseEntity<FeedDto> createFeed(CreateFeedRequest request
+	public ResponseEntity<FeedDto> createFeed(FeedCreateRequest request
 		// @AuthenticationPrincipal CustomUserDetails user
 	) {
 		FeedDto feedDto = feedService.createFeed(request);
@@ -76,23 +74,23 @@ public class FeedController {
 	}
 
 	@GetMapping("/{feedId}/comments")
-	public ResponseEntity<FeedCommentsPageResponse> findFeedComments(FindFeedCommentsRequest request) {
-		FeedCommentsPageResponse feedCommentDtos = feedService.findFeedComments(request);
+	public ResponseEntity<CommentsPageResponse> findFeedComments(FindCommentsRequest request) {
+		CommentsPageResponse feedCommentDtos = feedService.findComments(request);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(feedCommentDtos);
 	}
 
 	@PostMapping("/{feedId}/comments")
-	public ResponseEntity<FeedCommentDto> createFeedComment(
+	public ResponseEntity<CommentDto> createFeedComment(
 		@PathVariable("feedId") UUID feedId,
 		// @AuthenticationPrincipal CustomUserDetails user
-		CreateFeedCommentRequest request
+		CommentCreateRequest request
 	) {
-		FeedCommentDto feedCommentDto = feedService.createFeedComment(feedId, request);
+		CommentDto commentDto = feedService.createFeedComment(feedId, request);
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
-			.body(feedCommentDto);
+			.body(commentDto);
 	}
 
 	//todo 딜리트시 반환값 이거맞는지 확인 필요
@@ -111,7 +109,7 @@ public class FeedController {
 	public ResponseEntity<FeedDto> updateFeed(
 		@PathVariable("feedId") UUID feedId,
 		// @AuthenticationPrincipal CustomUserDetails user
-		UpdateFeedRequest request
+		FeedUpdateRequest request
 	){
 		FeedDto feedDto = feedService.updateFeed(feedId, request);
 		return ResponseEntity
