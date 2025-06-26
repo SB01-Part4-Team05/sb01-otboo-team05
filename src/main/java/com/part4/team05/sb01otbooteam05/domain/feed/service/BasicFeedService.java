@@ -7,19 +7,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedsPageResponse;
-import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.CreateFeedRequest;
+import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FindFeedsRequest;
-import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.UpdateFeedRequest;
+import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.repository.FeedRepository;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.FeedCommentDto;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.FeedCommentsPageResponse;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CreateFeedCommentRequest;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindFeedCommentsRequest;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDto;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentsPageResponse;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCreateRequest;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindCommentsRequest;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -33,7 +31,7 @@ public class BasicFeedService implements FeedService {
 	}
 
 	@Override
-	public FeedDto createFeed(CreateFeedRequest request) {
+	public FeedDto createFeed(FeedCreateRequest request) {
 		return null;
 	}
 
@@ -48,12 +46,7 @@ public class BasicFeedService implements FeedService {
 	}
 
 	@Override
-	public FeedCommentsPageResponse findFeedComments(FindFeedCommentsRequest request) {
-		return null;
-	}
-
-	@Override
-	public FeedCommentDto createFeedComment(UUID feedId, CreateFeedCommentRequest request) {
+	public CommentDto createFeedComment(UUID feedId, CommentCreateRequest request) {
 		return null;
 	}
 
@@ -63,7 +56,12 @@ public class BasicFeedService implements FeedService {
 	}
 
 	@Override
-	public FeedDto updateFeed(UUID feedId, UpdateFeedRequest request) {
+	public FeedDto updateFeed(UUID feedId, FeedUpdateRequest request) {
+		return null;
+	}
+
+	@Override
+	public CommentsPageResponse findComments(FindCommentsRequest request) {
 		return null;
 	}
 }
