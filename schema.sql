@@ -3,43 +3,37 @@ create type clothes_type as ENUM(
     'SHOES','SOCKS','CAP','BAG','SCARF'
 );
 
-create type user_role as ENUM(
-    'USER', 'ADMIN'
-);
-
-create type gender_type as ENUM(
-    'MALE', 'FEMALE', 'OTHER'
-);
-
-
+-- 사용자 테이블 (프로필 + 비밀번호 리셋 통합)
 CREATE TABLE users
 (
+    -- 기본 사용자 정보
     id UUID PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(20) NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role user_role DEFAULT 'USER',
+    password VARCHAR(255) NOT NULL,  -- 임시 비밀번호 요청 시 이 값이 덮어씌워짐
+    role VARCHAR(20) NOT NULL DEFAULT 'USER',
     locked BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP
-);
 
-CREATE TABLE profiles (
-    user_id UUID PRIMARY KEY,
-    gender gender_type,
+    -- 프로필 정보 (초기값 NULL 허용)
+    gender VARCHAR(10),
     birth_date DATE,
     latitude DECIMAL(10,8),
     longitude DECIMAL(11,8),
     location_x INTEGER,
     location_y INTEGER,
-    location_names VARCHAR(255),
+    location_names jsonb,
     temperature_sensitivity INTEGER,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP,
     profile_image_url VARCHAR(500),
-    CONSTRAINT fk_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) on DELETE CASCADE
+
+    -- 임시 비밀번호 관련
+    is_temp_password BOOLEAN DEFAULT FALSE,  -- 현재 비밀번호가 임시 비밀번호인지 여부 추가
+    password_expires_at TIMESTAMP,           -- 임시 비밀번호 만료 시간 추가
+
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP
 );
 
+-- 리프레시 토큰 테이블 (인증 관련) 기존 유지
 CREATE TABLE refresh_tokens (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL,
@@ -47,18 +41,11 @@ CREATE TABLE refresh_tokens (
     expires_at TIMESTAMP NOT NULL,
     revoked BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users(id) on DELETE CASCADE
+    CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE password_resets (
-  id UUID PRIMARY KEY,
-  user_id UUID NOT NULL,
-  temporary_password VARCHAR(255) NOT NULL,
-  expires_at TIMESTAMP NOT NULL,
-  used BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP NOT NULL ,
-  constraint fk_password_resets_user FOREIGN KEY (user_id) REFERENCES users(id) on DELETE CASCADE
-);
+
+
 
 CREATE TABLE weathers
 (
@@ -184,7 +171,8 @@ CREATE TABLE feed_likes
     UNIQUE (feed_id, user_id)
 );
 
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 
 CREATE INDEX idx_weathers_user_forecast ON weathers(user_id, forecastAt);
-
-CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
