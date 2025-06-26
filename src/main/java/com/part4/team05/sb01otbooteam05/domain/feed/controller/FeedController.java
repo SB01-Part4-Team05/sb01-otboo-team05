@@ -34,18 +34,23 @@ public class FeedController {
 	private final FeedService feedService;
 
 	@GetMapping("/")
-	public ResponseEntity<FeedsPageResponse> findFeeds(FindFeedsRequest request) {
-		FeedsPageResponse feedDtos = feedService.findFeeds(request);
+	public ResponseEntity<FeedsPageResponse> findFeeds(
+		// @AuthenticationPrincipal CustomUserDetails user
+		FindFeedsRequest request) {
+		UUID userId = null;
+		FeedsPageResponse feedDtos = feedService.findFeeds(userId, request);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(feedDtos);
 	}
 
 	@PostMapping("/")
-	public ResponseEntity<FeedDto> createFeed(FeedCreateRequest request
+	public ResponseEntity<FeedDto> createFeed(
 		// @AuthenticationPrincipal CustomUserDetails user
+		FeedCreateRequest request
 	) {
-		FeedDto feedDto = feedService.createFeed(request);
+		UUID userId = null;
+		FeedDto feedDto = feedService.createFeed(userId, request);
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
 			.body(feedDto);
@@ -56,7 +61,8 @@ public class FeedController {
 		@PathVariable("feedId") UUID feedId
 		// @AuthenticationPrincipal CustomUserDetails user
 	) {
-		FeedDto feedDto = feedService.likeFeed(feedId);
+		UUID userId = null;
+		FeedDto feedDto = feedService.likeFeed(userId, feedId);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(feedDto);
@@ -67,15 +73,20 @@ public class FeedController {
 		@PathVariable("feedId") UUID feedId
 		// @AuthenticationPrincipal CustomUserDetails user
 	) {
-		FeedDto feedDto = feedService.unlikeFeed(feedId);
+		UUID userId = null;
+		FeedDto feedDto = feedService.unlikeFeed(userId, feedId);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(feedDto);
 	}
 
 	@GetMapping("/{feedId}/comments")
-	public ResponseEntity<CommentsPageResponse> findFeedComments(FindCommentsRequest request) {
-		CommentsPageResponse feedCommentDtos = feedService.findComments(request);
+	public ResponseEntity<CommentsPageResponse> findFeedComments(
+		// @AuthenticationPrincipal CustomUserDetails user
+		FindCommentsRequest request
+	) {
+		UUID userId = null;
+		CommentsPageResponse feedCommentDtos = feedService.findComments(userId, request);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(feedCommentDtos);
@@ -87,7 +98,8 @@ public class FeedController {
 		// @AuthenticationPrincipal CustomUserDetails user
 		CommentCreateRequest request
 	) {
-		CommentDto commentDto = feedService.createFeedComment(feedId, request);
+		UUID userId = null;
+		CommentDto commentDto = feedService.createFeedComment(userId, feedId, request);
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
 			.body(commentDto);
@@ -99,7 +111,8 @@ public class FeedController {
 		@PathVariable("feedId") UUID feedId
 		// @AuthenticationPrincipal CustomUserDetails user
 	){
-		FeedDto feedDto = feedService.deleteFeed(feedId);
+		UUID userId = null;
+		FeedDto feedDto = feedService.deleteFeed(userId, feedId);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(feedDto);
@@ -111,7 +124,8 @@ public class FeedController {
 		// @AuthenticationPrincipal CustomUserDetails user
 		FeedUpdateRequest request
 	){
-		FeedDto feedDto = feedService.updateFeed(feedId, request);
+		UUID userId = null;
+		FeedDto feedDto = feedService.updateFeed(userId, feedId, request);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(feedDto);
