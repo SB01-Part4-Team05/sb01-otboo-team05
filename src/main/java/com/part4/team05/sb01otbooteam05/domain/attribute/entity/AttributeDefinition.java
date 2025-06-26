@@ -38,4 +38,8 @@ public class AttributeDefinition {
   public void setSelectableValues(List<String> selectableValues) {
     this.selectableValues = selectableValues;
   }
+
+  public void setName(String name) {
+    this.name = name;
+  }
 }
