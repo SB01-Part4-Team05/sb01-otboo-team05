@@ -14,8 +14,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,7 +24,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
+@Builder
 public class RefreshToken extends BaseEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -39,8 +37,7 @@ public class RefreshToken extends BaseEntity {
   @Column(name = "expires_at", nullable = false)
   private LocalDateTime expiresAt;
 
-  @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
-  @Builder.Default
-  private Boolean revoked = false;
+  @Column(nullable = false)
+  private Boolean revoked;
 
 }

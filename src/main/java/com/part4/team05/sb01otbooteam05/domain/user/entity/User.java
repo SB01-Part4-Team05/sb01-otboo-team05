@@ -50,10 +50,10 @@ public class User extends BaseEntity {
   @Column(name = "birth_date")
   private LocalDate birthDate;
 
-  @Column(precision = 10, scale = 8)
+  @Column
   private Double latitude;
 
-  @Column(precision = 11, scale = 8)
+  @Column
   private Double longitude;
 
   @Column(name = "location_x")
