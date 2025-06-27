@@ -106,9 +106,15 @@ public class FeedController {
 	@GetMapping("/{feedId}/comments")
 	public ResponseEntity<CommentsPageResponse> findFeedComments(
 		// @AuthenticationPrincipal CustomUserDetails user
-		FindCommentsRequest request
+		// 값이 들어왔는데 변환할 타입과 맞지않을경우(ex. 지정한 상수로 변환될 수 없는 문자 들어옴) 스프링이 400 반환)
+		@RequestParam(value = "feedId", required = true) UUID feedId,
+		@RequestParam(value = "cursor", defaultValue = "") String cursor,
+
+		@RequestParam(value = "idAfter", defaultValue = "") UUID idAfter,
+		@RequestParam(value = "limit", required = true) @Min(value = 0, message = "limit은 음수일 수 없습니다.") Integer limit
 	) {
 		UUID userId = null;
+		FindCommentsRequest request = new FindCommentsRequest(feedId, cursor, idAfter, limit);
 		CommentsPageResponse feedCommentDtos = feedService.findComments(userId, request);
 		return ResponseEntity
 			.status(HttpStatus.OK)
