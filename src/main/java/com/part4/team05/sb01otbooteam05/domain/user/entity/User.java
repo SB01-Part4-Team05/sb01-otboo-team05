@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -67,6 +69,8 @@ public class User extends BaseEntity {
   private List<String> locationNames;
 
   @Column(name = "temperature_sensitivity")
+  @Min(value = 0, message = "온도 민감도는 0 이상이어야 합니다") //코드래빗 추천 온도만감도 추가
+  @Max(value = 5, message = "온도 민감도는 5 이하여야 합니다")
   private Integer temperatureSensitivity;
 
   @Column(name = "profile_image_url", length = 500)
