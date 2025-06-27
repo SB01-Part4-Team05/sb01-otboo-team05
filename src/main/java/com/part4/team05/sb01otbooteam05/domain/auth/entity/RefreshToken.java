@@ -13,7 +13,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,7 +20,6 @@ import java.time.LocalDateTime;
     @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id")
 })
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
