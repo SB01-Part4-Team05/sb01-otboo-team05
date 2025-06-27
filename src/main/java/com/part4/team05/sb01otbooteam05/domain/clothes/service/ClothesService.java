@@ -32,7 +32,7 @@ public class ClothesService {
   private final ClothesRepository repository;
   private final AttributeService attributeService;
 
-  public List<ClothesDto> get(UUID ownerId){
+  public List<ClothesDto> get(UUID ownerId){ // slice(cursor pagination) 변경 필요
     List<Clothes> clothes = repository.findByOwnerId(ownerId);
     List<ClothesDto> result = new ArrayList<>();
 
@@ -118,4 +118,9 @@ public class ClothesService {
 
     throw new RuntimeException("이미지 파일 저장에 실패하였습니다.");
   }
+
+  public List<Clothes> findAllByOwnerId(UUID ownerId){
+    return repository.findByOwnerId(ownerId);
+  }
+
 }
