@@ -4,11 +4,13 @@ import java.util.List;
 
 import org.springframework.data.domain.Sort;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 public record FeedsPageResponse(
 
 	@NotNull
+	@Valid
 	List<FeedDto> data,
 
 	String nextCursor,
