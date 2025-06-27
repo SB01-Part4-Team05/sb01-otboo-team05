@@ -1,14 +1,15 @@
 package com.part4.team05.sb01otbooteam05.domain.feedComment.dto;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.part4.team05.sb01otbooteam05.domain.user.dto.AuthorDto;
+
 public record CommentDto(
-	// todo userDto 만들어지면 수정
 	UUID id,
-	Instant createdAt,
+	LocalDateTime createdAt,
 	UUID feedId,
-	//UserDto author,
+	AuthorDto author,
 	String content
 ) {
 }
