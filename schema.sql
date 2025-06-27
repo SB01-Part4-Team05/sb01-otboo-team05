@@ -17,8 +17,8 @@ CREATE TABLE users
     -- 프로필 정보 (초기값 NULL 허용)
     gender VARCHAR(10),
     birth_date DATE,
-    latitude DECIMAL(10,8),
-    longitude DECIMAL(11,8),
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
     location_x INTEGER,
     location_y INTEGER,
     location_names jsonb,
