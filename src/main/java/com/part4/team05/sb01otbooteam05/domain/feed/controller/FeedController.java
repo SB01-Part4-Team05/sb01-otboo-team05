@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -69,7 +70,7 @@ public class FeedController {
 	@PostMapping("/")
 	public ResponseEntity<FeedDto> createFeed(
 		// @AuthenticationPrincipal CustomUserDetails user
-		@Validated FeedCreateRequest request
+		@Validated @RequestBody FeedCreateRequest request
 	) {
 		UUID userId = null;
 		FeedDto feedDto = feedService.createFeed(userId, request);
@@ -123,7 +124,7 @@ public class FeedController {
 	public ResponseEntity<CommentDto> createFeedComment(
 		@PathVariable("feedId") UUID feedId,
 		// @AuthenticationPrincipal CustomUserDetails user
-		@Validated CommentCreateRequest request
+		@Validated @RequestBody CommentCreateRequest request
 	) {
 		UUID userId = null;
 		CommentDto commentDto = feedService.createFeedComment(userId, feedId, request);
@@ -148,7 +149,7 @@ public class FeedController {
 	public ResponseEntity<FeedDto> updateFeed(
 		@PathVariable("feedId") UUID feedId,
 		// @AuthenticationPrincipal CustomUserDetails user
-		@Validated FeedUpdateRequest request
+		@Validated @RequestBody FeedUpdateRequest request
 	){
 		UUID userId = null;
 		FeedDto feedDto = feedService.updateFeed(userId, feedId, request);
