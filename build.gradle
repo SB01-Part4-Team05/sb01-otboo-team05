@@ -40,6 +40,7 @@ dependencies {
 	implementation 'org.postgresql:postgresql'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+	implementation 'org.springframework.boot:spring-boot-starter-batch' //스프링 배치
 	implementation 'org.springframework.boot:spring-boot-starter-mail' //임시 비밀번호 발송시 이메일 사용을 위한 의존성
 	implementation "io.jsonwebtoken:jjwt-api:0.12.5" //강의노트 참고 토큰 관련 의존성
 	runtimeOnly "io.jsonwebtoken:jjwt-impl:0.12.5"
