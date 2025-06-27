@@ -29,7 +29,6 @@ import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentsPageRespo
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindCommentsRequest;
 
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,13 +49,13 @@ public class FeedController {
 		// 값이 들어왔는데 변환할 타입과 맞지않을경우(ex. 지정한 상수로 변환될 수 없는 문자 들어옴) 스프링이 400 반환)
 		@RequestParam(value = "cursor", defaultValue = "") String cursor,
 		@RequestParam(value = "idAfter", defaultValue = "") UUID idAfter,
-		@RequestParam(value = "limit", required = true) @Min(value = 0, message = "limit은 음수일 수 없습니다.") Integer limit,
-		@RequestParam(value = "sortBy", required = true) SortType sortBy,
-		@RequestParam(value = "sortDirection", required = true) SortDirection sortDirection,
+		@RequestParam(value = "limit") Integer limit,
+		@RequestParam(value = "sortBy") SortType sortBy,
+		@RequestParam(value = "sortDirection") SortDirection sortDirection,
 		@RequestParam(value = "keywordLike", defaultValue = "") String keywordLike,
-		@RequestParam(value = "skyStatusEqual", required = false) SkyStatusType skyStatusEqual,
-		@RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,
-		@RequestParam(value = "authorIdEqual", required = false) UUID authorIdEqual
+		@RequestParam(value = "skyStatusEqual") SkyStatusType skyStatusEqual,
+		@RequestParam(value = "precipitationTypeEqual") PrecipitationType precipitationTypeEqual,
+		@RequestParam(value = "authorIdEqual") UUID authorIdEqual
 		) {
 		UUID userId = null;
 		FindFeedsRequest request = new FindFeedsRequest(cursor, idAfter, limit, sortBy, sortDirection, keywordLike, skyStatusEqual, precipitationTypeEqual, authorIdEqual);
@@ -107,11 +106,10 @@ public class FeedController {
 	public ResponseEntity<CommentsPageResponse> findFeedComments(
 		// @AuthenticationPrincipal CustomUserDetails user
 		// 값이 들어왔는데 변환할 타입과 맞지않을경우(ex. 지정한 상수로 변환될 수 없는 문자 들어옴) 스프링이 400 반환)
-		@RequestParam(value = "feedId", required = true) UUID feedId,
+		@RequestParam(value = "feedId") UUID feedId,
 		@RequestParam(value = "cursor", defaultValue = "") String cursor,
-
 		@RequestParam(value = "idAfter", defaultValue = "") UUID idAfter,
-		@RequestParam(value = "limit", required = true) @Min(value = 0, message = "limit은 음수일 수 없습니다.") Integer limit
+		@RequestParam(value = "limit") Integer limit
 	) {
 		UUID userId = null;
 		FindCommentsRequest request = new FindCommentsRequest(feedId, cursor, idAfter, limit);

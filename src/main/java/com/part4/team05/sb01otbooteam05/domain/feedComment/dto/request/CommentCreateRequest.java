@@ -3,14 +3,15 @@ package com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request;
 import java.util.UUID;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 
 //프로토타입에서는 예외발생시 별다른 상태코드나 메세지를 반환하지 않아서 우선 임의지정.
 public record CommentCreateRequest(
-	@NotBlank(message = "유효한 요청이 아닙니다: 피드 ID 누락")
+	@NotNull(message = "유효한 요청이 아닙니다: 피드 ID 누락")
 	UUID feedId,
-	@NotBlank(message = "유효한 요청이 아닙니다: 작성자 ID 누락")
+	@NotNull(message = "유효한 요청이 아닙니다: 작성자 ID 누락")
 	UUID authorId,
 
 	/*	content 필드의 경우, 프로토타입에 따르면 varchar(255바이트)가 넘어가면 500오류반환하는데,
