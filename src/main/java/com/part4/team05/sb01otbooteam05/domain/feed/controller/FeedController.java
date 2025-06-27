@@ -134,17 +134,16 @@ public class FeedController {
 			.body(commentDto);
 	}
 
-	//todo 딜리트시 반환값 이거맞는지 확인 필요
 	@DeleteMapping("/{feedId}")
-	public ResponseEntity<FeedDto> deleteFeed(
+	public ResponseEntity<Void> deleteFeed(
 		@PathVariable("feedId") UUID feedId
 		// @AuthenticationPrincipal CustomUserDetails user
 	) {
 		UUID userId = null;
-		FeedDto feedDto = feedService.deleteFeed(userId, feedId);
+		feedService.deleteFeed(userId, feedId);
 		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(feedDto);
+			.status(HttpStatus.NO_CONTENT)
+			.build();
 	}
 
 	@PatchMapping("/{feedId}")
