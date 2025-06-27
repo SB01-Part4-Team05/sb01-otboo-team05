@@ -3,16 +3,16 @@ package com.part4.team05.sb01otbooteam05.domain.feed.dto.request;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 //프로토타입에는 예외발생시 별다른 상태코드나 메세지를 반환하지 않아서 우선 임의지정.
 public record FeedCreateRequest(
-	@NotBlank(message = "유효한 요청이 아닙니다: 작성자 ID 누락")
+	@NotNull(message = "유효한 요청이 아닙니다: 작성자 ID 누락")
 	UUID authorId,
-	@NotBlank(message = "유효한 요청이 아닙니다: 날씨 ID 누락")
+	@NotNull(message = "유효한 요청이 아닙니다: 날씨 ID 누락")
 	UUID weatherId,
-	@NotBlank(message = "유효한 요청이 아닙니다: 옷 ID 누락")
+	@NotNull(message = "유효한 요청이 아닙니다: 옷 ID 누락")
 	@Size(min=1, max=10, message = "피드에는 최소 1장, 최대 10장의 옷이 등록되어야 합니다.")
 	List<UUID> clothesIds,
 
