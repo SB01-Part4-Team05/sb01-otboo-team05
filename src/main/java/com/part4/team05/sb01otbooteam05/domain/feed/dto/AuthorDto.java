@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.user.dto;
+package com.part4.team05.sb01otbooteam05.domain.feed.dto;
 
 import java.util.UUID;
 
