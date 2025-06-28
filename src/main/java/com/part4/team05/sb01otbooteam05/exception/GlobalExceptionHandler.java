@@ -6,8 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +43,6 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 	}
 
-
 	// @Valid, @Validated 유효성 검사 실패 시
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	protected ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
@@ -51,6 +52,21 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 	}
 
+	// 파라미터 타입이 맞지 않아 매핑 실패 시
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	protected ResponseEntity<?> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException exception) {
+		log.error("잘못된 타입의 파라미터가 전달되었습니다.:  message = {}", exception.getMessage());
+		ErrorResponse errorResponse = new ErrorResponse(exception, HttpStatus.BAD_REQUEST.value());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	}
+
+	// 필수값으로 설정되어있는 파라미터가 없을 시
+	@ExceptionHandler(MissingServletRequestParameterException.class)
+	protected ResponseEntity<?> handleMissingServletRequestParameterException(MissingServletRequestParameterException exception) {
+		log.error("필수 파라미터가 누락되었습니다.:  message = {}", exception.getMessage());
+		ErrorResponse errorResponse = new ErrorResponse(exception, HttpStatus.BAD_REQUEST.value());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	}
 
 
 

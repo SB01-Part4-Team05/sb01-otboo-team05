@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "feed_comments")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class FeedComment extends BaseEntity {
+public class Comment extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "feed_id")
@@ -29,7 +29,7 @@ public class FeedComment extends BaseEntity {
 
 	private String content;
 
-	public FeedComment(Feed feed, User author, String content) {
+	public Comment(Feed feed, User author, String content) {
 		//todo 생성자 내 검증 로직 추가 필요
 		this.feed = feed;
 		this.author = author;
