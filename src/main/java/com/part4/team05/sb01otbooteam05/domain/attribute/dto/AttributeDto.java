@@ -14,7 +14,14 @@ public class AttributeDto {
   private List<String> selectableValues;
   private String value;
 
+  public AttributeDto() {
+  }
+
   public AttributeDto(AttributeValue attributeValue) {
+    if(attributeValue == null) throw new NullPointerException();
+
+    if(attributeValue.getDefinition() == null) throw new NullPointerException();
+
     this.definitionId = attributeValue.getDefinition().getId();
     this.definitionName = attributeValue.getDefinition().getName();
     this.selectableValues = attributeValue.getDefinition().getSelectableValues();

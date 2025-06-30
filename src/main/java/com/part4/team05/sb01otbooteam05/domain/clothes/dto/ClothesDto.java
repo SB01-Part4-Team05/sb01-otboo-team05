@@ -10,10 +10,10 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ClothesDto{
-  UUID id;
-  String name;
-  String imageUrl;
-  List<AttributeDto> attributes;
-  UUID ownerId;
-  String type;
+  private UUID id;
+  private String name;
+  private String imageUrl;
+  private List<AttributeDto> attributes;
+  private UUID ownerId;
+  private String type;
 }
