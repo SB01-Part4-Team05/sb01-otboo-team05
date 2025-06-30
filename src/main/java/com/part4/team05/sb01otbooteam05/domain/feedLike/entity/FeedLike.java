@@ -25,11 +25,11 @@ public class FeedLike extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
-	private User user;
+	private User author;
 
-	public FeedLike(Feed feed, User user) {
+	public FeedLike(Feed feed, User author) {
 		//todo 생성자 내 검증 로직 추가 필요
 		this.feed = feed;
-		this.user = user;
+		this.author = author;
 	}
 }
