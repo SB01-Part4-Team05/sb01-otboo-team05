@@ -22,7 +22,6 @@ import java.util.UUID;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final NotificationMapper notificationMapper;
 
     @Override
     public NotificationDtoCursorResponse getNotifications(UUID userId, UUID idAfter, int limit) {
