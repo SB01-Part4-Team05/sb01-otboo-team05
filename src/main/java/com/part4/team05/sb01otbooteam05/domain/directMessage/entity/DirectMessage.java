@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.notification.entity;
+package com.part4.team05.sb01otbooteam05.domain.directMessage.entity;
 
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import jakarta.persistence.Column;
@@ -13,32 +13,23 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 @Entity
-@Table(name = "notifications")
-public class notification {
+@Table(name = "direct_messages")
+public class DirectMessage {
 
   @Id
   @Column(nullable = false)
   private UUID id;
 
-  @Column(nullable = false, length = 30)
-  private String type;
-
-  private UUID entityId;
-
-  @Column(length = 100)
-  private String title;
-
   @Lob
-  private String content;
-
-  @Column(length = 20)
-  private String level;
-
   @Column(nullable = false)
-  private boolean isRead = false;
+  private String content;
 
   @Column(nullable = false)
   private Timestamp createdAt;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "sender_id", nullable = false)
+  private User sender;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "receiver_id", nullable = false)
