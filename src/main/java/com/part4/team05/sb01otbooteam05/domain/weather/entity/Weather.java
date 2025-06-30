@@ -1,7 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.entity;
 
 import com.part4.team05.sb01otbooteam05.domain.base.BaseEntity;
-import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -72,5 +71,4 @@ public class Weather extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "wind_speed_as_word", nullable = false)
   private WindSpeedAsWord windSpeedAsWord;
-
 }
