@@ -35,7 +35,7 @@ public class Weather extends BaseEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "sky_status", nullable = false)
-  private SkyStatus skyStatus;
+  private SkyStatusType skyStatusType;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "precipitation_type", nullable = false)
