@@ -23,6 +23,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -33,6 +34,7 @@ public class WeatherService {
   private final WeatherRepository weatherRepository;
 
   // 기상청 API 응답값 저장
+  @Transactional
   public void saveWeather(WeatherAPILocation weatherAPILocation) {
     //예보 위치 x,y 값 받기
     ParsedForecastDto parsedForecastDto = weatherApiClient.fetchForecast(weatherAPILocation.x(), weatherAPILocation.y());
