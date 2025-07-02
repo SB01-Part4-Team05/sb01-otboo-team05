@@ -41,7 +41,7 @@ public class WeatherCategoryMapper {
       } else {
         return WindSpeedAsWord.STRONG;
       }
-    } catch (IllegalArgumentException e) {
+    } catch (NumberFormatException e) {
       throw new IllegalArgumentException("알수없는 코드값: " + wsdCode); //todo 예외처리
     }
   }
