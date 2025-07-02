@@ -4,14 +4,8 @@ import static java.lang.Double.parseDouble;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.WeatherApiClient;
 import com.part4.team05.sb01otbooteam05.domain.weather.WeatherCategoryMapper;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.HumidityDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.PrecipitationDto;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.TemperatureDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.WindSpeedDto;
-import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.repository.WeatherRepository;
 import java.time.LocalDate;
@@ -37,7 +31,8 @@ public class WeatherService {
   @Transactional
   public void saveWeather(WeatherAPILocation weatherAPILocation) {
     //예보 위치 x,y 값 받기
-    ParsedForecastDto parsedForecastDto = weatherApiClient.fetchForecast(weatherAPILocation.x(), weatherAPILocation.y());
+    ParsedForecastDto parsedForecastDto = weatherApiClient.fetchForecast(weatherAPILocation.x(),
+        weatherAPILocation.y());
 
     //예보 등록 기준 시간
     LocalDateTime forecastedAt = parsedForecastDto.forecastedDateTime();
@@ -46,27 +41,10 @@ public class WeatherService {
     Map<LocalDateTime, Map<String, String>> forecastMap = parsedForecastDto.forecastMap();
 
     // 날짜별 모든 시간 TMP(온도) 수집
-    Map<LocalDate, List<Double>> tmpPerDay = new HashMap<>();
-    for (Map.Entry<LocalDateTime, Map<String, String>> entry : forecastMap.entrySet()) {
-      String tmp = entry.getValue().get("TMP");
-      if(tmp != null) {
-        double value = parseDouble(tmp);
-        tmpPerDay.computeIfAbsent(entry.getKey().toLocalDate(), k -> new ArrayList<>()).add(value);
-      }
-    }
+    Map<LocalDate, Double> minTemps = getMinTemps(forecastMap);
+    Map<LocalDate, Double> maxTemps = getMaxTemps(forecastMap);
 
-    // 날짜 min/max 계산
-    Map<LocalDate, Double> minTempMap = new HashMap<>();
-    Map<LocalDate, Double> maxTempMap = new HashMap<>();
-    tmpPerDay.forEach((date, temps) -> {
-      minTempMap.put(date, temps.stream().min(Double::compareTo).orElse(null));
-      maxTempMap.put(date, temps.stream().max(Double::compareTo).orElse(null));
-    });
-
-    // 결과 리스트 생성
-    List<WeatherDto> result = new ArrayList<>();
-
-    // 결과 리스트 작업
+    // 시간별 날씨 엔티티 생성 작업
     for (Map.Entry<LocalDateTime, Map<String, String>> entry : forecastMap.entrySet()) {
       LocalDateTime forecastAt = entry.getKey();
       Map<String, String> values = entry.getValue();
@@ -74,7 +52,7 @@ public class WeatherService {
       double tmp = parseDouble(values.get("TMP"));
       double reh = parseDouble(values.get("TMP"));
 
-      // 온도, 습도 전날 비교 계산
+      // 전날 같은 시간의 온도, 습도 비교 계산
       // todo 예보 등록 기준일은 db에 있는 정보를 가져와서 비교해야 할 것 같음.
       Map<String, String> yesterdayData = forecastMap.get(forecastAt.minusDays(1));
       Double tmpDiff = (yesterdayData != null && yesterdayData.containsKey("TMP"))
@@ -84,71 +62,70 @@ public class WeatherService {
           ? reh - parseDouble(yesterdayData.get("REH"))
           : null;
 
-      // TemperatureDto 생성
-      TemperatureDto temperatureDto = new TemperatureDto(
-          tmp,
-          tmpDiff,
-          minTempMap.get(forecastAt.toLocalDate()),
-          maxTempMap.get(forecastAt.toLocalDate())
-      );
-
-      //HumidityDto 생성
-      HumidityDto humidityDto = new HumidityDto(
-          reh,
-          rehDiff
-      );
-
-      // WindSpeedDto 생성
-      WindSpeedDto windSpeedDto = new WindSpeedDto(
-          parseDouble(values.get("WSD")),
-          WeatherCategoryMapper.toWindSpeedAsWord(values.get("WSD"))
-      );
-
-      // PrecipitationDto 생성
-      PrecipitationDto precipitationDto = new PrecipitationDto(
-          WeatherCategoryMapper.toPrecipitationType(values.get("PTY")),
-          parseDouble(values.get("PCP")), //todo 강수량이 나와야함. ex) 강수없음 -> 0.0
-          parseDouble(values.get("POP"))
-      );
-
-      SkyStatusType skyStatusType = WeatherCategoryMapper.toSkyStatusType(values.get("SKY"));
-
       // Weather 엔티티 생성
       Weather weather = Weather.builder()
           .locationX(weatherAPILocation.x())
           .locationY(weatherAPILocation.y())
           .forecastedAt(forecastedAt)
           .forecastAt(forecastAt)
-          .skyStatusType(skyStatusType)
-          .precipitationType(precipitationDto.type())
-          .precipitationAmount(precipitationDto.amount())
-          .precipitationProbability(precipitationDto.probability())
-          .humidityCurrent(humidityDto.current())
-          .humidityComparedToDayBefore(humidityDto.comparedToDayBefore())
-          .temperatureCurrent(temperatureDto.current())
-          .temperatureComparedToDayBefore(temperatureDto.comparedToDayBefore())
-          .temperatureMin(temperatureDto.min())
-          .temperatureMax(temperatureDto.max())
-          .windSpeed(windSpeedDto.speed())
-          .windSpeedAsWord(windSpeedDto.asWord())
+          .skyStatusType(WeatherCategoryMapper.toSkyStatusType(values.get("SKY")))
+          .precipitationType(WeatherCategoryMapper.toPrecipitationType(values.get("PTY")))
+          .precipitationAmount(parseDouble(values.get("PCP"))) //todo 강수량이 나와야함. ex) 강수없음 -> 0.0
+          .precipitationProbability(parseDouble(values.get("POP")))
+          .humidityCurrent(reh)
+          .humidityComparedToDayBefore(rehDiff)
+          .temperatureCurrent(tmp)
+          .temperatureComparedToDayBefore(tmpDiff)
+          .temperatureMin(minTemps.get(forecastAt.toLocalDate()))
+          .temperatureMax(maxTemps.get(forecastAt.toLocalDate()))
+          .windSpeed(parseDouble(values.get("WSD")))
+          .windSpeedAsWord(WeatherCategoryMapper.toWindSpeedAsWord(values.get("WSD")))
           .build();
 
       weatherRepository.save(weather);
 
-      //WeatherDto 생성
-      WeatherDto weatherDto = new WeatherDto(
-          weather.getId(),
-          forecastedAt,
-          forecastAt,
-          weatherAPILocation,
-          weather.getSkyStatusType(),
-          precipitationDto,
-          humidityDto,
-          temperatureDto,
-          windSpeedDto
-      );
-
-      result.add(weatherDto);
     }
+  }
+
+  // 날짜 별 최저 온도
+  private Map<LocalDate, Double> getMinTemps(Map<LocalDateTime, Map<String, String>> forecastMap) {
+    Map<LocalDate, List<Double>> tmpPerDay = groupTmpByDate(forecastMap);
+    Map<LocalDate, Double> result = new HashMap<>();
+    tmpPerDay.forEach((date, list) ->
+        result.put(date, list.stream().min(Double::compareTo).orElse(null))
+    );
+    return result;
+  }
+
+  // 날짜 별 최고 온도
+  private Map<LocalDate, Double> getMaxTemps(Map<LocalDateTime, Map<String, String>> forecastMap) {
+    Map<LocalDate, List<Double>> tmpPerDay = groupTmpByDate(forecastMap);
+    Map<LocalDate, Double> result = new HashMap<>();
+    tmpPerDay.forEach((date, list) ->
+        result.put(date, list.stream().max(Double::compareTo).orElse(null))
+    );
+    return result;
+  }
+
+  // tmp 데이터 그룹화
+  private Map<LocalDate, List<Double>> groupTmpByDate(
+      Map<LocalDateTime, Map<String, String>> forecastMap) {
+    Map<LocalDate, List<Double>> tmpPerDay = new HashMap<>();
+
+    for (Map.Entry<LocalDateTime, Map<String, String>> entry : forecastMap.entrySet()) {
+      LocalDate date = entry.getKey().toLocalDate();
+      String value = entry.getValue().get("TMP");
+
+      if (value != null && !value.isBlank()) {
+        try {
+          double tmp = parseDouble(value);
+          tmpPerDay.computeIfAbsent(date, d -> new ArrayList<>()).add(tmp);
+        } catch (NumberFormatException e) {
+          throw new IllegalArgumentException("파싱 실패: " + value); //todo 예외처리
+        }
+      }
+    }
+
+    return tmpPerDay;
   }
 }
