@@ -81,6 +81,12 @@ CREATE TABLE clothes
     foreign key (owner_id) references users(id) on delete cascade
 );
 
+create table attribute_definition
+(
+    id UUID primary key ,
+    name varchar(225) not null
+);
+
 create table attributeValues
 (
     id bigint primary key ,
@@ -91,12 +97,6 @@ create table attributeValues
     foreign key (clothes_id) references clothes(id),
     foreign key (definition_id) references attribute_definition(id)
 
-);
-
-create table attribute_definition
-(
-  id UUID primary key ,
-  name varchar(225) not null
 );
 
 CREATE TABLE notifications
