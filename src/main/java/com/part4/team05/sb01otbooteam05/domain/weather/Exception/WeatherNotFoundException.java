@@ -5,7 +5,7 @@ import java.util.UUID;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
 
 public class WeatherNotFoundException extends
-    com.part4.team05.sb01otbooteam05.domain.weather.Exception.WeatherException {
+    com.part4.team05.sb01otbooteam05.domain.weather.exception.WeatherException {
   public WeatherNotFoundException() {
     super(ErrorCode.WEATHER_NOT_FOUND);
   }

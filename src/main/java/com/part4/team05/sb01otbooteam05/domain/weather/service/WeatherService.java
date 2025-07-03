@@ -19,7 +19,7 @@ import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.repository.WeatherRepository;
-import com.part4.team05.sb01otbooteam05.domain.weather.Exception.WeatherNotFoundException;
+import com.part4.team05.sb01otbooteam05.domain.weather.exception.WeatherNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
