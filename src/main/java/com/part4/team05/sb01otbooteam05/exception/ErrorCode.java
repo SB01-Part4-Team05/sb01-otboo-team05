@@ -13,6 +13,11 @@ public enum ErrorCode {
 	// Feed 관련 에러 코드
 	FEED_NOT_FOUND("해당 피드를 찾을 수 없습니다."),
 
+	// Clothes 관련 에러 코드
+	CLOTHES_NOT_FOUND("해당 옷을 찾을 수 없습니다."),
+
+	// Weather 관련 에러 코드
+	WEATHER_NOT_FOUND("해당 날씨를 찾을 수 없습니다."),
 
 	// 서버 관련 에러 코드
 	INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다."),
