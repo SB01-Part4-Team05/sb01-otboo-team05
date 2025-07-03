@@ -54,20 +54,20 @@ CREATE TABLE weathers
     updated_at TIMESTAMP NOT NULL,
     location_x INTEGER,
     location_y INTEGER,
-    forecastedAt TIMESTAMP NOT NULL,
-    forecastAt TIMESTAMP NOT NULL,
-    skyStatus VARCHAR(20) NOT NULL,
-    precipitationType VARCHAR(20) NOT NULL,
-    precipitationAmount real NOT NULL,
-    precipitationProbability real NOT NULL,
-    humidityCurrent real NOT NULL,
-    humidityComparedToDayBefore real NOT NULL,
-    temperatureCurrent real NOT NULL,
-    temperatureComparedToDayBefore real NOT NULL,
-    temperatureMin real NOT NULL,
-    temperatureMax real NOT NULL,
-    windSpeed real NOT NULL,
-    windSpeedAsWord VARCHAR(20) NOT NULL
+    forecasted_at TIMESTAMP NOT NULL,
+    forecast_at TIMESTAMP NOT NULL,
+    sky_status VARCHAR(20) NOT NULL,
+    precipitation_type VARCHAR(20) NOT NULL,
+    precipitation_amount DOUBLE PRECISION NOT NULL,
+    precipitation_probability DOUBLE PRECISION NOT NULL,
+    humidity_current DOUBLE PRECISION NOT NULL,
+    humidity_compared_to_day_before DOUBLE PRECISION NOT NULL,
+    temperature_current DOUBLE PRECISION NOT NULL,
+    temperature_compared_to_day_before DOUBLE PRECISION NOT NULL,
+    temperature_min DOUBLE PRECISION NOT NULL,
+    temperature_max DOUBLE PRECISION NOT NULL,
+    wind_speed DOUBLE PRECISION NOT NULL,
+    wind_speed_as_word VARCHAR(20) NOT NULL
 );
 
 CREATE TABLE clothes
@@ -81,6 +81,12 @@ CREATE TABLE clothes
     foreign key (owner_id) references users(id) on delete cascade
 );
 
+create table attribute_definition
+(
+    id UUID primary key ,
+    name varchar(225) not null
+);
+
 create table attributeValues
 (
     id bigint primary key ,
@@ -91,12 +97,6 @@ create table attributeValues
     foreign key (clothes_id) references clothes(id),
     foreign key (definition_id) references attribute_definition(id)
 
-);
-
-create table attribute_definition
-(
-  id UUID primary key ,
-  name varchar(225) not null
 );
 
 CREATE TABLE notifications

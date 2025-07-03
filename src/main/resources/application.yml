@@ -38,3 +38,12 @@ management:
   info:
     env:
       enabled: true
+# 기상청 API 설정
+weather:
+  api:
+    serviceKey: ${WEATHER_API_KEY}
+    url: ${WEATHER_API_URL}
+
+#카카오 지역명 추출 API
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY}
