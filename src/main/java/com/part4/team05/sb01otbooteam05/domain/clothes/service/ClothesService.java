@@ -18,6 +18,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.AttributeDto;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
+import com.part4.team05.sb01otbooteam05.domain.clothes.exception.ClothesNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
@@ -35,6 +36,7 @@ public class ClothesService {
   private final ClothesRepository clothesRepository;
   private final AttributeService attributeService;
 
+
   public List<ClothesDto> get(UUID ownerId){ // slice(cursor pagination) 변경 필요
     List<Clothes> clothes = clothesRepository.findByOwnerId(ownerId);
     List<ClothesDto> result = new ArrayList<>();
@@ -50,6 +52,11 @@ public class ClothesService {
     }
 
     return result;
+  }
+
+  @Transactional(readOnly = true)
+  public Clothes getClothesEntityByIdOrThrow(UUID clothesId) {
+	  return clothesRepository.findById(clothesId).orElseThrow(() -> ClothesNotFoundException.withId(clothesId));
   }
 
   @Transactional
