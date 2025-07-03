@@ -7,6 +7,8 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
+import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,13 +28,18 @@ import org.springframework.stereotype.Service;
 public class RecommendService {
   private final ClothesService clothesService;
   private final ClothesMapper clothesMapper;
+  private final WeatherService weatherService;
+
   private final Random random = new Random();
   private final Map<ThicknessType,Integer> criteria = new HashMap<>(); // 옷 두께 가중치
+  private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
+  private int weatherValue = 0;
 
+  // 온도에 따라 옷 스타일 별 추천
   public List<List<ClothesDto>> getRecommend(UUID ownerId, UUID weatherId){
     Map<StyleType, Map<ClothesType,List<Clothes>>> map = getMap(ownerId);
     List<List<Clothes>> result = new ArrayList<>();
-
+    weatherValue = getWeatherValue(weatherId);
     for(StyleType styleType : map.keySet()){
       Map<ClothesType,List<Clothes>> innerMap = map.get(styleType);
       Map<Clothes, List<Integer>> scoreMap;
@@ -83,7 +90,8 @@ public class RecommendService {
     List<List<Clothes>> list = new ArrayList<>();
 
     for(Clothes dress : dresses){
-      int totalScore = -Math.abs(getWeight(dress)/* - 날씨 가중치*/);
+      int totalScore = Math.abs(getWeight(dress)-weatherValue);
+
       if(totalScore <= 5 && totalScore >= 0){
         list.add(List.of(dress));
       }
@@ -131,7 +139,7 @@ public class RecommendService {
         .orElse(0);
   }
 
-  // 옷에 부여하는 기준 가중치
+  // 옷에 부여하는 기준 가중치. 서비스 시작 시에 생성됨
   @PostConstruct
   public void makeCriteria(){
     criteria.put(ThicknessType.THICK, 5);
@@ -149,7 +157,7 @@ public class RecommendService {
       List<Integer> scores = new ArrayList<>();
       for(Clothes bottom : bottoms){
         int bottomScore = getWeight(bottom);
-        scores.add(-Math.abs(topScore-bottomScore /* -날씨 가중치 */) - (topScore-bottomScore));
+        scores.add(-Math.abs(topScore-bottomScore - weatherValue) - (topScore-bottomScore));
       }
       map.put(top,scores);
     }
@@ -192,6 +200,40 @@ public class RecommendService {
     }
 
     return withOuter;
+  }
+
+  //날씨 가중치
+  private int getWeatherValue(UUID weatherId){
+    Weather weather = weatherService.getWeatherEntityByIdOrThrow(weatherId);
+
+    double max = weather.getTemperatureMax();
+    double min = weather.getTemperatureMin();
+
+    double mid = (max+min)/2;
+
+    for(int i : weatherCriteria.keySet()){
+      if(mid < i+5 && mid >= i){
+        return weatherCriteria.get(i);
+      }
+    }
+
+    throw new NoSuchElementException();
+  }
+
+
+  //날씨 가중치 기준 생성
+  @PostConstruct
+  public void makeWeatherCriteria(){
+    weatherCriteria.put(-15,-15);
+    weatherCriteria.put(-10,-10);
+    weatherCriteria.put(-5,-7);
+    weatherCriteria.put(0,-5);
+    weatherCriteria.put(5,2);
+    weatherCriteria.put(10,5);
+    weatherCriteria.put(15,7);
+    weatherCriteria.put(20,10);
+    weatherCriteria.put(25,12);
+    weatherCriteria.put(30,15);
   }
 
 
