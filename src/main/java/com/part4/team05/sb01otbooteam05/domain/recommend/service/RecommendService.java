@@ -62,7 +62,7 @@ public class RecommendService {
 
       int time = 0;
 
-      while(time < 3){
+      while(time < 3 && !settings.isEmpty() && !acc.isEmpty()){
         int indexList = random.nextInt(settings.size());
 
         int indAcc = random.nextInt(acc.size());
