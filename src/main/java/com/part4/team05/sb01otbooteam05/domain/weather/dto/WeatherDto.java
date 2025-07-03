@@ -15,17 +15,20 @@ public record WeatherDto(
     @NotNull
     LocalDateTime forecastAt,
 
+    @NotNull
     WeatherAPILocation location,
 
     @NotNull
     SkyStatusType skyStatus,
 
+    @NotNull
     PrecipitationDto precipitation,
 
     HumidityDto humidity,
 
     TemperatureDto temperature,
 
+    @NotNull
     WindSpeedDto windSpeed
 ) {
 

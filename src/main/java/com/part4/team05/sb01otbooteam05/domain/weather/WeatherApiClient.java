@@ -4,6 +4,7 @@ import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -25,14 +26,10 @@ public class WeatherApiClient {
   @Value("${weather.api.serviceKey}")
   private String serviceKey;
 
-  // LocalDateTime 으로 시간 변환 포맷
-  private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
-      "yyyyMMddHHmm");
-
   //기상청 API 호출 -> 시간별 예보 정보를 Map으로 반환
   public ParsedForecastDto fetchForecast(int x, int y) {
     String baseDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-    String baseTime = "0500";
+    String baseTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmm"));
 
     UriComponents uri = UriComponentsBuilder
         .fromUriString(baseUrl)
@@ -57,23 +54,21 @@ public class WeatherApiClient {
     List<WeatherResponse.Item> items = response.getResponse().getBody().getItems().getItem();
 
     // 예보 등록 기준 시간
-    LocalDateTime forecastedDateTime = LocalDateTime
-        .parse(items.get(0).getBaseDate() + items.get(0).getBaseTime(), dateTimeFormatter);
+    LocalDateTime forecastedDateTime = items.get(0).getBaseDateTime();
 
     // 시간별 생성
-    Map<LocalDateTime, Map<String, String>> forcecastMap = new HashMap<>();
+    Map<LocalDateTime, Map<String, String>> forecastMap = new HashMap<>();
 
     for (WeatherResponse.Item item : items) {
-      String key = item.getFcstDate() + item.getFcstTime();
       //예보 시간
-      LocalDateTime forecastDateTime = LocalDateTime.parse(key, dateTimeFormatter);
+      LocalDateTime forecastDateTime = item.getFcstDateTime();
 
-      forcecastMap
+      forecastMap
           .computeIfAbsent(forecastDateTime, k -> new HashMap<>())
           .put(item.getCategory(), item.getFcstValue());
 
     }
-    return new ParsedForecastDto(forecastedDateTime, forcecastMap);
+    return new ParsedForecastDto(forecastedDateTime, forecastMap);
   }
 
 }

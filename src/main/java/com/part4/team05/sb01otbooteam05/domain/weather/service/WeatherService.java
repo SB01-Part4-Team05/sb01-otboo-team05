@@ -50,7 +50,7 @@ public class WeatherService {
       Map<String, String> values = entry.getValue();
 
       double tmp = parseDouble(values.get("TMP"));
-      double reh = parseDouble(values.get("TMP"));
+      double reh = parseDouble(values.get("REH"));
 
       // 전날 같은 시간의 온도, 습도 비교 계산
       // todo 예보 등록 기준일은 db에 있는 정보를 가져와서 비교해야 할 것 같음.
