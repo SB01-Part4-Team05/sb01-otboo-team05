@@ -69,7 +69,7 @@ public class User extends BaseEntity {
   private List<String> locationNames;
 
   @Column(name = "temperature_sensitivity")
-  @Min(value = 0, message = "온도 민감도는 0 이상이어야 합니다") //코드래빗 추천 온도만감도 추가
+  @Min(value = 0, message = "온도 민감도는 0 이상이어야 합니다") //코드래빗 추천 온도민감도 추가
   @Max(value = 5, message = "온도 민감도는 5 이하여야 합니다")
   private Integer temperatureSensitivity;
 
@@ -83,6 +83,7 @@ public class User extends BaseEntity {
   @Column(name = "password_expires_at")
   private LocalDateTime passwordExpiresAt;
 
+  //회원가입
   public static User createUser(String email, String name, String password) {
     return User.builder()
         .email(email)
@@ -94,5 +95,36 @@ public class User extends BaseEntity {
         .build();
   }
 
+  public void updateName(String name) {
+    if (name != null && !name.trim().isEmpty()) {
+      this.name = name;
+    }
+  }
+
+  public void updateGender(GenderType gender) {
+    this.gender = gender;
+  }
+
+  public void updateBirthDate(LocalDate birthDate) {
+    this.birthDate = birthDate;
+  }
+
+  public void updateLocation(Double latitude, Double longitude, Integer x, Integer y, List<String> locationNames) {
+    this.latitude = latitude;
+    this.longitude = longitude;
+    this.locationX = x;
+    this.locationY = y;
+    this.locationNames = locationNames;
+  }
+
+  public void updateTemperatureSensitivity(Integer temperatureSensitivity) {
+    if (temperatureSensitivity != null && temperatureSensitivity >= 0 && temperatureSensitivity <= 5) {
+      this.temperatureSensitivity = temperatureSensitivity;
+    }
+  }
+
+  public void updateProfileImageUrl(String profileImageUrl) {
+    this.profileImageUrl = profileImageUrl;
+  }
 
 }
