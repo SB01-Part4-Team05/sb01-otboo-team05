@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 @EnableJpaAuditing
-// @EnableBatchProcessing
 @EnableConfigurationProperties(JwtProperties.class)
 public class Sb01OtbooTeam05Application {
 
