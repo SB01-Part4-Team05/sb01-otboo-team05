@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.weather.Exception;
+package com.part4.team05.sb01otbooteam05.domain.weather.exception;
 
 import java.util.UUID;
 
