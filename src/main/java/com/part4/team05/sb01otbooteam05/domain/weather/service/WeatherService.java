@@ -1,23 +1,28 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.service;
 
-import static java.lang.Double.parseDouble;
+import static java.lang.Double.*;
 
-import com.part4.team05.sb01otbooteam05.domain.weather.WeatherApiClient;
-import com.part4.team05.sb01otbooteam05.domain.weather.WeatherCategoryMapper;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
-import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
-import com.part4.team05.sb01otbooteam05.domain.weather.repository.WeatherRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.part4.team05.sb01otbooteam05.domain.weather.Exception.WeatherNotFoundException;
+import com.part4.team05.sb01otbooteam05.domain.weather.WeatherApiClient;
+import com.part4.team05.sb01otbooteam05.domain.weather.WeatherCategoryMapper;
+import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
+import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
+import com.part4.team05.sb01otbooteam05.domain.weather.repository.WeatherRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -127,5 +132,10 @@ public class WeatherService {
     }
 
     return tmpPerDay;
+  }
+
+  // @Override(readOnly = true)
+  public Weather getWeatherEntityByIdOrThrow(UUID weatherId) {
+    return weatherRepository.findById(weatherId).orElseThrow(() -> WeatherNotFoundException.withId(weatherId));
   }
 }
