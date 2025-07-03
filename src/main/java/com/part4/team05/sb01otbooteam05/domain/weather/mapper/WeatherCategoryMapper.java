@@ -29,6 +29,19 @@ public class WeatherCategoryMapper {
     };
   }
 
+  // 강수량 변환
+  public static double toPrecipitation(String pcpCode) {
+    try {
+      if (pcpCode.equals("강수없음")) {
+        return 0.0;
+      } else {
+        return Double.parseDouble(pcpCode);
+      }
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("알수없는 코드값: " + pcpCode);
+    }
+  }
+
   //풍속 상태 변환
   public static WindSpeedAsWord toWindSpeedAsWord(String wsdCode) {
     try {

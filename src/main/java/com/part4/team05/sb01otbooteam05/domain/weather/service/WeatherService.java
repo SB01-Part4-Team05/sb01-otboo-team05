@@ -75,7 +75,7 @@ public class WeatherService {
           .forecastAt(forecastAt)
           .skyStatusType(WeatherCategoryMapper.toSkyStatusType(values.get("SKY")))
           .precipitationType(WeatherCategoryMapper.toPrecipitationType(values.get("PTY")))
-          .precipitationAmount(parseDouble(values.get("PCP"))) //todo 강수량이 나와야함. ex) 강수없음 -> 0.0
+          .precipitationAmount(WeatherCategoryMapper.toPrecipitation(values.get("PCP")))
           .precipitationProbability(parseDouble(values.get("POP")))
           .humidityCurrent(reh)
           .humidityComparedToDayBefore(rehDiff)
