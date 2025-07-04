@@ -28,7 +28,7 @@ public class AttributeController {
 
   @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
-  public ResponseEntity<AttributeDefinition> createDef(ClothesAttributeDefCreateRequest request){
+  public ResponseEntity<AttributeDefinition> createDef(@RequestBody ClothesAttributeDefCreateRequest request){
     return ResponseEntity.status(HttpStatus.CREATED).body(service.createDef(request));
   }
 
