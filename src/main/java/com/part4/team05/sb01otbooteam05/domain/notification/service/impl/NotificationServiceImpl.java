@@ -7,6 +7,7 @@ import com.part4.team05.sb01otbooteam05.domain.notification.exception.Notificati
 import com.part4.team05.sb01otbooteam05.domain.notification.mapper.NotificationMapper;
 import com.part4.team05.sb01otbooteam05.domain.notification.repository.NotificationRepository;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
+import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +25,8 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
 
     @Override
-    public NotificationDtoCursorResponse getNotifications(UUID userId, UUID idAfter, int limit) {
+    public NotificationDtoCursorResponse getNotifications(User user, UUID idAfter, int limit) {
+        UUID userId = user.getId();
         Pageable pageable = PageRequest.of(0, limit + 1);
 
         List<Notification> results = notificationRepository.findNotifications(userId, idAfter, pageable);

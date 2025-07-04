@@ -1,37 +1,22 @@
 package com.part4.team05.sb01otbooteam05.domain.directMessage.entity;
 
+import com.part4.team05.sb01otbooteam05.domain.base.BaseEntity;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import java.sql.Timestamp;
-import java.util.UUID;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "direct_messages")
-public class DirectMessage {
+public class DirectMessage extends BaseEntity {
 
-  @Id
-  @Column(nullable = false)
-  private UUID id;
+    @Lob
+    @Column(nullable = false)
+    private String content;
 
-  @Lob
-  @Column(nullable = false)
-  private String content;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
 
-  @Column(nullable = false)
-  private Timestamp createdAt;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "sender_id", nullable = false)
-  private User sender;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "receiver_id", nullable = false)
-  private User receiver;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id", nullable = false)
+    private User receiver;
 }
