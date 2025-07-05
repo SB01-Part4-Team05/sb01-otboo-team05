@@ -8,6 +8,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -18,7 +19,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.AttributeDto;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
-import com.part4.team05.sb01otbooteam05.domain.clothes.exception.ClothesNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
@@ -55,8 +55,8 @@ public class ClothesService {
   }
 
   @Transactional(readOnly = true)
-  public Clothes getClothesEntityByIdOrThrow(UUID clothesId) {
-	  return clothesRepository.findById(clothesId).orElseThrow(() -> ClothesNotFoundException.withId(clothesId));
+  public Optional<Clothes> getClothesEntityById(UUID clothesId) {
+	  return clothesRepository.findById(clothesId);
   }
 
   @Transactional

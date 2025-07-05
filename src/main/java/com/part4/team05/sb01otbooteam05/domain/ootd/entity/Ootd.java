@@ -27,10 +27,12 @@ public class Ootd  extends BaseEntity {
 	@JoinColumn(name = "clothes_id")
 	private Clothes clothes;
 
-	// 다대일 연관관계 동기화 편의메서드
-	private Ootd(Feed feed) {
+
+	public Ootd(Feed feed) {
 		//todo 생성자 내 검증 로직 추가 필요
 		this.feed = feed;
+
+		// 다대일 연관관계 동기화
 		feed.addOotd(this);
 	}
 }
