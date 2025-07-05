@@ -22,6 +22,8 @@ import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDto;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentsPageResponse;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindCommentsRequest;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.entity.Comment;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.mapper.CommentMapper;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.repository.FeedCommentRepository;
 import com.part4.team05.sb01otbooteam05.domain.feedLike.entity.FeedLike;
 import com.part4.team05.sb01otbooteam05.domain.feedLike.repository.FeedLikeRepository;
@@ -47,8 +49,10 @@ public class BasicFeedService implements FeedService {
 	private final ClothesService clothesService;
 	private final FeedLikeRepository feedLikeRepository;
 	private final FeedCommentRepository feedCommentRepository;
-	private final FeedMapper mapper;
+	private final FeedMapper feedMapper;
+	private final CommentMapper commentMapper;
 	private final UserServiceImpl userServiceImpl;
+
 
 	@Override
 	@Transactional(readOnly = true)
@@ -59,6 +63,8 @@ public class BasicFeedService implements FeedService {
 	// 피드 생성
 	@Override
 	public FeedDto createFeed(UUID userId, FeedCreateRequest request) {
+
+		checkUserIdEquality(userId, request.authorId());
 
 		// 1. 유저, 날씨 객체 조회
 		User user = userService.getUserEntityByIdOrThrow(userId);
@@ -82,9 +88,32 @@ public class BasicFeedService implements FeedService {
 		}
 
 		log.info("피드 생성 성공: feedId={}", newFeed.getId());
-		return mapper.toDto(newFeed, 0L, 0, true);
+		return feedMapper.toDto(newFeed, 0L, 0, true);
 	}
 
+	// 피드 삭제
+	@Override
+	public void deleteFeed(UUID userId, UUID feedId) {
+
+		log.info("피드 삭제 시작: feedId={}", feedId);
+
+		// 1. 피드, 유저 조회
+		Feed feed = feedRepository.findById(feedId).orElseThrow(() -> FeedNotFoundException.withId(feedId));
+		User author = userService.getUserEntityByIdOrThrow(userId);
+
+		// 2. 피드 작성자와 요청한 유저가 동일한지 검증
+		checkUserIdEquality(feed.getAuthor().getId(), author.getId());
+
+		// todo 피드를 삭제한다고 연관객체들을 다 날리는게 맞을까 ? 고민하고 수정하기
+		// 3. 피드 연관 객체(댓글, 좋아요, ootd), 피드 삭제
+		feedCommentRepository.deleteAllByFeed(feed);
+		feedLikeRepository.deleteAllByFeed(feed);
+		feedRepository.delete(feed);
+
+		log.info("피드 삭제 성공");
+	}
+
+	// 피드 좋아요
 	@Override
 	public FeedDto likeFeed(UUID userId, UUID feedId) {
 
@@ -110,7 +139,7 @@ public class BasicFeedService implements FeedService {
 		Boolean likedByMe = true;
 
 		log.info("피드 좋아요 성공: feedId={}", feed.getId());
-		return mapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
+		return feedMapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
 	}
 
 	@Override
@@ -132,17 +161,25 @@ public class BasicFeedService implements FeedService {
 
 		// 4. 피드 Dto 반환
 		log.info("피드 좋아요 취소 성공: feedId={}", feed.getId());
-		return mapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
+		return feedMapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
 	}
 
 	@Override
 	public CommentDto createFeedComment(UUID userId, UUID feedId, CommentCreateRequest request) {
-		return null;
-	}
 
-	@Override
-	public FeedDto deleteFeed(UUID userId, UUID feedId) {
-		return null;
+		checkUserIdEquality(userId, request.authorId());
+
+		// 1. 피드, 유저 조회
+		Feed feed = feedRepository.findById(feedId).orElseThrow(() -> FeedNotFoundException.withId(feedId));
+		User author = userService.getUserEntityByIdOrThrow(userId);
+
+		// 2. 댓글 생성
+		Comment newComment = new Comment(feed, author, request.content());
+		feedCommentRepository.save(newComment);
+
+		// 3. 댓글 Dto 반환
+		log.info("댓글 생성 성공: commentId={}", newComment.getId());
+		return commentMapper.toDto(newComment);
 	}
 
 	@Override
@@ -156,4 +193,9 @@ public class BasicFeedService implements FeedService {
 		return null;
 	}
 
+	// todo 유저 검증 실패 관련 예외로 변경하기
+	// 요청 Id와 파라미터 Id가 같은지 검증
+	public void checkUserIdEquality(UUID firstId, UUID secondId) {
+		if (!firstId.equals(secondId)){ throw new IllegalArgumentException(); }
+	}
 }

@@ -10,4 +10,6 @@ import com.part4.team05.sb01otbooteam05.domain.feedComment.entity.Comment;
 public interface FeedCommentRepository extends JpaRepository<Comment, UUID> {
 
 	Integer countByFeed(Feed feed);
+
+	void deleteAllByFeed(Feed feed);
 }

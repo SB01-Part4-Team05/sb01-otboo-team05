@@ -18,13 +18,14 @@ public interface FeedService {
 
 	FeedDto createFeed(UUID userId, FeedCreateRequest request);
 
+	void deleteFeed(UUID userId, UUID feedId);
+
 	FeedDto likeFeed(UUID userId, UUID feedId);
 
 	FeedDto unlikeFeed(UUID userId, UUID feedId);
 
 	CommentDto createFeedComment(UUID userId, UUID feedId, CommentCreateRequest request);
 
-	FeedDto deleteFeed(UUID userId, UUID feedId);
 
 	FeedDto updateFeed(UUID userId, UUID feedId, FeedUpdateRequest request);
 

@@ -15,5 +15,8 @@ public interface FeedLikeRepository extends JpaRepository<FeedLike, UUID> {
 
 	int deleteByFeedAndAuthor(Feed feed, User author);
 
+	void deleteAllByFeed(Feed feed);
+
 	Long countByFeed(Feed feed);
+
 }
