@@ -58,7 +58,8 @@ public class BasicFeedService implements FeedService {
 		// 2. 피드 객체 생성
 		Feed newFeed = new Feed(user, weather, request.content());
 
-		// 3. 피드에 들어갈 옷 종류 조회
+		/* 3. 피드에 들어갈 옷 종류 조회
+			일부가 조회 실패하더라도 예외 던지지 않고, 조회 성공한 옷들만 추가함. */
 		Stream<Optional<Clothes>> foundClothesStream = request.clothesIds()
 			.stream()
 			.map(clothesId -> clothesService.getClothesEntityById(clothesId));
@@ -66,11 +67,14 @@ public class BasicFeedService implements FeedService {
 		// 4. 옷 단건을 참조하는 Ootd 객체 생성과 동시에 피드 ootds 필드에 추가 (Feed <- Ootd -> Clothes)
 		foundClothesStream.forEach(clothes -> new Ootd(newFeed));
 
-		// 5. 저장
-		Feed savedFeed = feedRepository.save(newFeed);
+		// 5. 피드 내 ootds 리스트에 ootd 객체가 하나라도 있으면 Feed 저장. 없다면 Feed 생성 실패.
+		// todo 예외 종류가 적절한지 고민 필요
+		if (newFeed.getOotds().isEmpty()) {
+			throw new IllegalArgumentException();
+		}
 
-		log.info("피드 생성 완료: feedId={}", savedFeed.getId());
-		return mapper.toDto(savedFeed);
+		log.info("피드 생성 성공: feedId={}", newFeed.getId());
+		return mapper.toDto(newFeed, 0L, 0, true);
 	}
 
 	@Override
