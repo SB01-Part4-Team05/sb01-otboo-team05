@@ -15,15 +15,20 @@ import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedCreateReques
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FindFeedsRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.entity.Feed;
+import com.part4.team05.sb01otbooteam05.domain.feed.exception.FeedNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.feed.mapper.FeedMapper;
 import com.part4.team05.sb01otbooteam05.domain.feed.repository.FeedRepository;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDto;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentsPageResponse;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindCommentsRequest;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.repository.FeedCommentRepository;
+import com.part4.team05.sb01otbooteam05.domain.feedLike.entity.FeedLike;
+import com.part4.team05.sb01otbooteam05.domain.feedLike.repository.FeedLikeRepository;
 import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
+import com.part4.team05.sb01otbooteam05.domain.user.service.UserServiceImpl;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
 
@@ -40,7 +45,10 @@ public class BasicFeedService implements FeedService {
 	private final UserService userService;
 	private final WeatherService weatherService;
 	private final ClothesService clothesService;
+	private final FeedLikeRepository feedLikeRepository;
+	private final FeedCommentRepository feedCommentRepository;
 	private final FeedMapper mapper;
+	private final UserServiceImpl userServiceImpl;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -79,12 +87,52 @@ public class BasicFeedService implements FeedService {
 
 	@Override
 	public FeedDto likeFeed(UUID userId, UUID feedId) {
-		return null;
+
+		// 1. 피드, 유저 조회
+		User author = userService.getUserEntityByIdOrThrow(userId);
+		Feed feed = feedRepository.findById(feedId).orElseThrow(() -> FeedNotFoundException.withId(feedId));
+
+		// 2. 현재 좋아요 수 조회
+		Long currentLikeCount = feedLikeRepository.countByFeed(feed);
+
+		// 3. 해당 유저가 피드에 이미 좋아요 했는지 여부를 확인
+		Optional<FeedLike> foundFeedLike = feedLikeRepository.findByFeedAndAuthor(feed, author);
+		boolean isLikeExistent = foundFeedLike.isPresent();
+
+		// 4. 좋아요 객체 존재하지 않을 시 FeedLike 객체 생성하고 저장
+		if (!isLikeExistent) {
+			feedLikeRepository.save(new FeedLike(feed, author));
+			currentLikeCount++; // 좋아요 수 1 증가
+		}
+
+		// 5. 피드 Dto 반환
+		Integer commentCount = feedCommentRepository.countByFeed(feed);
+		Boolean likedByMe = true;
+
+		log.info("피드 좋아요 성공: feedId={}", feed.getId());
+		return mapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
 	}
 
 	@Override
 	public FeedDto unlikeFeed(UUID userId, UUID feedId) {
-		return null;
+
+		// 1. 피드, 유저 조회
+		User author = userService.getUserEntityByIdOrThrow(userId);
+		Feed feed = feedRepository.findById(feedId).orElseThrow(() -> FeedNotFoundException.withId(feedId));
+
+		// 2. 현재 좋아요 수 조회
+		Long currentLikeCount = feedLikeRepository.countByFeed(feed);
+
+		// 3. FeedLike 객체가 존재하여, 삭제되었다면 좋아요 수 1 감소
+		if (feedLikeRepository.deleteByFeedAndAuthor(feed, author) > 0) {
+			currentLikeCount --;
+		}
+		Integer commentCount = feedCommentRepository.countByFeed(feed);
+		Boolean likedByMe = false;
+
+		// 4. 피드 Dto 반환
+		log.info("피드 좋아요 취소 성공: feedId={}", feed.getId());
+		return mapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
 	}
 
 	@Override
@@ -107,4 +155,5 @@ public class BasicFeedService implements FeedService {
 	public CommentsPageResponse findComments(UUID userId, FindCommentsRequest request) {
 		return null;
 	}
+
 }
