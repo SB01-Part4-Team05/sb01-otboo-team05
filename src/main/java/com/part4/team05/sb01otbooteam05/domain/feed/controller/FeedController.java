@@ -21,14 +21,14 @@ import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedsPageResponse;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FindFeedsRequest;
-import com.part4.team05.sb01otbooteam05.domain.feed.enums.PrecipitationType;
-import com.part4.team05.sb01otbooteam05.domain.feed.enums.SkyStatusType;
 import com.part4.team05.sb01otbooteam05.domain.feed.enums.SortType;
 import com.part4.team05.sb01otbooteam05.domain.feed.service.FeedService;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDto;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentsPageResponse;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindCommentsRequest;
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

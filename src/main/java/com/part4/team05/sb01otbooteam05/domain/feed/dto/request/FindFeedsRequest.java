@@ -4,9 +4,9 @@ import java.util.UUID;
 
 import org.hibernate.query.SortDirection;
 
-import com.part4.team05.sb01otbooteam05.domain.feed.enums.PrecipitationType;
-import com.part4.team05.sb01otbooteam05.domain.feed.enums.SkyStatusType;
 import com.part4.team05.sb01otbooteam05.domain.feed.enums.SortType;
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
