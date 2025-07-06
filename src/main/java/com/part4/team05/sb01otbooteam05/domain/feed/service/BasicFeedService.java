@@ -30,7 +30,6 @@ import com.part4.team05.sb01otbooteam05.domain.feedLike.repository.FeedLikeRepos
 import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
-import com.part4.team05.sb01otbooteam05.domain.user.service.UserServiceImpl;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
 
@@ -51,7 +50,6 @@ public class BasicFeedService implements FeedService {
 	private final FeedCommentRepository feedCommentRepository;
 	private final FeedMapper feedMapper;
 	private final CommentMapper commentMapper;
-	private final UserServiceImpl userServiceImpl;
 
 
 	@Override
@@ -69,6 +67,7 @@ public class BasicFeedService implements FeedService {
 		// 1. 유저, 날씨 객체 조회
 		User user = userService.getUserEntityByIdOrThrow(userId);
 		Weather weather = weatherService.getWeatherEntityByIdOrThrow(request.weatherId());
+
 		// 2. 피드 객체 생성
 		Feed newFeed = new Feed(user, weather, request.content());
 
@@ -156,10 +155,10 @@ public class BasicFeedService implements FeedService {
 		if (feedLikeRepository.deleteByFeedAndAuthor(feed, author) > 0) {
 			currentLikeCount --;
 		}
+		// 4. 피드 Dto 반환
 		Integer commentCount = feedCommentRepository.countByFeed(feed);
 		Boolean likedByMe = false;
 
-		// 4. 피드 Dto 반환
 		log.info("피드 좋아요 취소 성공: feedId={}", feed.getId());
 		return feedMapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
 	}
@@ -184,7 +183,24 @@ public class BasicFeedService implements FeedService {
 
 	@Override
 	public FeedDto updateFeed(UUID userId, UUID feedId, FeedUpdateRequest request) {
-		return null;
+
+		// 1. 피드, 유저 조회
+		Feed feed = feedRepository.findById(feedId).orElseThrow(() -> FeedNotFoundException.withId(feedId));
+		User author = userService.getUserEntityByIdOrThrow(userId);
+
+		// 2. 피드 작성자와 요청한 유저가 동일한지 검증
+		checkUserIdEquality(userId, feed.getAuthor().getId());
+
+		// 3. 피드 content(글) 변경
+		feed.updateContent(request.content());
+
+		// 4. 피드 Dto 반환
+		Long likeCount = feedLikeRepository.countByFeed(feed);
+		Integer commentCount = feedCommentRepository.countByFeed(feed);
+		Boolean likedByMe = feedLikeRepository.findByFeedAndAuthor(feed, author).isPresent();
+
+		log.info("피드 수정 성공: feedId={}", feed.getId());
+		return feedMapper.toDto(feed, likeCount, commentCount, likedByMe);
 	}
 
 	@Override
@@ -194,7 +210,7 @@ public class BasicFeedService implements FeedService {
 	}
 
 	// todo 유저 검증 실패 관련 예외로 변경하기
-	// 요청 Id와 파라미터 Id가 같은지 검증
+	// 요청 Id와 파라미터 Id가 같은지 검증 등, ID 동일성 검증용 메서드
 	public void checkUserIdEquality(UUID firstId, UUID secondId) {
 		if (!firstId.equals(secondId)){ throw new IllegalArgumentException(); }
 	}
