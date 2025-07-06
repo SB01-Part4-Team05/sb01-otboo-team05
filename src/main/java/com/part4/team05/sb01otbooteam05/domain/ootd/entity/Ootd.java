@@ -28,9 +28,10 @@ public class Ootd  extends BaseEntity {
 	private Clothes clothes;
 
 
-	public Ootd(Feed feed) {
+	public Ootd(Feed feed, Clothes clothes) {
 		//todo 생성자 내 검증 로직 추가 필요
 		this.feed = feed;
+		this.clothes = clothes;
 
 		// 다대일 연관관계 동기화
 		feed.addOotd(this);
