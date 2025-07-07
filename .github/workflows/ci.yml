@@ -30,6 +30,12 @@ jobs:
           postgresql user: ${{ secrets.SPRING_DATASOURCE_USER }}
           postgresql password: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
 
+      - name: Check PostgreSQL connectivity
+        run: |
+          sudo apt-get install -y postgresql-client
+          pg_isready -h localhost -p 5432
+
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
