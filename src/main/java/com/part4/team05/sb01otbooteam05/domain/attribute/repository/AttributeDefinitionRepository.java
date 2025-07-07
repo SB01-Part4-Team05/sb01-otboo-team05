@@ -17,7 +17,7 @@ public interface AttributeDefinitionRepository extends JpaRepository<AttributeDe
 
   @Query("""
     SELECT a FROM AttributeDefinition a
-    WHERE (:cursor IS NULL OR a.id > :cursor)
+    WHERE (:cursor IS NULL OR a.id < :cursor)
     ORDER BY a.id DESC
 """)
   List<AttributeDefinition> findByCursor(UUID cursor, Pageable pageable);
