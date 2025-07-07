@@ -1,9 +1,11 @@
 package com.part4.team05.sb01otbooteam05.domain.attribute.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -40,6 +43,9 @@ class AttributeControllerTest {
   @MockitoBean
   AttributeService attributeService;
 
+  @MockitoBean
+  JpaMetamodelMappingContext metamodelMappingContext;
+
   @Test
   @DisplayName("속성 추가 성공 테스트")
   @WithMockUser(roles = "ADMIN")
@@ -49,7 +55,8 @@ class AttributeControllerTest {
 
     mockMvc.perform(MockMvcRequestBuilders.post("/api/clothes/attribute-defs")
             .content(objectMapper.writeValueAsString(request))
-            .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON)
+            .with(csrf()))
         .andExpect(status().isCreated());
   }
 
@@ -75,11 +82,14 @@ class AttributeControllerTest {
     ClothesAttributeDefUpdateRequest request = new ClothesAttributeDefUpdateRequest("test1",
         List.of("d","e","f"));
 
-    given(attributeService.updateDef(any(UUID.class),request)).willReturn(attributeDefinition);
+    UUID id = UUID.randomUUID();
 
-    mockMvc.perform(MockMvcRequestBuilders.patch("/api/clothes/attribute-defs/"+ UUID.randomUUID())
+    given(attributeService.updateDef(id,request)).willReturn(attributeDefinition);
+
+    mockMvc.perform(MockMvcRequestBuilders.patch("/api/clothes/attribute-defs/"+ id)
         .content(objectMapper.writeValueAsString(request))
-        .contentType(MediaType.APPLICATION_JSON))
+        .contentType(MediaType.APPLICATION_JSON)
+            .with(csrf()))
         .andExpect(status().isOk());
   }
 
@@ -92,9 +102,10 @@ class AttributeControllerTest {
     ClothesAttributeDefUpdateRequest request = new ClothesAttributeDefUpdateRequest("test1",
         List.of("d","e","f"));
 
-    given(attributeService.updateDef(any(UUID.class),request)).willReturn(attributeDefinition);
+    UUID id = UUID.randomUUID();
+    given(attributeService.updateDef(id,request)).willReturn(attributeDefinition);
 
-    mockMvc.perform(MockMvcRequestBuilders.patch("/api/clothes/attribute-defs/"+ UUID.randomUUID())
+    mockMvc.perform(MockMvcRequestBuilders.patch("/api/clothes/attribute-defs/"+ id)
             .content(objectMapper.writeValueAsString(request))
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isForbidden());
@@ -107,7 +118,8 @@ class AttributeControllerTest {
     doNothing().when(attributeService).deleteDef(any(UUID.class));
 
     mockMvc.perform(MockMvcRequestBuilders
-            .delete("/api/clothes/attribute-defs/"+ UUID.randomUUID()))
+            .delete("/api/clothes/attribute-defs/"+ UUID.randomUUID())
+            .with(csrf()))
         .andExpect(status().isNoContent());
   }
 
