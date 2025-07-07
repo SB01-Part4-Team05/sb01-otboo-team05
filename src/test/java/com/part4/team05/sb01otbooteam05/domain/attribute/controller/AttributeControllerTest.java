@@ -8,9 +8,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeDefinition;
+import com.part4.team05.sb01otbooteam05.domain.attribute.mapper.AttributeDefinitionMapper;
+import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeDefinitionRepository;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDefCreateRequest;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDefUpdateRequest;
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefCreateRequest;
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefUpdateRequest;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -26,8 +28,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @WebMvcTest(controllers = AttributeController.class)
-@ExtendWith(MockitoExtension.class)
 class AttributeControllerTest {
+
 
   @Autowired
   MockMvc mockMvc;
