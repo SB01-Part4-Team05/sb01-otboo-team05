@@ -1,6 +1,7 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.controller;
 
 
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
@@ -31,8 +32,13 @@ public class ClothesController {
   private final ClothesService clothesService;
 
   @GetMapping
-  public ResponseEntity<List<ClothesDto>> getClothes(@RequestParam UUID ownerId){
-    return ResponseEntity.ok().body(clothesService.get(ownerId));
+  public ResponseEntity<ClothesCursorResponse> getClothes(
+      @RequestParam UUID ownerId,
+      @RequestParam(required = false) UUID cursor,
+      @RequestParam(defaultValue = "10") int size) {
+
+    ClothesCursorResponse response = clothesService.get(ownerId, cursor, size);
+    return ResponseEntity.ok(response);
   }
 
   @PostMapping
