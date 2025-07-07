@@ -8,7 +8,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      MY_SECRET_ENV: ${{ secrets.MY_SECRET }}
+      SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
+      SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+      SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
