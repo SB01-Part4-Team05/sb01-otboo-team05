@@ -1,5 +1,7 @@
 package com.part4.team05.sb01otbooteam05.domain.recommend.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.StyleType;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.ThicknessType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
@@ -10,6 +12,7 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +24,13 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -33,13 +42,12 @@ public class RecommendService {
   private final Random random = new Random();
   private final Map<ThicknessType,Integer> criteria = new HashMap<>(); // 옷 두께 가중치
   private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
-  private int weatherValue = 0;
 
   // 온도에 따라 옷 스타일 별 추천
-  public List<List<ClothesDto>> getRecommend(UUID ownerId, UUID weatherId){
+  public List<List<ClothesDto>> getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId){
     Map<StyleType, Map<ClothesType,List<Clothes>>> map = getMap(ownerId);
     List<List<Clothes>> result = new ArrayList<>();
-    weatherValue = getWeatherValue(weatherId);
+    int weatherValue = getWeatherValue(weatherId);
     for(StyleType styleType : map.keySet()){
       Map<ClothesType,List<Clothes>> innerMap = map.get(styleType);
       Map<Clothes, List<Integer>> scoreMap;
@@ -54,11 +62,11 @@ public class RecommendService {
       acc.addAll(innerMap.getOrDefault(ClothesType.SOCKS,Collections.emptyList()));
       List<Clothes> outers = innerMap.getOrDefault(ClothesType.OUTER,Collections.emptyList());
 
-      scoreMap = getScore(tops,bottoms);
+      scoreMap = getScore(tops,bottoms,weatherValue);
       List<List<Clothes>> settings = getSetting(scoreMap,bottoms,outers);
 
       settings.addAll(getDressScore(innerMap.getOrDefault(ClothesType.DRESS,Collections.emptyList()),
-          outers));
+          outers,weatherValue));
 
       int time = 0;
 
@@ -82,11 +90,33 @@ public class RecommendService {
       finalResult.add(clothesMapper.toDtoList(list));
     }
 
+    try{
+      String url = "http://localhost:8000/rank";
+
+      RestTemplate restTemplate = new RestTemplate();
+      ObjectMapper objectMapper = new ObjectMapper();
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(finalResult),headers);
+
+      ResponseEntity<String> response = restTemplate.postForEntity(url,request,String.class);
+
+      if (response.getStatusCode() == HttpStatus.OK) {
+        return objectMapper.readValue(response.getBody(),
+            objectMapper.getTypeFactory().constructCollectionType(List.class,
+                objectMapper.getTypeFactory().constructCollectionType(List.class, ClothesDto.class)));
+      }
+
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+
     return finalResult;
   }
 
   // 원피스 가중치 점수
-  private List<List<Clothes>> getDressScore(List<Clothes> dresses,List<Clothes> outers) {
+  private List<List<Clothes>> getDressScore(List<Clothes> dresses,List<Clothes> outers, int weatherValue) {
     List<List<Clothes>> list = new ArrayList<>();
 
     for(Clothes dress : dresses){
@@ -149,7 +179,7 @@ public class RecommendService {
   }
 
   // 상+하의 조합별 가중치 점수
-  private Map<Clothes,List<Integer>> getScore(List<Clothes> tops, List<Clothes> bottoms){
+  private Map<Clothes,List<Integer>> getScore(List<Clothes> tops, List<Clothes> bottoms, int weatherValue){
     Map<Clothes,List<Integer>> map = new HashMap<>();
 
     for(Clothes top : tops){
