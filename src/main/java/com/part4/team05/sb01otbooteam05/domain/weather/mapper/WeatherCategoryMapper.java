@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.weather;
+package com.part4.team05.sb01otbooteam05.domain.weather.mapper;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
