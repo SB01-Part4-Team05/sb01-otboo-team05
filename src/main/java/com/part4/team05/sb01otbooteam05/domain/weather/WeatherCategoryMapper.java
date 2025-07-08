@@ -1,0 +1,48 @@
+package com.part4.team05.sb01otbooteam05.domain.weather;
+
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.WindSpeedAsWord;
+
+public class WeatherCategoryMapper {
+  //변환 값은 기상청 단기예보 조회서비스 오픈 API 활용 가이드를 참고하였음
+
+  //하늘 상태 변환
+  public static SkyStatusType toSkyStatusType(String skyCode) {
+    return switch (skyCode) {
+      case "1" -> SkyStatusType.CLEAR;
+      case "3" -> SkyStatusType.MOSTLY_CLOUDY;
+      case "4" -> SkyStatusType.CLOUDY;
+      default -> throw new IllegalArgumentException("알수없는 코드값: " + skyCode); //todo 예외처리
+    };
+  }
+
+  //강수 형태 변환
+  public static PrecipitationType toPrecipitationType(String ptyCode) {
+    return switch (ptyCode) {
+      case "0" -> PrecipitationType.NONE;
+      case "1" -> PrecipitationType.RAIN;
+      case "2" -> PrecipitationType.RAIN_SNOW;
+      case "3" -> PrecipitationType.SNOW;
+      case "4" -> PrecipitationType.SHOWER;
+      default -> throw new IllegalArgumentException("알수없는 코드값: " + ptyCode); //todo 예외처리
+    };
+  }
+
+  //풍속 상태 변환
+  public static WindSpeedAsWord toWindSpeedAsWord(String wsdCode) {
+    try {
+      double windSpeed = Double.parseDouble(wsdCode);
+
+      if (windSpeed < 4.0) {
+        return WindSpeedAsWord.WEAK;
+      } else if (windSpeed < 9.0) {
+        return WindSpeedAsWord.MODERATE;
+      } else {
+        return WindSpeedAsWord.STRONG;
+      }
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("알수없는 코드값: " + wsdCode); //todo 예외처리
+    }
+  }
+}

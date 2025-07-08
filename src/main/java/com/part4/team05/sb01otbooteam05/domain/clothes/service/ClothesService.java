@@ -1,15 +1,5 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.service;
 
-import com.part4.team05.sb01otbooteam05.domain.attribute.dto.AttributeDto;
-import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
-import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
-import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
-import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
-import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
-import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,27 +9,42 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.AttributeDto;
+import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
+import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
+import com.part4.team05.sb01otbooteam05.domain.clothes.exception.ClothesNotFoundException;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
+import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
+import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
+import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
+import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
+
+import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
 public class ClothesService {
-  private final ClothesMapper mapper;
-  private final ClothesRepository repository;
+  private final ClothesMapper clothesMapper;
+  private final ClothesRepository clothesRepository;
   private final AttributeService attributeService;
 
+
   public List<ClothesDto> get(UUID ownerId){ // slice(cursor pagination) 변경 필요
-    List<Clothes> clothes = repository.findByOwnerId(ownerId);
+    List<Clothes> clothes = clothesRepository.findByOwnerId(ownerId);
     List<ClothesDto> result = new ArrayList<>();
 
     for(Clothes c : clothes){
       List<AttributeValue> attributeValues = c.getAttributeValues();
 
-      ClothesDto cd = mapper.toDto(c);
+      ClothesDto cd = clothesMapper.toDto(c);
       cd.setAttributes(attributeValues.stream()
           .map(AttributeDto::new)
           .toList());
@@ -47,6 +52,11 @@ public class ClothesService {
     }
 
     return result;
+  }
+
+  @Transactional(readOnly = true)
+  public Clothes getClothesEntityByIdOrThrow(UUID clothesId) {
+	  return clothesRepository.findById(clothesId).orElseThrow(() -> ClothesNotFoundException.withId(clothesId));
   }
 
   @Transactional
@@ -60,22 +70,22 @@ public class ClothesService {
     List<AttributeValue> list = attributeService.createAndReturnList(request.attributes(),clothes);
     clothes.setAttributeValues(list);
 
-    repository.save(clothes);
+    clothesRepository.save(clothes);
 
-    return mapper.toDto(clothes);
+    return clothesMapper.toDto(clothes);
   }
 
   @Transactional
   public void delete(UUID id){
-    Clothes clothes = repository.findById(id).orElseThrow(NoSuchElementException::new);
+    Clothes clothes = clothesRepository.findById(id).orElseThrow(NoSuchElementException::new);
     attributeService.delete(clothes.getAttributeValues());
 
-    repository.delete(clothes);
+    clothesRepository.delete(clothes);
   }
 
   @Transactional
   public ClothesDto update(UUID clothesId, ClothesUpdateRequest request, MultipartFile image){
-    Clothes clothes = repository.findById(clothesId).orElseThrow(NoSuchElementException::new);
+    Clothes clothes = clothesRepository.findById(clothesId).orElseThrow(NoSuchElementException::new);
 
     if(request.name() != null) {
       clothes.setName(request.name());
@@ -98,7 +108,7 @@ public class ClothesService {
               .build()).toList());
     }
 
-    return mapper.toDto(clothes);
+    return clothesMapper.toDto(clothes);
   }
 
   private String storeImage(MultipartFile file){
@@ -120,7 +130,7 @@ public class ClothesService {
   }
 
   public List<Clothes> findAllByOwnerId(UUID ownerId){
-    return repository.findByOwnerId(ownerId);
+    return clothesRepository.findByOwnerId(ownerId);
   }
 
 }

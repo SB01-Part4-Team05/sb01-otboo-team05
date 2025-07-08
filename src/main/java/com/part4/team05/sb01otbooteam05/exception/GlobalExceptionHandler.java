@@ -75,7 +75,9 @@ public class GlobalExceptionHandler {
 		return switch (errorCode) {
 			// 404 Not Found
 			case USER_NOT_FOUND,
-				 FEED_NOT_FOUND -> HttpStatus.NOT_FOUND;
+				 FEED_NOT_FOUND,
+				 CLOTHES_NOT_FOUND,
+				 WEATHER_NOT_FOUND -> HttpStatus.NOT_FOUND;
 
 			// 400 Bad Request
 			case INVALID_REQUEST -> HttpStatus.BAD_REQUEST;
