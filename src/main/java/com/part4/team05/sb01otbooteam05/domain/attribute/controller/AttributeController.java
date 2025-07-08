@@ -1,10 +1,10 @@
 package com.part4.team05.sb01otbooteam05.domain.attribute.controller;
 
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeDefinition;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDefCreateRequest;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDefUpdateRequest;
-import java.util.List;
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefCreateRequest;
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefUpdateRequest;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,29 +24,32 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/clothes/attribute-defs")
 public class AttributeController {
-  private final AttributeService service;
+  private final AttributeService attributeService;
 
   @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ResponseEntity<AttributeDefinition> createDef(@RequestBody ClothesAttributeDefCreateRequest request){
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.createDef(request));
+    return ResponseEntity.status(HttpStatus.CREATED).body(attributeService.createDef(request));
   }
 
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{definitionId}")
   public ResponseEntity<AttributeDefinition> update(@PathVariable UUID definitionId, @RequestBody ClothesAttributeDefUpdateRequest request){
-    return ResponseEntity.ok(service.updateDef(definitionId,request));
+    return ResponseEntity.ok(attributeService.updateDef(definitionId,request));
   }
 
   @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{definitionId}")
   public ResponseEntity<Void> deleteDef(@PathVariable UUID definitionId){
-    service.deleteDef(definitionId);
+    attributeService.deleteDef(definitionId);
     return ResponseEntity.noContent().build();
   }
 
   @GetMapping
-  public ResponseEntity<List<AttributeDefinition>> getDef(@RequestParam int limit){
-    return ResponseEntity.ok(service.getDef(limit));
+  public ResponseEntity<ClothesAttributeDefDtoCursorResponse> getAttributes(
+      @RequestParam(required = false) UUID cursor,
+      @RequestParam(defaultValue = "10") int size) {
+
+    return ResponseEntity.ok(attributeService.getDef(cursor,size));
   }
 }
