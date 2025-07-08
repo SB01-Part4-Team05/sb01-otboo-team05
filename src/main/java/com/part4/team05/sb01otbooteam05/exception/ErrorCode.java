@@ -19,6 +19,10 @@ public enum ErrorCode {
 	// Weather 관련 에러 코드
 	WEATHER_NOT_FOUND("해당 날씨를 찾을 수 없습니다."),
 
+    // Notification 관련 에러 코드
+	NOTIFICATION_NOT_FOUND("알림이 존재하지 않습니다."),
+
+
 	// 서버 관련 에러 코드
 	INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다."),
 	INVALID_REQUEST("잘못된 요청입니다.");
