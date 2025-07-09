@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -124,6 +125,22 @@ class AttributeControllerTest {
   }
 
   @Test
-  void getDef() {
+  @WithMockUser
+  @DisplayName("속성 리스트 가져 오기")
+  void getDef() throws Exception {
+    List<AttributeDefinition> list = List.of(mock(AttributeDefinition.class));
+
+    AttributeDefinitionRepository attributeRepository = mock(AttributeDefinitionRepository.class);
+
+    given(attributeRepository.findByCursor(any(UUID.class),any(Pageable.class)))
+        .willReturn(list);
+
+    mockMvc.perform(MockMvcRequestBuilders
+        .get("/api/clothes/attribute-defs")
+        .with(csrf())
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(attributeService.getDef(null,10))))
+        .andExpect(status().isOk());
+
   }
 }
