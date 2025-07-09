@@ -9,6 +9,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeDefinition;
 import com.part4.team05.sb01otbooteam05.domain.attribute.mapper.AttributeDefinitionMapper;
 import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeDefinitionRepository;
@@ -128,12 +129,12 @@ class AttributeControllerTest {
   @WithMockUser
   @DisplayName("속성 리스트 가져 오기")
   void getDef() throws Exception {
-    List<AttributeDefinition> list = List.of(mock(AttributeDefinition.class));
 
-    AttributeDefinitionRepository attributeRepository = mock(AttributeDefinitionRepository.class);
+    ClothesAttributeDefDtoCursorResponse mockResponse = mock(ClothesAttributeDefDtoCursorResponse.class);
 
-    given(attributeRepository.findByCursor(any(UUID.class),any(Pageable.class)))
-        .willReturn(list);
+    given(attributeService.getDef(null, 10))
+    .willReturn(mockResponse);
+
 
     mockMvc.perform(MockMvcRequestBuilders
         .get("/api/clothes/attribute-defs")

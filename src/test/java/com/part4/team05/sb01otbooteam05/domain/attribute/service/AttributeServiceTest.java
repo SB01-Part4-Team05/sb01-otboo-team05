@@ -98,6 +98,15 @@ class AttributeServiceTest {
     ClothesAttributeDefCreateRequest request = new ClothesAttributeDefCreateRequest("name1",
         Collections.emptyList());
 
+    AttributeDefinition savedDefinition = AttributeDefinition.builder()
+        .id(UUID.randomUUID())
+        .name("name1")
+        .selectableValues(Collections.emptyList())
+        .build();
+
+    given(attributeDefinitionRepository.save(any(AttributeDefinition.class)))
+        .willReturn(savedDefinition);
+
     AttributeDefinition definition=
         attributeService.createDef(request);
 

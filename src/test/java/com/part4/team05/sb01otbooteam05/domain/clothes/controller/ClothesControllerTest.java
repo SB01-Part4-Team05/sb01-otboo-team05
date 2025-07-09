@@ -84,17 +84,9 @@ class ClothesControllerTest {
     ClothesDto clothesDto = new ClothesDto();
     clothesDto.setName(request.name());
 
-    ClothesRepository clothesRepository = mock(ClothesRepository.class);
-    AttributeRepository attributeRepository = mock(AttributeRepository.class);
-
     given(clothesService.create(request)).willReturn(clothesDto);
     given(attributeService.createAndReturnList(Collections.emptyList(),new Clothes()))
         .willReturn(Collections.emptyList());
-    given(clothesRepository.save(any(Clothes.class)))
-        .willReturn(mock(Clothes.class));
-
-    given(attributeRepository.save(any(AttributeValue.class)))
-        .willReturn(mock(AttributeValue.class));
 
     MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/clothes")
         .contentType(MediaType.APPLICATION_JSON)

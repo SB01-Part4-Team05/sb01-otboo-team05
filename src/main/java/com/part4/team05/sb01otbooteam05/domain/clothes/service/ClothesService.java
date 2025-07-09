@@ -100,7 +100,7 @@ public class ClothesService {
       clothes.setType(ClothesType.valueOf(request.type()));
     }
 
-    if(image != null){
+    if(image != null && !image.isEmpty()){
       String url = storeImage(image);
       clothes.setImageUrl(url);
     }
