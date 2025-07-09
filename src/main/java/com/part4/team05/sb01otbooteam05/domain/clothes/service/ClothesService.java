@@ -1,7 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.service;
 
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
-import java.awt.print.Pageable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,6 +12,7 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,7 +41,7 @@ public class ClothesService {
 
 
   public ClothesCursorResponse get(UUID ownerId, UUID cursor, int size) {
-    Pageable pageable = (Pageable) PageRequest.of(0, size);
+    Pageable pageable = PageRequest.of(0, size);
     List<Clothes> clothes = clothesRepository.findByOwnerIdPageNation(ownerId, cursor, pageable);
 
     List<ClothesDto> result = clothesMapper.toDtoList(clothes);
@@ -100,7 +100,7 @@ public class ClothesService {
       clothes.setType(ClothesType.valueOf(request.type()));
     }
 
-    if(!image.isEmpty()){
+    if(image != null){
       String url = storeImage(image);
       clothes.setImageUrl(url);
     }
