@@ -1,10 +1,12 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.batch;
 
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.context.annotation.Bean;
@@ -15,17 +17,27 @@ import org.springframework.transaction.PlatformTransactionManager;
 @RequiredArgsConstructor
 public class WeatherJobConfig {
 
+  private final JobRepository jobRepository;
+  private final PlatformTransactionManager platformTransactionManager;
+
+  private final WeatherItemReader reader;
+  private final WeatherItemProcessor processor;
+  private final WeatherItemWriter writer;
+
   @Bean
-  public Job weatherJob(JobRepository jobRepository, Step step) {
+  public Job weatherJob() {
     return new JobBuilder("weatherJob", jobRepository)
-        .start(step)
+        .start(weatherStep())
         .build();
   }
 
-//  @Bean
-//  public Step weatherStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
-//    return new StepBuilder("weatherStep", jobRepository)
-//        .
-//  }
-
+  @Bean
+  public Step weatherStep() {
+    return new StepBuilder("weatherStep", jobRepository)
+        .<Pair<Integer, Integer>, List<Weather>>chunk(10, platformTransactionManager)
+        .reader(reader)
+        .processor(processor)
+        .writer(writer)
+        .build();
+  }
 }
