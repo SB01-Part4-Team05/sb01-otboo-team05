@@ -5,4 +5,6 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface WeatherRepository extends JpaRepository<Weather, UUID> {
+
+  boolean existsByLocationXAndLocationY(Integer locationX, Integer locationY);
 }
