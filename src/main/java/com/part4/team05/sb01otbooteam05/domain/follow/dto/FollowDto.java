@@ -4,12 +4,7 @@ import java.util.UUID;
 
 public record FollowDto (
     UUID id,
-    UserSummary followee,
-    UserSummary follower
+    UUID followee,
+    UUID follower
 ) {
-    public record UserSummary (
-            UUID userId,
-            String name, // 추후 User 연동 시 채움
-            String profileImageUrl
-    ) {}
 }

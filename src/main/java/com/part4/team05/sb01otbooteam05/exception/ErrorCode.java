@@ -15,13 +15,15 @@ public enum ErrorCode {
 
 	// Clothes 관련 에러 코드
 	CLOTHES_NOT_FOUND("해당 옷을 찾을 수 없습니다."),
-
 	// Weather 관련 에러 코드
 	WEATHER_NOT_FOUND("해당 날씨를 찾을 수 없습니다."),
 
     // Notification 관련 에러 코드
 	NOTIFICATION_NOT_FOUND("알림이 존재하지 않습니다."),
 
+	// follow 관련 에러 코드
+	FOLLOW_SELF_NOT_ALLOWED("자기 자신을 팔로우할 수 없습니다."),
+	ALREADY_FOLLOWED("이미 팔로우한 사용자입니다."),
 
 	// 서버 관련 에러 코드
 	INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다."),
