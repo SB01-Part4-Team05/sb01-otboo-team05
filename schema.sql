@@ -50,8 +50,6 @@ CREATE TABLE refresh_tokens (
 CREATE TABLE weathers
 (
     id         UUID PRIMARY KEY,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
     location_x INTEGER,
     location_y INTEGER,
     forecasted_at TIMESTAMP NOT NULL,
