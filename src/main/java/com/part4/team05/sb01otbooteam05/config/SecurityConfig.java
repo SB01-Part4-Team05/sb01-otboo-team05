@@ -44,7 +44,7 @@ public class SecurityConfig {
                 "/swagger-ui/**",
                 "/v3/api-docs/**"
             ).permitAll()
-            //            .anyRequest().permitAll() // 이거는 일시적으로 모두 접근 허용하는 것 (테스트용)
+            //.anyRequest().permitAll() // 이거는 일시적으로 모두 접근 허용하는 것 (테스트용)
             .anyRequest().authenticated() // 나머지는 토큰 필수 (다른 도메인도 인증 추가하여 구현 진행해야함!)
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
