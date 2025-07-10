@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.part4.team05.sb01otbooteam05.domain.weather.WeatherApiClient;
 import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherCategoryMapper;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.repository.WeatherRepository;
 import com.part4.team05.sb01otbooteam05.domain.weather.exception.WeatherNotFoundException;
@@ -32,12 +31,15 @@ public class WeatherService {
   private final WeatherApiClient weatherApiClient;
   private final WeatherRepository weatherRepository;
 
-  // 기상청 API 응답값 저장
   @Transactional
-  public void saveWeather(WeatherAPILocation weatherAPILocation) {
+  public List<Weather> generateWeather(int x, int y) {
     //예보 위치 x,y 값 받기
-    ParsedForecastDto parsedForecastDto = weatherApiClient.fetchForecast(weatherAPILocation.x(),
-        weatherAPILocation.y());
+    ParsedForecastDto parsedForecastDto = weatherApiClient.fetchForecast(x, y);
+    return parsedForecastDtoToWeathers(parsedForecastDto, x, y);
+  }
+
+  // 기상청 API 응답값 저장
+  public List<Weather> parsedForecastDtoToWeathers(ParsedForecastDto parsedForecastDto , int x, int y) {
 
     //예보 등록 기준 시간
     LocalDateTime forecastedAt = parsedForecastDto.forecastedDateTime();
@@ -48,6 +50,9 @@ public class WeatherService {
     // 날짜별 모든 시간 TMP(온도) 수집
     Map<LocalDate, Double> minTemps = getMinTemps(forecastMap);
     Map<LocalDate, Double> maxTemps = getMaxTemps(forecastMap);
+
+    // 날씨 리스트 생성
+    List<Weather> weathers = new ArrayList<>();
 
     // 시간별 날씨 엔티티 생성 작업
     for (Map.Entry<LocalDateTime, Map<String, String>> entry : forecastMap.entrySet()) {
@@ -69,8 +74,8 @@ public class WeatherService {
 
       // Weather 엔티티 생성
       Weather weather = Weather.builder()
-          .locationX(weatherAPILocation.x())
-          .locationY(weatherAPILocation.y())
+          .locationX(x)
+          .locationY(y)
           .forecastedAt(forecastedAt)
           .forecastAt(forecastAt)
           .skyStatusType(WeatherCategoryMapper.toSkyStatusType(values.get("SKY")))
@@ -87,9 +92,9 @@ public class WeatherService {
           .windSpeedAsWord(WeatherCategoryMapper.toWindSpeedAsWord(values.get("WSD")))
           .build();
 
-      weatherRepository.save(weather);
-
+      weathers.add(weather);
     }
+    return weathers;
   }
 
   // 날짜 별 최저 온도
@@ -132,6 +137,10 @@ public class WeatherService {
     }
 
     return tmpPerDay;
+  }
+
+  public boolean existWeatherLocation(int x, int y) {
+    return weatherRepository.existsByLocationXAndLocationY(x, y);
   }
 
   @Transactional(readOnly = true)
