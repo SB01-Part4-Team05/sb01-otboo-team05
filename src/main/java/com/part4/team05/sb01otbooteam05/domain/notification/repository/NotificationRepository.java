@@ -13,7 +13,7 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     @Query("SELECT n FROM Notification n " +
             "WHERE n.receiverId = :userId " +
             "AND (:idAfter IS NULL OR n.id < :idAfter) " +
-            "ORDER BY n.createdAt DESC")
+            "ORDER BY n.createdAt DESC, n.id DESC")
     List<Notification> findNotifications(UUID userId, UUID idAfter, Pageable pageable);
 
     long countByReceiverId(UUID receiverId);

@@ -2,6 +2,8 @@ package com.part4.team05.sb01otbooteam05.domain.notification.controller;
 
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
+import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
+import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final UserService userService;
 
     @GetMapping
     public ResponseEntity<NotificationDtoCursorResponse> getNotifications(
@@ -29,7 +32,9 @@ public class NotificationController {
             ) {
         log.info("알림 조회 API 호출: userId={}, limit={}, idAfter={}", userId, limit, idAfter);
 
-        NotificationDtoCursorResponse response = notificationService.getNotifications(userId, idAfter, limit);
+        User user = userService.getUserEntityByIdOrThrow(userId);
+
+        NotificationDtoCursorResponse response = notificationService.getNotifications(user, idAfter, limit);
 
         log.info("알림 응답 전송: size={}, nextCursor={}, hasNext={}",
                 response.data().size(),

@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.service;
 
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,22 +40,25 @@ public class ClothesService {
   private final AttributeService attributeService;
 
 
-  public List<ClothesDto> get(UUID ownerId){ // slice(cursor pagination) 변경 필요
-    List<Clothes> clothes = clothesRepository.findByOwnerId(ownerId);
-    List<ClothesDto> result = new ArrayList<>();
+  public ClothesCursorResponse get(UUID ownerId, UUID cursor, int size) {
+    Pageable pageable = PageRequest.of(0, size);
+    List<Clothes> clothes = clothesRepository.findByOwnerIdPageNation(ownerId, cursor, pageable);
 
-    for(Clothes c : clothes){
-      List<AttributeValue> attributeValues = c.getAttributeValues();
+    List<ClothesDto> result = clothesMapper.toDtoList(clothes);
+    UUID nextCursor = clothes.isEmpty() ? null : clothes.get(clothes.size() - 1).getId();
 
-      ClothesDto cd = clothesMapper.toDto(c);
-      cd.setAttributes(attributeValues.stream()
-          .map(AttributeDto::new)
-          .toList());
-      result.add(cd);
-    }
+    ClothesCursorResponse response = new ClothesCursorResponse();
+    response.setClothesDtos(result);
+    response.setNextCursor(nextCursor != null ? nextCursor.toString() : null);
+    response.setNextIdAfter(nextCursor != null ? nextCursor.toString() : null);
+    response.setNextCount(result.size());
+    response.setHasNext(result.size() == size);
+    response.setSortBy("id");
+    response.setSortDirection("DESCENDING");
 
-    return result;
+    return response;
   }
+
 
   @Transactional(readOnly = true)
   public Clothes getClothesEntityByIdOrThrow(UUID clothesId) {
@@ -94,7 +100,7 @@ public class ClothesService {
       clothes.setType(ClothesType.valueOf(request.type()));
     }
 
-    if(!image.isEmpty()){
+    if(image != null && !image.isEmpty()){
       String url = storeImage(image);
       clothes.setImageUrl(url);
     }

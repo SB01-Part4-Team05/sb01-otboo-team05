@@ -1,18 +1,22 @@
 package com.part4.team05.sb01otbooteam05.domain.attribute.service;
 
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeDefinition;
 import com.part4.team05.sb01otbooteam05.domain.attribute.exception.NoSuchDefException;
+import com.part4.team05.sb01otbooteam05.domain.attribute.mapper.AttributeDefinitionMapper;
 import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeDefinitionRepository;
 import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeRepository;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDefCreateRequest;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDefUpdateRequest;
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefCreateRequest;
+import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
+import java.awt.print.Pageable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AttributeService {
   private final AttributeRepository attributeRepository;
   private final AttributeDefinitionRepository definitionRepository;
+  private final AttributeDefinitionMapper definitionMapper;
 
   @Transactional
   public List<AttributeValue> createAndReturnList(List<ClothesAttributeDto> attributes, Clothes clothes){
@@ -79,8 +84,23 @@ public class AttributeService {
     definitionRepository.deleteById(definitionId);
   }
 
-  public List<AttributeDefinition> getDef(int limit){
-    return definitionRepository.findAll();
+  public ClothesAttributeDefDtoCursorResponse getDef(UUID cursor,int limit){
+    PageRequest pageable = PageRequest.of(0, limit);
+    List<AttributeDefinition> defs = definitionRepository.findByCursor(cursor,pageable);
+
+    ClothesAttributeDefDtoCursorResponse response = new ClothesAttributeDefDtoCursorResponse();
+
+    response.setClothesAttributeDefDtos(definitionMapper.toDtoList(defs));
+    UUID nextCursor = defs.isEmpty() ? null : defs.get(defs.size() - 1).getId();
+    response.setNextCursor(nextCursor != null ? nextCursor.toString() : null);
+    response.setNextIdAfter(nextCursor != null ? nextCursor.toString() : null);
+    response.setNextCount(defs.size());
+    response.setHasNext(defs.size() == limit);
+    response.setSortBy("id");
+    response.setSortDirection("DESCENDING");
+
+
+    return response;
   }
 
   public AttributeDefinition findByDefName(String name){
