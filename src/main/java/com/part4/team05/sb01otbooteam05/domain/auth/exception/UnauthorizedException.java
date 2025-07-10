@@ -5,7 +5,7 @@ import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 
 public class UnauthorizedException extends OtbooException {
 
-  public UnauthorizedException(String message) {
+  public UnauthorizedException() {
     super(ErrorCode.UNAUTHORIZED);
   }
 }

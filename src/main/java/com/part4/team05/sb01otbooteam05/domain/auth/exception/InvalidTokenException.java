@@ -5,7 +5,7 @@ import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 
 public class InvalidTokenException extends OtbooException {
 
-  public InvalidTokenException(String message) {
+  public InvalidTokenException() {
     super(ErrorCode.INVALID_TOKEN);
   }
 }

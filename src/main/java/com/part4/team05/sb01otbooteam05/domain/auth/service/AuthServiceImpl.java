@@ -41,16 +41,16 @@ public class AuthServiceImpl implements AuthService {
 
     // 사용자 조회
     User user = userRepository.findByEmail(request.email())
-        .orElseThrow(() -> new UnauthorizedException("이메일 또는 비밀번호가 일치하지 않습니다"));
+        .orElseThrow(() -> new UnauthorizedException());
 
     // 비밀번호 검증
     if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-      throw new UnauthorizedException("이메일 또는 비밀번호가 일치하지 않습니다");
+      throw new UnauthorizedException();
     }
 
     // 계정 잠금 확인
     if (user.isLocked()) {
-      throw new UnauthorizedException("계정이 잠겨있습니다");
+      throw new UnauthorizedException();
     }
 
     // 기존 로그인된 계정이 있을 경우 강제 로그아웃 처리
@@ -109,11 +109,11 @@ public class AuthServiceImpl implements AuthService {
 
     // 리프레시 토큰 조회
     RefreshToken refreshToken = refreshTokenRepository.findByTokenWithUser(request.refreshToken())
-        .orElseThrow(() -> new InvalidTokenException("유효하지 않은 리프레시 토큰입니다"));
+        .orElseThrow(() -> new InvalidTokenException());
 
     // 토큰 유효성 확인
     if (!refreshToken.isValid()) {
-      throw new InvalidTokenException("만료되었거나 무효화된 리프레시 토큰입니다");
+      throw new InvalidTokenException();
     }
 
     User user = refreshToken.getUser();
@@ -157,11 +157,11 @@ public class AuthServiceImpl implements AuthService {
 
     // 리프레시 토큰 조회
     RefreshToken refreshToken = refreshTokenRepository.findByTokenWithUser(request.refreshToken())
-        .orElseThrow(() -> new InvalidTokenException("유효하지 않은 리프레시 토큰입니다"));
+        .orElseThrow(() -> new InvalidTokenException());
 
     // 토큰 유효성 확인
     if (!refreshToken.isValid()) {
-      throw new InvalidTokenException("만료되었거나 무효화된 리프레시 토큰입니다");
+      throw new InvalidTokenException();
     }
 
     User user = refreshToken.getUser();
