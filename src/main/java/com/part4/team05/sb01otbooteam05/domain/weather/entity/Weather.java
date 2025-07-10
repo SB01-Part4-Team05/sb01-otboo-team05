@@ -1,17 +1,20 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.entity;
 
-import com.part4.team05.sb01otbooteam05.domain.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.UuidGenerator;
 
 @Getter
 @Entity
@@ -19,7 +22,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Table(name = "weathers")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Weather extends BaseEntity {
+public class Weather {
+
+  @Id
+  @GeneratedValue
+  @UuidGenerator
+  private UUID id;
 
   @Column(name = "location_x", nullable = false)
   private Integer locationX;
