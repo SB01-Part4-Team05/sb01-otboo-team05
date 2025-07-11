@@ -36,7 +36,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @WebMvcTest(controllers = AttributeController.class)
-@Import(SecurityConfig.class)
 class AttributeControllerTest {
 
 

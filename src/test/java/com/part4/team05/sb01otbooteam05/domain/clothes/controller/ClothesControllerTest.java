@@ -43,7 +43,6 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester.MockMvcRequest
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @WebMvcTest(controllers = ClothesController.class)
-@Import(SecurityConfig.class)
 class ClothesControllerTest {
   @Autowired
   MockMvc mockMvc;
