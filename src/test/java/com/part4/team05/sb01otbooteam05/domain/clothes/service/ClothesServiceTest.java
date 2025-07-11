@@ -8,7 +8,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
@@ -27,11 +29,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.test.context.support.WithMockUser;
 
 @ExtendWith(MockitoExtension.class)
-@WithMockUser
 class ClothesServiceTest {
 
   @InjectMocks
@@ -45,6 +47,9 @@ class ClothesServiceTest {
 
   @Mock
   AttributeService attributeService;
+
+  @Mock
+  JwtTokenProvider jwtTokenProvider;
 
   @Test
   void get() {

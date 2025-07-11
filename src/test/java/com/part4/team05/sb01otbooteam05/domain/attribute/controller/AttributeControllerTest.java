@@ -9,6 +9,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeDefinition;
 import com.part4.team05.sb01otbooteam05.domain.attribute.mapper.AttributeDefinitionMapper;
@@ -16,6 +17,7 @@ import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeDef
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefUpdateRequest;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
@@ -33,6 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @WebMvcTest(controllers = AttributeController.class)
+@Import(SecurityConfig.class)
 class AttributeControllerTest {
 
 
@@ -47,6 +51,9 @@ class AttributeControllerTest {
 
   @MockitoBean
   JpaMetamodelMappingContext metamodelMappingContext;
+
+  @MockitoBean
+  JwtTokenProvider jwtTokenProvider;
 
   @Test
   @DisplayName("속성 추가 성공 테스트")

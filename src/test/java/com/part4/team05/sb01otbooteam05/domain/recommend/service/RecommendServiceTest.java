@@ -3,6 +3,8 @@ package com.part4.team05.sb01otbooteam05.domain.recommend.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.annotation.Import;
 
 @ExtendWith(MockitoExtension.class)
 class RecommendServiceTest {
@@ -31,6 +34,9 @@ class RecommendServiceTest {
 
   @Mock
   WeatherService weatherService;
+
+  @Mock
+  JwtTokenProvider jwtTokenProvider;
 
   @Test
   void getRecommend() {
