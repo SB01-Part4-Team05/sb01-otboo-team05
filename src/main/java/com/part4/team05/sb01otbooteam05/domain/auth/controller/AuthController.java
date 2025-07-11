@@ -114,6 +114,7 @@ public class AuthController {
     cookie.setSecure(false);    // 개발환경용
     cookie.setPath("/");
     cookie.setMaxAge(7 * 24 * 60 * 60); // 7일
+    // cookie.setAttribute("SameSite", "Lax");  // TODO: 추후 주석 제거 예정
     response.addCookie(cookie);
   }
 }

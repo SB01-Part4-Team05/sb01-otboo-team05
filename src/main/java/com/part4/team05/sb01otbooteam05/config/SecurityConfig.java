@@ -32,7 +32,10 @@ public class SecurityConfig {
         // CSRF 설정 추가
         .csrf(csrf -> csrf
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-            .ignoringRequestMatchers("/api/auth/**", "/api/users") // 로그인/회원가입은 CSRF 제외
+            .ignoringRequestMatchers("/api/auth/**")
+            .ignoringRequestMatchers(request ->
+                "/api/users".equals(request.getRequestURI()) &&
+                    "POST".equals(request.getMethod()))  // 코드래빗 참고
         )
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()  // 회원가입만 허용하기 위한 post만 허용

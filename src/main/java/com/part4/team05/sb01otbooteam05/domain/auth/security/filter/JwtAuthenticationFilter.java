@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.UUID;
 
 @Slf4j
@@ -32,6 +30,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
 
     try {
+      //수정
+      if (SecurityContextHolder.getContext().getAuthentication() != null &&
+          SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
+        filterChain.doFilter(request, response);
+        return;
+      }
+
       String jwt = getJwtFromRequest(request);
 
       if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
@@ -44,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
             userDetails,
             null,
-            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+            userDetails.getAuthorities()  // 코드래빗 참고
         );
 
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
