@@ -17,7 +17,8 @@ public class WeatherBatchScheduler {
   private final JobLauncher jobLauncher;
   private final Job weatherJob;
 
-  @Scheduled(cron = "0 0 * * * *")
+//  @Scheduled(cron = "0 5 2,5,8,11,14,17,20,23 * * *")
+  @Scheduled(cron = "0 */5 * * * *")
   public void batchWeatherForAllLocations() {
     try {
       JobParameters parameters = new JobParametersBuilder()
@@ -26,7 +27,7 @@ public class WeatherBatchScheduler {
 
       jobLauncher.run(weatherJob, parameters);
     } catch (Exception e) {
-      log.error("날씨 매 시각 정기 배치 실행 중 오류 발생", e);
+      log.error("날씨 3시간 간격 정기 배치 실행 중 오류 발생", e);
     }
   }
 }

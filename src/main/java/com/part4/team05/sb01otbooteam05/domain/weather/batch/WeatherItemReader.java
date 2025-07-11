@@ -21,10 +21,9 @@ public class WeatherItemReader implements ItemReader<Pair<Integer, Integer>> {
 
   @PostConstruct
   public void init() {
-    Set<Pair<Integer, Integer>> locations = userRepository.findAll().stream()
-        .map(user -> Pair.of(user.getLocationX(), user.getLocationY()))
-        .collect(Collectors.toSet());
-    this.iterator = locations.iterator();
+    this.iterator = userRepository.findDistinctLocations().stream()
+        .map(arr -> Pair.of((Integer) arr[0], (Integer) arr[1]))
+        .iterator();
   }
 
   @Override

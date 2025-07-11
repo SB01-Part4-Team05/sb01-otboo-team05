@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -62,16 +63,26 @@ public class WeatherService {
       double tmp = parseDouble(values.get("TMP"));
       double reh = parseDouble(values.get("REH"));
 
-      // 전날 같은 시간의 온도, 습도 비교 계산
-      // todo 예보 등록 기준일은 db에 있는 정보를 가져와서 비교해야 할 것 같음.
-      Map<String, String> yesterdayData = forecastMap.get(forecastAt.minusDays(1));
-      Double tmpDiff = (yesterdayData != null && yesterdayData.containsKey("TMP"))
-          ? tmp - parseDouble(yesterdayData.get("TMP"))
-          : null;
-      Double rehDiff = (yesterdayData != null && yesterdayData.containsKey("REH"))
-          ? reh - parseDouble(yesterdayData.get("REH"))
-          : null;
+      Double tmpDiff;
+      Double rehDiff;
 
+      // 전날 같은 시간의 온도, 습도 비교 계산
+      // 예보 등록 기준일은 db에 있는 정보를 가져와서 비교. 없으면 null
+      if (!forecastAt.toLocalDate().equals(forecastedAt.toLocalDate())) {
+        Optional<Weather> yesterday = weatherRepository.findByLocationXAndLocationYAndForecastAt(
+            x, y, forecastAt.minusDays(1));
+
+        tmpDiff = yesterday.map(weather -> tmp - weather.getTemperatureCurrent()).orElse(null);
+        rehDiff = yesterday.map(weather -> reh - weather.getHumidityCurrent()).orElse(null);
+      } else {
+        Map<String, String> yesterdayData = forecastMap.get(forecastAt.minusDays(1));
+        tmpDiff = (yesterdayData != null && yesterdayData.containsKey("TMP"))
+            ? tmp - parseDouble(yesterdayData.get("TMP"))
+            : null;
+        rehDiff = (yesterdayData != null && yesterdayData.containsKey("REH"))
+            ? reh - parseDouble(yesterdayData.get("REH"))
+            : null;
+      }
       // Weather 엔티티 생성
       Weather weather = Weather.builder()
           .locationX(x)

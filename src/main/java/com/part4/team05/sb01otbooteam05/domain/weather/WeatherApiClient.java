@@ -2,13 +2,14 @@ package com.part4.team05.sb01otbooteam05.domain.weather;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherResponse;
+import com.part4.team05.sb01otbooteam05.domain.weather.utils.BaseTimeUtils;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,10 +27,9 @@ public class WeatherApiClient {
   @Value("${weather.api.serviceKey}")
   private String serviceKey;
 
-  //기상청 API 호출 -> 시간별 예보 정보를 Map으로 반환
+  //기상청 API 호출 -> 시간별 예보 정보를 WeatherResponse dto로 받음
   public ParsedForecastDto fetchForecast(int x, int y) {
-    String baseDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-    String baseTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmm"));
+    Pair<LocalDate, String> baseInfo = BaseTimeUtils.getLatestBaseDateTime();
 
     UriComponents uri = UriComponentsBuilder
         .fromUriString(baseUrl)
@@ -37,14 +37,19 @@ public class WeatherApiClient {
         .queryParam("pageNo", 1)
         .queryParam("numOfRows", 1000)
         .queryParam("dataType", "JSON")
-        .queryParam("base_date", baseDate)
-        .queryParam("base_time", baseTime)
+        .queryParam("base_date", baseInfo.getLeft().format(DateTimeFormatter.ofPattern("yyyyMMdd")))
+        .queryParam("base_time", baseInfo.getRight())
         .queryParam("nx", x)
         .queryParam("ny", y)
         .build(true);
 
     ResponseEntity<WeatherResponse> response = new RestTemplate().getForEntity(uri.toUri(),
         WeatherResponse.class);
+
+    // 응답 없을 시 예외 발생
+    if (response.getBody() == null) {
+      throw new IllegalArgumentException("기상청 응답이 비어있습니다.");
+    }
 
     return parseForecastItems(response.getBody());
   }
@@ -54,14 +59,15 @@ public class WeatherApiClient {
     List<WeatherResponse.Item> items = response.getResponse().getBody().getItems().getItem();
 
     // 예보 등록 기준 시간
-    LocalDateTime forecastedDateTime = items.get(0).getBaseDateTime();
+    WeatherResponse.Item firstItem = items.get(0);
+    LocalDateTime forecastedDateTime = BaseTimeUtils.toDateTime(firstItem.getBaseDate(), firstItem.getBaseTime());
 
     // 시간별 생성
     Map<LocalDateTime, Map<String, String>> forecastMap = new HashMap<>();
 
     for (WeatherResponse.Item item : items) {
       //예보 시간
-      LocalDateTime forecastDateTime = item.getFcstDateTime();
+      LocalDateTime forecastDateTime = BaseTimeUtils.toDateTime(item.getFcstDate(), item.getFcstTime());
 
       forecastMap
           .computeIfAbsent(forecastDateTime, k -> new HashMap<>())
