@@ -1,6 +1,5 @@
 package com.part4.team05.sb01otbooteam05.domain.user.dto;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;

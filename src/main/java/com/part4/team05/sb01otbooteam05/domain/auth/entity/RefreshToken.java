@@ -17,7 +17,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "refresh_tokens", indexes = {
-    @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id")
+    @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id"),
+    @Index(name = "idx_refresh_tokens_token", columnList = "token")
 })
 @Getter
 @NoArgsConstructor
@@ -36,6 +37,16 @@ public class RefreshToken extends BaseEntity {
   private LocalDateTime expiresAt;
 
   @Column(nullable = false)
-  private Boolean revoked;
+  @Builder.Default
+  private Boolean revoked = false;
 
+  // 토큰 무효화
+  public void revoke() {
+    this.revoked = true;
+  }
+
+  // 토큰 유효성 확인
+  public boolean isValid() {
+    return !revoked && LocalDateTime.now().isBefore(expiresAt);
+  }
 }

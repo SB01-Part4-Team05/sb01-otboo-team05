@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,6 +39,7 @@ public class UserController {
    * 프로필 조회
    */
   @GetMapping("/{userId}/profiles")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ProfileDto> getProfile(@PathVariable UUID userId) {
     ProfileDto profile = userService.getProfile(userId);
     return ResponseEntity.ok(profile);
@@ -47,6 +49,7 @@ public class UserController {
    * 프로필 업데이트
    */
   @PatchMapping(value = "/{userId}/profiles", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<ProfileDto> updateProfile(
       @PathVariable UUID userId,
       @RequestPart(value = "request") @Valid ProfileUpdateRequest request,
