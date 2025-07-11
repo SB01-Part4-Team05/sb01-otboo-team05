@@ -13,6 +13,7 @@ import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -27,6 +28,7 @@ public class FollowServiceImpl implements FollowService {
     private final UserRepository userRepository;
     private final FollowMapper followMapper;
 
+    @Transactional
     @Override
     public FollowDto createFollow(FollowCreateRequest request) {
         UUID followerId = request.followerId();
