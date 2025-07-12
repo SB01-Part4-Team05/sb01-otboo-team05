@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.WeatherApiClient;
-import com.part4.team05.sb01otbooteam05.domain.weather.WeatherCategoryMapper;
+import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherCategoryMapper;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;

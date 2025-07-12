@@ -69,11 +69,11 @@ public class UserServiceImpl implements UserService {
     return UserDto.from(savedUser);
   }
 
-	@Override
-    @Transactional(readOnly = true)
-	public User getUserEntityByIdOrThrow(UUID userId) {
-      return userRepository.findById(userId).orElseThrow(() -> UserNotFoundException.withId(userId));
-	}
+  @Override
+  @Transactional(readOnly = true)
+  public User getUserEntityByIdOrThrow(UUID userId) {
+    return userRepository.findById(userId).orElseThrow(() -> UserNotFoundException.withId(userId));
+  }
 
   /**
    * 프로필 조회

@@ -1,5 +1,16 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.mapper;
 
+import static com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper.toHumidityDto;
+import static com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper.toPrecipitationDto;
+import static com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper.toTemperatureDto;
+import static com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper.toWindSpeedDto;
+
+import com.part4.team05.sb01otbooteam05.domain.ootd.mapper.OotdMapper;
+import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
+import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
+import com.part4.team05.sb01otbooteam05.domain.weather.dto.WindSpeedDto;
+import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
+import java.util.Collections;
 import java.util.List;
 
 import org.mapstruct.Mapper;
@@ -7,39 +18,43 @@ import org.mapstruct.Mapper;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.AuthorDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.entity.Feed;
-import com.part4.team05.sb01otbooteam05.domain.ootd.dto.OotdDto;
-import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
-import com.part4.team05.sb01otbooteam05.domain.ootd.mapper.OotdMapper;
-import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
-import com.part4.team05.sb01otbooteam05.domain.weather.Mapper.WeatherMapper;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
-import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
-@Mapper(componentModel = "spring", uses = {WeatherMapper.class, OotdMapper.class})
+@Mapper(componentModel = "spring", uses = OotdMapper.class)
 public interface FeedMapper {
+
+	@Mapping(target = "likeCount", ignore = true)
+	@Mapping(target = "commentCount", ignore = true)
+	@Mapping(target = "likedByMe",ignore = true)
+	@Mapping(source = "weather", target = "weather",qualifiedByName = "weatherToDto")
+	FeedDto toDto(Feed feed);
 
 	List<FeedDto> toDtoList(List<Feed> feeds);
 
-	AuthorDto toDto(User user);
-
-	WeatherDto toDto(Weather weather);
+	@Mapping(source = "weather.windSpeed", target = "weather.windSpeed", qualifiedByName = "windSpeedDtoToDouble")
+	Feed toEntity(FeedDto feedDto);
 
 	OotdDto toDto(Ootd ootd);
 
-	List<OotdDto> toOotdDtoList(List<Ootd> ootds);
-
-	default FeedDto toDto(Feed feed, Long likeCount, Integer commentCount, Boolean likedByMe) {
-		return new FeedDto(
-			feed.getId(),
-			feed.getCreatedAt(),
-			feed.getUpdatedAt(),
-			toDto(feed.getAuthor()),
-			toDto(feed.getWeather()),
-			toOotdDtoList(feed.getOotds()),
-			feed.getContent(),
-			likeCount,
-			commentCount,
-			likedByMe
+	@Named("weatherToDto")
+	default WeatherDto toWeatherDto(Weather weather) {
+		return new WeatherDto(
+				weather.getId(),
+				weather.getForecastedAt(),
+				weather.getForecastAt(),
+				new WeatherAPILocation(Double.valueOf(weather.getLocationX()),Double.valueOf(weather.getLocationY()),
+						weather.getLocationX(),weather.getLocationY(), Collections.emptyList()),
+				weather.getSkyStatusType(),
+				toPrecipitationDto(weather),
+				toHumidityDto(weather),
+				toTemperatureDto(weather),
+				toWindSpeedDto(weather)
 		);
+	}
+
+	@Named("windSpeedDtoToDouble")
+	default Double map(WindSpeedDto dto) {
+		return dto != null ? dto.speed() : null;
 	}
 }
