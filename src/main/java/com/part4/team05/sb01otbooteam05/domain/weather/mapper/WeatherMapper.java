@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.weather.mapper;
+package com.part4.team05.sb01otbooteam05.domain.weather.Mapper;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.HumidityDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.PrecipitationDto;
