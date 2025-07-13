@@ -50,8 +50,8 @@ CREATE TABLE refresh_tokens (
 CREATE TABLE weathers
 (
     id         UUID PRIMARY KEY,
-    location_x INTEGER,
-    location_y INTEGER,
+    location_x INTEGER NOT NULL,
+    location_y INTEGER NOT NULL,
     forecasted_at TIMESTAMP NOT NULL,
     forecast_at TIMESTAMP NOT NULL,
     sky_status VARCHAR(20) NOT NULL,
@@ -59,9 +59,9 @@ CREATE TABLE weathers
     precipitation_amount DOUBLE PRECISION NOT NULL,
     precipitation_probability DOUBLE PRECISION NOT NULL,
     humidity_current DOUBLE PRECISION NOT NULL,
-    humidity_compared_to_day_before DOUBLE PRECISION NOT NULL,
+    humidity_compared_to_day_before DOUBLE PRECISION,
     temperature_current DOUBLE PRECISION NOT NULL,
-    temperature_compared_to_day_before DOUBLE PRECISION NOT NULL,
+    temperature_compared_to_day_before DOUBLE PRECISION,
     temperature_min DOUBLE PRECISION NOT NULL,
     temperature_max DOUBLE PRECISION NOT NULL,
     wind_speed DOUBLE PRECISION NOT NULL,
