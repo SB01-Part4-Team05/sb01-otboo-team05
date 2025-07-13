@@ -34,9 +34,22 @@ public class WeatherCategoryMapper {
     try {
       if (pcpCode.equals("강수없음")) {
         return 0.0;
-      } else {
-        return Double.parseDouble(pcpCode);
       }
+
+      if (pcpCode.equals("1mm 미만")) {
+        return 0.5;
+      }
+
+      if (pcpCode.endsWith("mm 이상")) {
+        pcpCode = pcpCode.replace("mm 이상", "").trim();
+      }
+
+      if (pcpCode.endsWith("mm")) {
+        pcpCode = pcpCode.replace("mm", "").trim();
+      }
+
+      return Double.parseDouble(pcpCode);
+
     } catch (NumberFormatException e) {
       throw new IllegalArgumentException("알수없는 코드값: " + pcpCode);
     }
