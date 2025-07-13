@@ -2,8 +2,15 @@ package com.part4.team05.sb01otbooteam05.domain.weather.service;
 
 import static java.lang.Double.*;
 
+import com.part4.team05.sb01otbooteam05.domain.user.service.KakaoApiService;
+import com.part4.team05.sb01otbooteam05.domain.user.util.LccGridConverter;
+import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
+import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
+import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +38,7 @@ public class WeatherService {
 
   private final WeatherApiClient weatherApiClient;
   private final WeatherRepository weatherRepository;
+  private final KakaoApiService kakaoApiService;
 
   @Transactional
   public List<Weather> generateWeather(int x, int y) {
@@ -163,4 +171,47 @@ public class WeatherService {
     return weatherRepository.findById(weatherId)
         .orElseThrow(() -> WeatherNotFoundException.withId(weatherId));
   }
+
+  public List<WeatherDto> getWeathers(double longitude, double latitude) {
+
+    WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
+    LocalDateTime now = LocalDateTime.now();
+    LocalTime requestedTime = now.toLocalTime().truncatedTo(ChronoUnit.HOURS);
+
+    List<WeatherDto> result = new ArrayList<>();
+
+    // 기상청 날씨 정보가 3일 뒤부터는 매 시간마다 정보를 주지 않아 00시로 고정
+    for (int i = 0; i <= 4; i++) {
+      LocalDate targetDate = now.toLocalDate().plusDays(i);
+      LocalTime targetTime = i < 2 ? requestedTime : LocalTime.MIDNIGHT;
+      LocalDateTime targetForecastAt = LocalDateTime.of(targetDate, targetTime);
+
+      log.info("요청 기준 forecastAt (targetForecastAt): {}, x = {}, y = {}", targetForecastAt, weatherAPILocation.x(), weatherAPILocation.y());
+
+      weatherRepository.findByLocationXAndLocationYAndForecastAt(
+          weatherAPILocation.x(), weatherAPILocation.y(), targetForecastAt)
+          .stream()
+          .filter(weather -> weather.getForecastAt().equals(targetForecastAt))
+          .findFirst()
+          .map(weather -> WeatherMapper.toDto(weather, weatherAPILocation))
+          .ifPresent(result::add);
+    }
+    return result;
+  }
+
+  public WeatherAPILocation getWeatherAPILocation(double longitude, double latitude) {
+    List<String> locationNames = kakaoApiService.getLocationNames(latitude, longitude);
+    LccGridConverter.XY gridXY = LccGridConverter.toGrid(latitude, longitude);
+
+    return new WeatherAPILocation(
+        latitude,
+        longitude,
+        gridXY.x,
+        gridXY.y,
+        locationNames
+    );
+
+  }
+
+
 }
