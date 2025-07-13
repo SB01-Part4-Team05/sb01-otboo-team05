@@ -12,8 +12,13 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "follows", uniqueConstraints = {
+@Table(
+        name = "follows", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"follower_id", "followee_id"})
+},
+indexes = {
+        @jakarta.persistence.Index(name = "idx_follows_followee", columnList = "followee_id"),
+        @jakarta.persistence.Index(name = "idx_follows_follower", columnList = "follower_id")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
