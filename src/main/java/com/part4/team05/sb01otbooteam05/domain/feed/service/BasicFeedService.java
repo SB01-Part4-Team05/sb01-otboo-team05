@@ -1,16 +1,9 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.service;
 
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Stream;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
-import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedsPageResponse;
+import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FindFeedsRequest;
@@ -18,6 +11,7 @@ import com.part4.team05.sb01otbooteam05.domain.feed.entity.Feed;
 import com.part4.team05.sb01otbooteam05.domain.feed.exception.FeedNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.feed.mapper.FeedMapper;
 import com.part4.team05.sb01otbooteam05.domain.feed.repository.FeedRepository;
+import com.part4.team05.sb01otbooteam05.domain.feed.repository.SearchFeedRepository;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDto;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentsPageResponse;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCreateRequest;
@@ -32,9 +26,14 @@ import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -50,12 +49,13 @@ public class BasicFeedService implements FeedService {
 	private final FeedCommentRepository feedCommentRepository;
 	private final FeedMapper feedMapper;
 	private final CommentMapper commentMapper;
+	private final SearchFeedRepository searchFeedRepository;
 
 
 	@Override
 	@Transactional(readOnly = true)
-	public FeedsPageResponse findFeeds(UUID userId, FindFeedsRequest request) {
-		return null;
+	public FeedDtoCursorResponse findFeeds(UUID userId, FindFeedsRequest request) {
+		return searchFeedRepository.findFeedDtosWithCursor(userId, request);
 	}
 
 	// 피드 생성
@@ -89,7 +89,7 @@ public class BasicFeedService implements FeedService {
 		}
 
 		log.info("피드 생성 성공: feedId={}", newFeed.getId());
-		return feedMapper.toDto(newFeed, 0L, 0, true);
+		return feedMapper.toFeedDto(newFeed, 0L, 0, true);
 	}
 
 	// 피드 삭제
@@ -143,7 +143,7 @@ public class BasicFeedService implements FeedService {
 		feed.setLikeCount(currentLikeCount);
 
 		log.info("피드 좋아요 성공: feedId={}", feed.getId());
-		return feedMapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
+		return feedMapper.toFeedDto(feed, currentLikeCount, commentCount, likedByMe);
 	}
 
 	@Override
@@ -168,7 +168,7 @@ public class BasicFeedService implements FeedService {
 		feed.setLikeCount(currentLikeCount);
 
 		log.info("피드 좋아요 취소 성공: feedId={}", feed.getId());
-		return feedMapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
+		return feedMapper.toFeedDto(feed, currentLikeCount, commentCount, likedByMe);
 	}
 
 	@Override
@@ -186,7 +186,7 @@ public class BasicFeedService implements FeedService {
 
 		// 3. 댓글 Dto 반환
 		log.info("댓글 생성 성공: commentId={}", newComment.getId());
-		return commentMapper.toDto(newComment);
+		return commentMapper.toCommentDto(newComment);
 	}
 
 	@Override
@@ -208,7 +208,7 @@ public class BasicFeedService implements FeedService {
 		Boolean likedByMe = feedLikeRepository.findByFeedAndAuthor(feed, author).isPresent();
 
 		log.info("피드 수정 성공: feedId={}", feed.getId());
-		return feedMapper.toDto(feed, likeCount, commentCount, likedByMe);
+		return feedMapper.toFeedDto(feed, likeCount, commentCount, likedByMe);
 	}
 
 	@Override

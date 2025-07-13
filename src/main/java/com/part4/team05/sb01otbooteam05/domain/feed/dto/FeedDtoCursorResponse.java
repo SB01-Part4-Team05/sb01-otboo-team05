@@ -1,13 +1,12 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.dto;
 
-import java.util.List;
-
-import org.springframework.data.domain.Sort;
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.query.SortDirection;
 
-public record FeedsPageResponse(
+import java.util.List;
+
+public record FeedDtoCursorResponse(
 
 	@NotNull
 	@Valid
@@ -27,6 +26,6 @@ public record FeedsPageResponse(
 	String sortBy,
 
 	@NotNull
-	Sort.Direction direction
+	SortDirection direction
 ) {
 }
