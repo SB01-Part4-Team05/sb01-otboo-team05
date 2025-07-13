@@ -140,7 +140,8 @@ CREATE TABLE feeds
     author_id UUID NOT NULL REFERENCES users(id),
     content TEXT,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    updated_at TIMESTAMP NOT NULL,
+    like_count BIGINT
 );
 
 CREATE TABLE ootds

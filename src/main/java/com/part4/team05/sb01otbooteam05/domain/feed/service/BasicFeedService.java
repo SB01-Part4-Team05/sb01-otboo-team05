@@ -139,6 +139,9 @@ public class BasicFeedService implements FeedService {
 		Integer commentCount = feedCommentRepository.countByFeed(feed);
 		Boolean likedByMe = true;
 
+		// 5. 조회한 김에 피드 내 좋아요 수 필드 최신화
+		feed.setLikeCount(currentLikeCount);
+
 		log.info("피드 좋아요 성공: feedId={}", feed.getId());
 		return feedMapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
 	}
@@ -160,6 +163,9 @@ public class BasicFeedService implements FeedService {
 		// 4. 피드 Dto 반환
 		Integer commentCount = feedCommentRepository.countByFeed(feed);
 		Boolean likedByMe = false;
+
+		// 5. 조회한 김에 피드 내 좋아요 수 필드 최신화
+		feed.setLikeCount(currentLikeCount);
 
 		log.info("피드 좋아요 취소 성공: feedId={}", feed.getId());
 		return feedMapper.toDto(feed, currentLikeCount, commentCount, likedByMe);
