@@ -40,7 +40,8 @@ public class WeatherService {
   }
 
   // 기상청 API 응답값 저장
-  public List<Weather> parsedForecastDtoToWeathers(ParsedForecastDto parsedForecastDto , int x, int y) {
+  public List<Weather> parsedForecastDtoToWeathers(ParsedForecastDto parsedForecastDto, int x,
+      int y) {
 
     //예보 등록 기준 시간
     LocalDateTime forecastedAt = parsedForecastDto.forecastedDateTime();
@@ -63,26 +64,29 @@ public class WeatherService {
       double tmp = parseDouble(values.get("TMP"));
       double reh = parseDouble(values.get("REH"));
 
-      Double tmpDiff;
-      Double rehDiff;
+      Double tmpDiff = null;
+      Double rehDiff = null;
 
-      // 전날 같은 시간의 온도, 습도 비교 계산
-      // 예보 등록 기준일은 db에 있는 정보를 가져와서 비교. 없으면 null
-      if (!forecastAt.toLocalDate().equals(forecastedAt.toLocalDate())) {
-        Optional<Weather> yesterday = weatherRepository.findByLocationXAndLocationYAndForecastAt(
-            x, y, forecastAt.minusDays(1));
+      LocalDateTime yesterdayForecastAt = forecastAt.minusDays(1);
 
-        tmpDiff = yesterday.map(weather -> tmp - weather.getTemperatureCurrent()).orElse(null);
-        rehDiff = yesterday.map(weather -> reh - weather.getHumidityCurrent()).orElse(null);
+      Map<String, String> yesterdayData = forecastMap.get(yesterdayForecastAt);
+
+      if (yesterdayData != null) {
+        // 기상청 응답 안에 전날 데이터가 있으면 그걸로 계산
+        if (yesterdayData.containsKey("TMP")) {
+          tmpDiff = tmp - parseDouble(yesterdayData.get("TMP"));
+        }
+        if (yesterdayData.containsKey("REH")) {
+          rehDiff = reh - parseDouble(yesterdayData.get("REH"));
+        }
       } else {
-        Map<String, String> yesterdayData = forecastMap.get(forecastAt.minusDays(1));
-        tmpDiff = (yesterdayData != null && yesterdayData.containsKey("TMP"))
-            ? tmp - parseDouble(yesterdayData.get("TMP"))
-            : null;
-        rehDiff = (yesterdayData != null && yesterdayData.containsKey("REH"))
-            ? reh - parseDouble(yesterdayData.get("REH"))
-            : null;
+        // forecastMap에 전날 정보가 없으면 DB에서 조회
+        Optional<Weather> yesterday = weatherRepository.findByLocationXAndLocationYAndForecastAt(x, y, yesterdayForecastAt);
+
+        tmpDiff = yesterday.map(w -> tmp - w.getTemperatureCurrent()).orElse(null);
+        rehDiff = yesterday.map(w -> reh - w.getHumidityCurrent()).orElse(null);
       }
+
       // Weather 엔티티 생성
       Weather weather = Weather.builder()
           .locationX(x)
@@ -156,6 +160,7 @@ public class WeatherService {
 
   @Transactional(readOnly = true)
   public Weather getWeatherEntityByIdOrThrow(UUID weatherId) {
-    return weatherRepository.findById(weatherId).orElseThrow(() -> WeatherNotFoundException.withId(weatherId));
+    return weatherRepository.findById(weatherId)
+        .orElseThrow(() -> WeatherNotFoundException.withId(weatherId));
   }
 }
