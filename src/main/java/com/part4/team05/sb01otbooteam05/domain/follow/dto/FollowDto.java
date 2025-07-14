@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public record FollowDto (
     UUID id,
-    UUID followee,
-    UUID follower
+    UUID followee,  // UserSummary followee,
+    UUID follower   // UserSummary follower
 ) {
 }
