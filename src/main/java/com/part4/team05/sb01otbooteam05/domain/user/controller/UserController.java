@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.user.controller;
 
+import com.part4.team05.sb01otbooteam05.domain.user.dto.ChangePasswordRequest;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.ProfileDto;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.ProfileUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserCreateRequest;
@@ -57,5 +58,14 @@ public class UserController {
 
     ProfileDto updatedProfile = userService.updateProfile(userId, request, image);
     return ResponseEntity.ok(updatedProfile);
+  }
+
+  @PatchMapping("/{userId}/password")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void changePassword(
+      @PathVariable UUID userId,
+      @RequestBody ChangePasswordRequest request
+  ) {
+    userService.changePassword(userId, request.password());
   }
 }
