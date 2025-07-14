@@ -72,7 +72,7 @@ public class SecurityConfig {
             ).permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
 
-            // ADMIN 전용 경로들을 여기에 직접 명시
+            // ADMIN 여부 확인
             .requestMatchers("/api/weathers/location").authenticated()
             .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
             .requestMatchers(HttpMethod.PATCH, "/api/users/{userId}/role").hasRole("ADMIN")
