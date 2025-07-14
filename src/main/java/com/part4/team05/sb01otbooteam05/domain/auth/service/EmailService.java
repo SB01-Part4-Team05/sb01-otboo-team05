@@ -2,18 +2,24 @@ package com.part4.team05.sb01otbooteam05.domain.auth.service;
 
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailService {
   private final JavaMailSender mailSender;
 
   public void sendTempPassword(String to, String tempPassword, LocalDateTime expireAt) {
-    String subject = "[OTBOO] 임시 비밀번호 안내";
-    String text = """
+    if (to == null || tempPassword == null || expireAt == null) {
+            throw new IllegalArgumentException("이메일 전송에 필요한 정보가 누락되었습니다");
+        }
+          try {
+            String subject = "[OTBOO] 임시 비밀번호 안내";
+            String text = """
             안녕하세요.
             요청하신 임시 비밀번호는 아래와 같습니다.
 
@@ -22,12 +28,16 @@ public class EmailService {
 
             로그인 후 반드시 새 비밀번호로 변경해 주세요.
             """.formatted(tempPassword, expireAt);
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(text);
 
-    SimpleMailMessage message = new SimpleMailMessage();
-    message.setTo(to);
-    message.setSubject(subject);
-    message.setText(text);
-
-    mailSender.send(message);
+            mailSender.send(message);
+          } catch (Exception e) {
+            log.error("이메일 전송 실패: to={}", to, e);
+            throw new RuntimeException("이메일 전송에 실패했습니다", e);
+          }
   }
 }
+
