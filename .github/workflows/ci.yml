@@ -11,6 +11,12 @@ env:
   KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
   WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
   WEATHER_API_URL: ${{ secrets.WEATHER_API_URL }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+  MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+  ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+  ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+  ADMIN_NAME: ${{ secrets.ADMIN_NAME }}
 
 jobs:
   test:
