@@ -42,7 +42,7 @@ public class FollowController {
     }
 
     @GetMapping("/followings")
-    public FollowListResponse getFollowings(
+    public ResponseEntity<FollowListResponse> getFollowings(
             @RequestParam @NotNull UUID followerId,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) UUID idAfter,
@@ -50,11 +50,12 @@ public class FollowController {
             @RequestParam(required = false) String nameLike
     ) {
         log.info("팔로잉 목록 조회 요청: followerId={}, idAfter={}, limit={}, nameLike={}", followerId, idAfter, limit, nameLike);
-        return followService.getFollowings(followerId, cursor, idAfter, limit, nameLike);
+        FollowListResponse response = followService.getFollowings(followerId, cursor, idAfter, limit, nameLike);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/followers")
-    public FollowListResponse getFollowers(
+    public ResponseEntity<FollowListResponse> getFollowers(
             @RequestParam @NotNull UUID followeeId,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) UUID idAfter,
@@ -62,6 +63,7 @@ public class FollowController {
             @RequestParam(required = false) String nameLike
     ) {
         log.info("팔로워 목록 조회 요청: followeeId={}, idAfter={}, limit={}, nameLike={}", followeeId, idAfter, limit, nameLike);
-        return followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike);
+        FollowListResponse response = followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike);
+        return ResponseEntity.ok(response);
     }
 }

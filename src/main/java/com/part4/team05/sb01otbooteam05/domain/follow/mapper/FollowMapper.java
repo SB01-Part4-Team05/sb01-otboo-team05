@@ -5,17 +5,17 @@ import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowDto;
 import com.part4.team05.sb01otbooteam05.domain.follow.entity.Follow;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserSummary;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
-import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
 import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class FollowMapper {
-
-    private final UserRepository userRepository;
 
     public Follow toEntity(FollowCreateRequest request) {
         if(request == null || request.followerId() == null || request.followeeId() == null) {
@@ -28,15 +28,17 @@ public class FollowMapper {
         );
     }
 
-    public FollowDto toDto(Follow entity) {
+    public FollowDto toDto(Follow entity, Map<UUID, User> userMap) {
         if(entity == null) {
             throw new OtbooException(ErrorCode.INVALID_REQUEST);
         }
 
-        var follower = userRepository.findById(entity.getFollower())
-                .orElseThrow(() -> new OtbooException(ErrorCode.USER_NOT_FOUND));
-        var followee = userRepository.findById(entity.getFollowee())
-                .orElseThrow(() -> new OtbooException(ErrorCode.USER_NOT_FOUND));
+        User follower = userMap.get(entity.getFollower());
+        User followee = userMap.get(entity.getFollowee());
+
+        if(follower == null || followee == null) {
+            throw new OtbooException(ErrorCode.USER_NOT_FOUND);
+        }
 
         return new FollowDto(
                 entity.getId(),
