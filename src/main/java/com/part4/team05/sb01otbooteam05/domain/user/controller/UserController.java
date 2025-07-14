@@ -61,10 +61,11 @@ public class UserController {
   }
 
   @PatchMapping("/{userId}/password")
+  @PreAuthorize("isAuthenticated() and #userId == authentication.principal.id")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void changePassword(
       @PathVariable UUID userId,
-      @RequestBody ChangePasswordRequest request
+      @RequestBody @Valid ChangePasswordRequest request
   ) {
     userService.changePassword(userId, request.password());
   }

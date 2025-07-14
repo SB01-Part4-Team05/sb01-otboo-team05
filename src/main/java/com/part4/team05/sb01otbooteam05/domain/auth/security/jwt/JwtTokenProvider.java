@@ -29,7 +29,7 @@ public class JwtTokenProvider {
   public void init() {
     String secret = jwtProperties.getSecret();
     if (secret != null && !secret.isEmpty()) {
-      log.info("JWT Secret Key Loaded: {}...", secret.substring(0, 10));
+      log.info("JWT Secret Key successfully loaded and configured");
     } else {
       log.error("JWT Secret Key IS NOT LOADED. Check your application.yml file.");
     }

@@ -125,7 +125,7 @@ public class AuthController {
    */
   @PostMapping("/reset-password")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void resetPassword(@RequestBody ResetPasswordRequest request) {
+  public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
     authService.resetPassword(request.email());
   }
 }
