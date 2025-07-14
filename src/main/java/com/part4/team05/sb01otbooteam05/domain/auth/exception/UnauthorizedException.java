@@ -8,4 +8,9 @@ public class UnauthorizedException extends OtbooException {
   public UnauthorizedException() {
     super(ErrorCode.UNAUTHORIZED);
   }
+
+  public UnauthorizedException(String detailMessage) {
+    super(ErrorCode.UNAUTHORIZED);
+    this.addDetail("detail", detailMessage);
+  }
 }
