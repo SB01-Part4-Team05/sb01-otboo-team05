@@ -10,9 +10,11 @@ import com.part4.team05.sb01otbooteam05.domain.auth.exception.InvalidTokenExcept
 import com.part4.team05.sb01otbooteam05.domain.auth.exception.UnauthorizedException;
 import com.part4.team05.sb01otbooteam05.domain.auth.repository.RefreshTokenRepository;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
+import com.part4.team05.sb01otbooteam05.domain.user.exception.UserNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,8 @@ public class AuthServiceImpl implements AuthService {
   private final JwtTokenProvider jwtTokenProvider;
   private final PasswordEncoder passwordEncoder;
   private final JwtProperties jwtProperties;
+  private final EmailService emailService;
+
 
   /**
    * 로그인
@@ -46,6 +50,12 @@ public class AuthServiceImpl implements AuthService {
     // 비밀번호 검증
     if (!passwordEncoder.matches(request.password(), user.getPassword())) {
       throw new UnauthorizedException();
+    }
+
+    // 임시 비밀번호 만료 체크 추가
+    if (user.isTempPasswordExpired()) {
+      log.warn("만료된 임시 비밀번호로 로그인 시도: userId={}, email={}", user.getId(), user.getEmail());
+      throw new UnauthorizedException("임시 비밀번호가 만료되었습니다. 비밀번호를 다시 초기화해주세요.");
     }
 
     // 계정 잠금 확인
@@ -74,8 +84,8 @@ public class AuthServiceImpl implements AuthService {
 
     refreshTokenRepository.save(refreshToken);
 
-    log.info("로그인 성공: userId={}, email={}, 강제로그아웃={}",
-        user.getId(), user.getEmail(), hasExistingLogin);
+    log.info("로그인 성공: userId={}, email={}, 강제로그아웃={}, 임시비밀번호여부={}",
+        user.getId(), user.getEmail(), hasExistingLogin, user.isTempPassword());
 
     return SignInResponse.builder()
         .accessToken(accessToken)
@@ -174,4 +184,22 @@ public class AuthServiceImpl implements AuthService {
     return newAccessToken;
   }
 
+  /**
+   * 비밀번호 초기화
+   */
+  @Override
+  @Transactional
+  public void resetPassword(String email) {
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> UserNotFoundException.withEmail(email));
+
+    String tempPassword = RandomStringUtils.randomAlphanumeric(8); // 임시 비번 생성
+    String encodedTempPassword = passwordEncoder.encode(tempPassword); // 반드시 암호화
+    LocalDateTime expireAt = LocalDateTime.now().plusHours(2);
+
+    user.setTempPassword(encodedTempPassword, expireAt); // 암호화된 비번 저장!
+    userRepository.save(user);
+
+    emailService.sendTempPassword(user.getEmail(), tempPassword, expireAt); // 평문은 메일로만 발송
+  }
 }
