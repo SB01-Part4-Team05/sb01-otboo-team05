@@ -35,7 +35,7 @@ public class WeatherController {
       @RequestParam double latitude
   ) {
     log.info("날씨 위치 정보 조회 longitude = {}, latitude = {}", longitude, latitude);
-    return ResponseEntity.ok(weatherService.getWeatherAPILocation(longitude, latitude));
+    return ResponseEntity.ok(weatherService.getWeatherAPILocationAndGenerateWeather(longitude, latitude));
   }
 
 }

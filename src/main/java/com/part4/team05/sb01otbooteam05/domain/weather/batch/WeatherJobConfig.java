@@ -23,6 +23,7 @@ public class WeatherJobConfig {
   private final WeatherItemReader reader;
   private final WeatherItemProcessor processor;
   private final WeatherItemWriter writer;
+  private final SingleLocationWeatherItemReader singleLocationWeatherItemReader;
 
   @Bean
   public Job weatherJob() {
@@ -36,6 +37,23 @@ public class WeatherJobConfig {
     return new StepBuilder("weatherStep", jobRepository)
         .<Pair<Integer, Integer>, List<Weather>>chunk(10, platformTransactionManager)
         .reader(reader)
+        .processor(processor)
+        .writer(writer)
+        .build();
+  }
+
+  @Bean
+  public Job singleLocationWeatherJob() {
+    return new JobBuilder("singleLocationWeatherJob", jobRepository)
+        .start(singelLocationWeatherStep())
+        .build();
+  }
+
+  @Bean
+  public Step singelLocationWeatherStep() {
+    return new StepBuilder("singleLocationWeatherStep", jobRepository)
+        .<Pair<Integer, Integer>, List<Weather>>chunk(5, platformTransactionManager)
+        .reader(singleLocationWeatherItemReader)
         .processor(processor)
         .writer(writer)
         .build();

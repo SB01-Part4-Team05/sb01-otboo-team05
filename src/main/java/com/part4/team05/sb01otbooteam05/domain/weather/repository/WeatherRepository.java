@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface WeatherRepository extends JpaRepository<Weather, UUID> {
 
-  boolean existsByLocationXAndLocationY(Integer locationX, Integer locationY);
-
   Optional<Weather> findByLocationXAndLocationYAndForecastAt(Integer locationX, Integer locationY, LocalDateTime forecastAt);
+
+  boolean existsByLocationXAndLocationYAndForecastedAt(Integer locationX, Integer locationY, LocalDateTime forecastedAt);
 }

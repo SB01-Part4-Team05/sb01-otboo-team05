@@ -163,8 +163,8 @@ public class WeatherService {
     return tmpPerDay;
   }
 
-  public boolean existWeatherLocation(int x, int y) {
-    return weatherRepository.existsByLocationXAndLocationY(x, y);
+  public boolean existWeather(int x, int y, LocalDateTime forecastedAt) {
+    return weatherRepository.existsByLocationXAndLocationYAndForecastedAt(x, y, forecastedAt);
   }
 
   @Transactional(readOnly = true)
@@ -201,11 +201,19 @@ public class WeatherService {
     return result;
   }
 
-  @Transactional(readOnly = true)
+  public WeatherAPILocation getWeatherAPILocationAndGenerateWeather(double longitude, double latitude) {
+    WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
+
+
+    return weatherAPILocation;
+  }
+
+
   public WeatherAPILocation getWeatherAPILocation(double longitude, double latitude) {
     List<String> locationNames = kakaoApiService.getLocationNames(latitude, longitude);
     LccGridConverter.XY gridXY = LccGridConverter.toGrid(latitude, longitude);
 
+    log.info("WeatherAPILocation 생성 : longitude = {}, latitude = {}",longitude, latitude);
     return new WeatherAPILocation(
         latitude,
         longitude,

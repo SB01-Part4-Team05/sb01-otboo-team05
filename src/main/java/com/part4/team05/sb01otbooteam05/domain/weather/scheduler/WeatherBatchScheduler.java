@@ -17,8 +17,7 @@ public class WeatherBatchScheduler {
   private final JobLauncher jobLauncher;
   private final Job weatherJob;
 
-//  @Scheduled(cron = "0 5 2,5,8,11,14,17,20,23 * * *")
-  @Scheduled(cron = "0 */5 * * * *")
+  @Scheduled(cron = "0 5 2,5,8,11,14,17,20,23 * * *")
   public void batchWeatherForAllLocations() {
     try {
       JobParameters parameters = new JobParametersBuilder()
