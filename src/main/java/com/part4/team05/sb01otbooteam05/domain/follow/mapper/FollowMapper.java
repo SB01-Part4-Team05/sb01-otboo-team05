@@ -3,6 +3,9 @@ package com.part4.team05.sb01otbooteam05.domain.follow.mapper;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowDto;
 import com.part4.team05.sb01otbooteam05.domain.follow.entity.Follow;
+import com.part4.team05.sb01otbooteam05.domain.user.dto.UserSummary;
+import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
+import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
 import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +15,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class FollowMapper {
 
-    public Follow toEntity(FollowCreateRequest request) {
-        if(request == null) {
-            throw new OtbooException(ErrorCode.INVALID_REQUEST);
-        }
+    private final UserRepository userRepository;
 
-        if(request.followerId() == null || request.followeeId() == null) {
+    public Follow toEntity(FollowCreateRequest request) {
+        if(request == null || request.followerId() == null || request.followeeId() == null) {
             throw new OtbooException(ErrorCode.INVALID_REQUEST);
         }
 
@@ -32,10 +33,23 @@ public class FollowMapper {
             throw new OtbooException(ErrorCode.INVALID_REQUEST);
         }
 
+        var follower = userRepository.findById(entity.getFollower())
+                .orElseThrow(() -> new OtbooException(ErrorCode.USER_NOT_FOUND));
+        var followee = userRepository.findById(entity.getFollowee())
+                .orElseThrow(() -> new OtbooException(ErrorCode.USER_NOT_FOUND));
+
         return new FollowDto(
                 entity.getId(),
-                entity.getFollowee(),
-                entity.getFollower()
+                toUserSummary(followee),
+                toUserSummary(follower)
+        );
+    }
+
+    private UserSummary toUserSummary(User user) {
+        return new UserSummary(
+                user.getId(),
+                user.getName(),
+                user.getProfileImageUrl()
         );
     }
 }

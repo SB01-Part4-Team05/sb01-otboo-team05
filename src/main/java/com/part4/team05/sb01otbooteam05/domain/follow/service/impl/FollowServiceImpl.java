@@ -95,23 +95,27 @@ public class FollowServiceImpl implements FollowService {
         );
     }
 
+    // 팔로잉 목록 조회
     @Override
     public FollowListResponse getFollowings(UUID followerId, String cursor, UUID idAfter, int limit, String nameLike) {
-        log.debug("팔로잉 목록 조회 시작: followerId={}, limit={}, idAfter={}, nameLike={}", followerId, limit, idAfter, nameLike);
-
-        if(followerId == null) {
+        if(followerId == null || !userRepository.existsById(followerId)) {
+            log.warn("팔로잉 목록 조회 실패 - 존재하지 않는 사용자: followerId={}", followerId);
             throw new OtbooException(ErrorCode.USER_NOT_FOUND);
         }
 
-        List<Follow> follows = followRepository.findFollowings(followerId, idAfter, limit + 1, nameLike);
+        log.debug("팔로잉 목록 조회 시작: followerId={}, idAfter={}, limit={}, nameLike={}", followerId, idAfter, limit, nameLike);
+
+        List<Follow> follows = followRepository.findFollowings(followerId, idAfter, nameLike);
         boolean hasNext = follows.size() > limit;
-        if (hasNext) follows.remove(follows.size() - 1);
+        if (hasNext) follows = follows.subList(0, limit);
 
         List<FollowDto> dtos = follows.stream()
                 .map(followMapper::toDto)
                 .toList();
 
         UUID nextIdAfter = hasNext ? follows.get(follows.size() - 1).getId() : null;
+
+        log.info("팔로잉 조회 완료: count={}, hasNext={}", dtos.size(), hasNext);
         
         return new FollowListResponse(
                 dtos,
@@ -124,26 +128,28 @@ public class FollowServiceImpl implements FollowService {
         );
     }
 
+    // 팔로워 목록 조회
     @Override
     public FollowListResponse getFollowers(UUID followeeId, String cursor, UUID idAfter, int limit, String nameLike) {
-        log.debug("팔로워 목록 조회: followeeId={}, idAfter={}, limit={}, nameLike={}", followeeId, idAfter, limit, nameLike);
-
-        if(followeeId == null) {
+        if(followeeId == null || !userRepository.existsById(followeeId)) {
+            log.warn("팔로워 목록 조회 실패 - 존재하지 않는 사용자: followeeId={}", followeeId);
             throw new OtbooException(ErrorCode.USER_NOT_FOUND);
         }
 
-        List<Follow> follows = followRepository.findFollowers(followeeId, idAfter, limit + 1, nameLike);
-        boolean hasNext = follows.size() > limit;
-        if(hasNext) follows.remove(follows.size() - 1);
+        log.debug("팔로워 목록 조회 시작: followeeId={}, idAfter={}, limit={}, nameLike={}", followeeId, idAfter, limit, nameLike);
 
-        List<FollowDto> followDtos = follows.stream()
+        List<Follow> follows = followRepository.findFollowers(followeeId, idAfter, nameLike);
+        boolean hasNext = follows.size() > limit;
+        if(hasNext) follows = follows.subList(0, limit);
+
+        List<FollowDto> dtos = follows.stream()
                 .map(followMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
 
         UUID nextIdAfter = hasNext ? follows.get(follows.size() - 1).getId() : null;
 
         return new FollowListResponse(
-                followDtos,
+                dtos,
                 null,
                 nextIdAfter,
                 hasNext,

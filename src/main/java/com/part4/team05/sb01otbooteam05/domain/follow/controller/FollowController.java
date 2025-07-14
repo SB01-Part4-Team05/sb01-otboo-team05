@@ -49,7 +49,7 @@ public class FollowController {
             @RequestParam @Min(1) int limit,
             @RequestParam(required = false) String nameLike
     ) {
-        log.info("팔로잉 목록 조회 요청: followerId={}, limit={}, idAfter={}, nameLike={}", followerId, limit, idAfter, nameLike);
+        log.info("팔로잉 목록 조회 요청: followerId={}, idAfter={}, limit={}, nameLike={}", followerId, idAfter, limit, nameLike);
         return followService.getFollowings(followerId, cursor, idAfter, limit, nameLike);
     }
 
@@ -61,7 +61,7 @@ public class FollowController {
             @RequestParam @Min(1) int limit,
             @RequestParam(required = false) String nameLike
     ) {
-        log.info("팔로워 목록 조회 요청: followeeId={}, limit={}, idAfter={}, nameLike={}", followeeId, limit, idAfter, nameLike);
+        log.info("팔로워 목록 조회 요청: followeeId={}, idAfter={}, limit={}, nameLike={}", followeeId, idAfter, limit, nameLike);
         return followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike);
     }
 }
