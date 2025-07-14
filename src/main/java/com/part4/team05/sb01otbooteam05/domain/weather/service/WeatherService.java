@@ -19,6 +19,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +44,8 @@ public class WeatherService {
   private final WeatherApiClient weatherApiClient;
   private final WeatherRepository weatherRepository;
   private final KakaoApiService kakaoApiService;
+  private final JobLauncher jobLauncher;
+  private final Job singleLocationWeatherJob;
 
   @Transactional
   public List<Weather> generateWeather(int x, int y) {
@@ -70,8 +76,16 @@ public class WeatherService {
       LocalDateTime forecastAt = entry.getKey();
       Map<String, String> values = entry.getValue();
 
-      double tmp = parseDouble(values.get("TMP"));
-      double reh = parseDouble(values.get("REH"));
+      String tmpStr = values.get("TMP");
+      String rehStr = values.get("REH");
+
+      if (tmpStr == null || tmpStr.isBlank() || rehStr == null || rehStr.isBlank()) {
+        log.warn("기온 or 습도 값이 null 또는 빈 값임: TMP={}, REH={}, forecastAt={}", tmpStr, rehStr, forecastAt);
+        continue; // 해당 데이터는 스킵
+      }
+
+      double tmp = parseDouble(tmpStr);
+      double reh = parseDouble(rehStr);
 
       Double tmpDiff = null;
       Double rehDiff = null;
@@ -203,7 +217,24 @@ public class WeatherService {
 
   public WeatherAPILocation getWeatherAPILocationAndGenerateWeather(double longitude, double latitude) {
     WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
-
+    int x = weatherAPILocation.x();
+    int y = weatherAPILocation.y();
+    boolean exists = weatherRepository.existsByLocationXAndLocationY(x, y);
+    if (!exists) {
+      try {
+        JobParameters parameters = new JobParametersBuilder()
+            .addString("x", String.valueOf(x))
+            .addString("y", String.valueOf(y))
+            .addLong("timestamp", System.currentTimeMillis())
+            .toJobParameters();
+        log.info("단일 위치 배치 실행: x={}, y={}", x, y);
+        jobLauncher.run(singleLocationWeatherJob, parameters);
+      } catch (Exception e) {
+        log.error("단일 위치 날씨 배치 실행 실패", e);
+      }
+    } else {
+      log.info("해당 위치의 날씨 데이터 이미 존재함: x = {}, y = {}", x, y);
+    }
 
     return weatherAPILocation;
   }

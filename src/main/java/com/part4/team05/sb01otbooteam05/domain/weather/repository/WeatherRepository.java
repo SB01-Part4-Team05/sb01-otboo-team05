@@ -11,4 +11,6 @@ public interface WeatherRepository extends JpaRepository<Weather, UUID> {
   Optional<Weather> findByLocationXAndLocationYAndForecastAt(Integer locationX, Integer locationY, LocalDateTime forecastAt);
 
   boolean existsByLocationXAndLocationYAndForecastedAt(Integer locationX, Integer locationY, LocalDateTime forecastedAt);
+
+  boolean existsByLocationXAndLocationY(Integer locationX, Integer locationY);
 }
