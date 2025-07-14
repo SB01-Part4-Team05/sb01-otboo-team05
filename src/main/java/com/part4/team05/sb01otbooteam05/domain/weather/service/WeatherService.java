@@ -47,7 +47,7 @@ public class WeatherService {
     return parsedForecastDtoToWeathers(parsedForecastDto, x, y);
   }
 
-  // 기상청 API 응답값 저장
+  // 기상청 API 응답값 정제
   public List<Weather> parsedForecastDtoToWeathers(ParsedForecastDto parsedForecastDto, int x,
       int y) {
 
@@ -172,6 +172,7 @@ public class WeatherService {
         .orElseThrow(() -> WeatherNotFoundException.withId(weatherId));
   }
 
+  @Transactional(readOnly = true)
   public List<WeatherDto> getWeathers(double longitude, double latitude) {
 
     WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
@@ -199,6 +200,7 @@ public class WeatherService {
     return result;
   }
 
+  @Transactional(readOnly = true)
   public WeatherAPILocation getWeatherAPILocation(double longitude, double latitude) {
     List<String> locationNames = kakaoApiService.getLocationNames(latitude, longitude);
     LccGridConverter.XY gridXY = LccGridConverter.toGrid(latitude, longitude);
