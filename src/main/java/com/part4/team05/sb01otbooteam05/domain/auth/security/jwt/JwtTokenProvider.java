@@ -8,6 +8,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,16 @@ public class JwtTokenProvider {
 
   private final JwtProperties jwtProperties;
 
+  @PostConstruct
+  public void init() {
+    String secret = jwtProperties.getSecret();
+    if (secret != null && !secret.isEmpty()) {
+      log.info("JWT Secret Key Loaded: {}...", secret.substring(0, 10));
+    } else {
+      log.error("JWT Secret Key IS NOT LOADED. Check your application.yml file.");
+    }
+  }
+
   private SecretKey getSigningKey() {
     return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
   }
@@ -35,6 +46,7 @@ public class JwtTokenProvider {
 
     return Jwts.builder()
         .subject(user.getId().toString())
+        .claim("userId", user.getId().toString())
         .claim("email", user.getEmail())
         .claim("name", user.getName())
         .claim("role", user.getRole().name())
@@ -94,18 +106,6 @@ public class JwtTokenProvider {
           .getPayload();
     } catch (ExpiredJwtException e) {
       return e.getClaims();
-    }
-  }
-
-  // 토큰 만료 여부 확인
-  public boolean isTokenExpired(String token) {
-    try {
-      Claims claims = parseClaims(token);
-      return claims.getExpiration().before(new Date());
-    } catch (ExpiredJwtException e) {
-      return true;
-    } catch (Exception e) {
-      return false;
     }
   }
 }
