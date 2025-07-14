@@ -22,6 +22,7 @@ public enum ErrorCode {
 	CLOTHES_NOT_FOUND("해당 옷을 찾을 수 없습니다."),
 	// Weather 관련 에러 코드
 	WEATHER_NOT_FOUND("해당 날씨를 찾을 수 없습니다."),
+	INVALID_DATA("잘못된 값입니다."),
 
     // Notification 관련 에러 코드
 	NOTIFICATION_NOT_FOUND("알림이 존재하지 않습니다."),

@@ -6,6 +6,7 @@ import com.part4.team05.sb01otbooteam05.domain.user.service.KakaoApiService;
 import com.part4.team05.sb01otbooteam05.domain.user.util.LccGridConverter;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
+import com.part4.team05.sb01otbooteam05.domain.weather.exception.InvalidDataException;
 import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -154,7 +155,7 @@ public class WeatherService {
           double tmp = parseDouble(value);
           tmpPerDay.computeIfAbsent(date, d -> new ArrayList<>()).add(tmp);
         } catch (NumberFormatException e) {
-          throw new IllegalArgumentException("파싱 실패: " + value); //todo 예외처리
+          throw new InvalidDataException("파싱 실패");
         }
       }
     }

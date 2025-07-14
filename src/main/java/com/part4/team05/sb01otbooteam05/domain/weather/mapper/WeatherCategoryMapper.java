@@ -3,6 +3,7 @@ package com.part4.team05.sb01otbooteam05.domain.weather.mapper;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.WindSpeedAsWord;
+import com.part4.team05.sb01otbooteam05.domain.weather.exception.InvalidDataException;
 
 public class WeatherCategoryMapper {
   //변환 값은 기상청 단기예보 조회서비스 오픈 API 활용 가이드를 참고하였음
@@ -13,7 +14,7 @@ public class WeatherCategoryMapper {
       case "1" -> SkyStatusType.CLEAR;
       case "3" -> SkyStatusType.MOSTLY_CLOUDY;
       case "4" -> SkyStatusType.CLOUDY;
-      default -> throw new IllegalArgumentException("알수없는 코드값: " + skyCode); //todo 예외처리
+      default -> throw new InvalidDataException("알수없는 코드값: " + skyCode);
     };
   }
 
@@ -25,7 +26,7 @@ public class WeatherCategoryMapper {
       case "2" -> PrecipitationType.RAIN_SNOW;
       case "3" -> PrecipitationType.SNOW;
       case "4" -> PrecipitationType.SHOWER;
-      default -> throw new IllegalArgumentException("알수없는 코드값: " + ptyCode); //todo 예외처리
+      default -> throw new InvalidDataException("알수없는 코드값: " + ptyCode);
     };
   }
 
@@ -51,7 +52,7 @@ public class WeatherCategoryMapper {
       return Double.parseDouble(pcpCode);
 
     } catch (NumberFormatException e) {
-      throw new IllegalArgumentException("알수없는 코드값: " + pcpCode);
+      throw new InvalidDataException("알수없는 코드값: " + pcpCode);
     }
   }
 
@@ -68,7 +69,7 @@ public class WeatherCategoryMapper {
         return WindSpeedAsWord.STRONG;
       }
     } catch (NumberFormatException e) {
-      throw new IllegalArgumentException("알수없는 코드값: " + wsdCode); //todo 예외처리
+      throw new InvalidDataException("알수없는 코드값: " + wsdCode);
     }
   }
 }
