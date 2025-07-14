@@ -9,6 +9,7 @@ public enum ErrorCode {
 
 	// User 관련 에러 코드
 	USER_NOT_FOUND("해당 유저를 찾을 수 없습니다."),
+	EMAIL_ALREADY_EXISTS("이미 사용 중인 이메일입니다."),
 
 	//Auth 관련 에러 코드
 	UNAUTHORIZED("인증이 필요합니다"),
