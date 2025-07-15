@@ -64,9 +64,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Transactional
     @Override
-    public void markAsRead(UUID notificationId) {
+    public void markAsRead(UUID notificationId, UUID userId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new OtbooException(ErrorCode.NOTIFICATION_NOT_FOUND));
+
+        if(!notification.getReceiverId().equals(userId)) {
+            throw new OtbooException(ErrorCode.NOTIFICATION_UNAUTHORIZED);
+        }
 
         notification.markAsRead();
         log.info("알림 읽음 처리 완료: notificationId={}", notificationId);

@@ -48,7 +48,8 @@ public class NotificationController {
 
     @DeleteMapping("/{notificationId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void markAsRead(@PathVariable UUID notificationId) {
-        notificationService.markAsRead(notificationId);
+    public void markAsRead(@PathVariable UUID notificationId,
+                           @RequestHeader("X-USER-ID") UUID userId) {
+        notificationService.markAsRead(notificationId, userId);
     }
 }
