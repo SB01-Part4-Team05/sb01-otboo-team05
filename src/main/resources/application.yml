@@ -16,6 +16,12 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+  # 스프링 배치 설정
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
 
   mail:
     host: smtp.gmail.com

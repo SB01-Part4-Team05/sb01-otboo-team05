@@ -49,32 +49,20 @@ public class WeatherResponse {
   @Setter
   public static class Item {
 
-    @JsonFormat(pattern = "yyyyMMdd")
-    private LocalDate baseDate;
+    private String baseDate;
 
-    @JsonFormat(pattern = "HHmm")
-    private LocalTime baseTime;
+    private String baseTime;
 
     private String category;
 
-    @JsonFormat(pattern = "yyyyMMdd")
-    private LocalDate fcstDate;
+    private String fcstDate;
 
-    @JsonFormat(pattern = "HHmm")
-    private LocalTime fcstTime;
+    private String fcstTime;
 
     private String fcstValue;
 
     private int nx;
     private int ny;
-
-    public LocalDateTime getBaseDateTime() {
-      return LocalDateTime.of(baseDate, baseTime);
-    }
-
-    public LocalDateTime getFcstDateTime() {
-      return LocalDateTime.of(fcstDate, fcstTime);
-    }
 
   }
 
