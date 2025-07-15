@@ -69,5 +69,6 @@ public class NotificationServiceImpl implements NotificationService {
                 .orElseThrow(() -> new OtbooException(ErrorCode.NOTIFICATION_NOT_FOUND));
 
         notification.markAsRead();
+        log.info("알림 읽음 처리 완료: notificationId={}", notificationId);
     }
 }
