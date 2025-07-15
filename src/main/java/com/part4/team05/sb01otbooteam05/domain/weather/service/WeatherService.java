@@ -7,6 +7,7 @@ import com.part4.team05.sb01otbooteam05.domain.user.util.LccGridConverter;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.exception.InvalidDataException;
+import com.part4.team05.sb01otbooteam05.domain.weather.exception.WeatherBatchException;
 import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,10 +17,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -68,6 +73,19 @@ public class WeatherService {
     Map<LocalDate, Double> minTemps = getMinTemps(forecastMap);
     Map<LocalDate, Double> maxTemps = getMaxTemps(forecastMap);
 
+    // forecastMap에 없는 전날 forecastAt 모으기 (DB 조회용)
+    Set<LocalDateTime> missingYesterdays = forecastMap.keySet().stream()
+        .map(dt -> dt.minusDays(1))
+        .filter(dt -> !forecastMap.containsKey(dt))
+        .collect(Collectors.toSet());
+
+    // 필요한 전날 데이터들 DB에서 한 번에 조회
+    List<Weather> yesterdayWeathers = weatherRepository.findByLocationXAndLocationYAndForecastAtIn(x, y, missingYesterdays);
+
+    // DB 결과를 Map으로 빠르게 조회
+    Map<LocalDateTime, Weather> yesterdayMap = yesterdayWeathers.stream()
+        .collect(Collectors.toMap(Weather::getForecastAt, Function.identity()));
+
     // 날씨 리스트 생성
     List<Weather> weathers = new ArrayList<>();
 
@@ -91,7 +109,6 @@ public class WeatherService {
       Double rehDiff = null;
 
       LocalDateTime yesterdayForecastAt = forecastAt.minusDays(1);
-
       Map<String, String> yesterdayData = forecastMap.get(yesterdayForecastAt);
 
       if (yesterdayData != null) {
@@ -103,11 +120,11 @@ public class WeatherService {
           rehDiff = reh - parseDouble(yesterdayData.get("REH"));
         }
       } else {
-        // forecastMap에 전날 정보가 없으면 DB에서 조회
-        Optional<Weather> yesterday = weatherRepository.findByLocationXAndLocationYAndForecastAt(x, y, yesterdayForecastAt);
-
-        tmpDiff = yesterday.map(w -> tmp - w.getTemperatureCurrent()).orElse(null);
-        rehDiff = yesterday.map(w -> reh - w.getHumidityCurrent()).orElse(null);
+        Weather yesterday = yesterdayMap.get(yesterdayForecastAt);
+        if (yesterday != null) {
+          tmpDiff = tmp - yesterday.getTemperatureCurrent();
+          rehDiff = reh - yesterday.getHumidityCurrent();
+        }
       }
 
       // Weather 엔티티 생성
@@ -194,25 +211,29 @@ public class WeatherService {
     WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
     LocalDateTime now = LocalDateTime.now();
     LocalTime requestedTime = now.toLocalTime().truncatedTo(ChronoUnit.HOURS);
-
-    List<WeatherDto> result = new ArrayList<>();
+    List<LocalDateTime> targetForecastAtList = new ArrayList<>();
 
     // 기상청 날씨 정보가 3일 뒤부터는 매 시간마다 정보를 주지 않아 00시로 고정
     for (int i = 0; i <= 4; i++) {
       LocalDate targetDate = now.toLocalDate().plusDays(i);
       LocalTime targetTime = i < 2 ? requestedTime : LocalTime.MIDNIGHT;
       LocalDateTime targetForecastAt = LocalDateTime.of(targetDate, targetTime);
-
+      targetForecastAtList.add(targetForecastAt);
       log.info("요청 기준 forecastAt (targetForecastAt): {}, x = {}, y = {}", targetForecastAt, weatherAPILocation.x(), weatherAPILocation.y());
-
-      weatherRepository.findByLocationXAndLocationYAndForecastAt(
-          weatherAPILocation.x(), weatherAPILocation.y(), targetForecastAt)
-          .stream()
-          .filter(weather -> weather.getForecastAt().equals(targetForecastAt))
-          .findFirst()
-          .map(weather -> WeatherMapper.toDto(weather, weatherAPILocation))
-          .ifPresent(result::add);
     }
+
+    List<Weather> weathers = weatherRepository.findByLocationXAndLocationYAndForecastAtIn(
+        weatherAPILocation.x(), weatherAPILocation.y(), targetForecastAtList);
+
+    Map<LocalDateTime, Weather> weatherMap = weathers.stream()
+        .collect(Collectors.toMap(Weather::getForecastAt, Function.identity()));
+
+    List<WeatherDto> result = targetForecastAtList.stream()
+        .map(weatherMap::get)
+        .filter(Objects::nonNull)
+        .map(weather -> WeatherMapper.toDto(weather, weatherAPILocation))
+        .collect(Collectors.toList());
+
     return result;
   }
 
@@ -231,8 +252,11 @@ public class WeatherService {
             .toJobParameters();
         log.info("단일 위치 배치 실행: x={}, y={}", x, y);
         jobLauncher.run(singleLocationWeatherJob, parameters);
+      } catch (JobExecutionException e) {
+        log.error("단일 위치 날씨 배치 실행 실패: x={}, y={}", x, y);
+        throw new WeatherBatchException("날씨 데이터 배치 처리 실패");
       } catch (Exception e) {
-        log.error("단일 위치 날씨 배치 실행 실패", e);
+        throw new WeatherBatchException("시스템 오류로 인한 날씨 데이터 처리 실패");
       }
     }
 
