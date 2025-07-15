@@ -2,20 +2,32 @@ package com.part4.team05.sb01otbooteam05.domain.follow.service.impl;
 
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowDto;
+import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowListResponse;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowSummaryDto;
 import com.part4.team05.sb01otbooteam05.domain.follow.entity.Follow;
 import com.part4.team05.sb01otbooteam05.domain.follow.exception.FollowException;
 import com.part4.team05.sb01otbooteam05.domain.follow.mapper.FollowMapper;
 import com.part4.team05.sb01otbooteam05.domain.follow.repository.FollowRepository;
 import com.part4.team05.sb01otbooteam05.domain.follow.service.FollowService;
+import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
+import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.part4.team05.sb01otbooteam05.exception.ErrorCode.*;
 
@@ -66,7 +78,10 @@ public class FollowServiceImpl implements FollowService {
 
         log.info("팔로우 저장 완료: followId={}, follower={}, followee={}", saved.getId(), followerId, followeeId);
 
-        return followMapper.toDto(saved);
+        Map<UUID, User> userMap = userRepository.findAllById(List.of(followerId, followeeId)).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+
+        return followMapper.toDto(saved, userMap);
     }
 
     @Override
@@ -88,6 +103,89 @@ public class FollowServiceImpl implements FollowService {
                 followedByMe,
                 followedByMe ? currentUserId : null,
                 followingMe
+        );
+    }
+
+    // 팔로잉 목록 조회
+    @Override
+    public FollowListResponse getFollowings(UUID followerId, String cursor, UUID idAfter, int limit, String nameLike) {
+        return getFollowList(
+                followerId,
+                "팔로잉",
+                cursor,
+                idAfter,
+                limit,
+                nameLike,
+                (id, pageable) -> followRepository.findFollowings(id, idAfter, nameLike, pageable)
+        );
+    }
+
+    // 팔로워 목록 조회
+    @Override
+    public FollowListResponse getFollowers(UUID followeeId, String cursor, UUID idAfter, int limit, String nameLike) {
+        return getFollowList(
+                followeeId,
+                "팔로워",
+                cursor,
+                idAfter,
+                limit,
+                nameLike,
+                (id, pageable) -> followRepository.findFollowers(id, idAfter, nameLike, pageable)
+        );
+    }
+
+    private FollowListResponse getFollowList(
+            UUID userId,
+            String userType,
+            String cursor,
+            UUID idAfter,
+            int limit,
+            String nameLike,
+            BiFunction<UUID, Pageable, List<Follow>> repositoryMethod
+    ) {
+        if (userId == null || !userRepository.existsById(userId)) {
+            log.warn("{} 목록 조회 실패 - 존재하지 않는 사용자: userId={}", userType, userId);
+            throw new OtbooException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        log.debug("{} 목록 조회 시작: userId={}, idAfter={}, limit={}, nameLike={}", userType, userId, idAfter, limit, nameLike);
+
+        Pageable pageable = PageRequest.of(0, limit + 1);
+        List<Follow> follows = repositoryMethod.apply(userId, pageable);
+
+        boolean hasNext = follows.size() > limit;
+        if (hasNext) follows = follows.subList(0, limit);
+
+        List<UUID> userIds = follows.stream()
+                .flatMap(f -> Stream.of(f.getFollower(), f.getFollowee()))
+                .distinct()
+                .toList();
+
+        Map<UUID, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+
+        List<FollowDto> dtos = follows.stream()
+                .map(f -> followMapper.toDto(f, userMap))
+                .toList();
+
+        UUID nextIdAfter = hasNext ? follows.get(follows.size() - 1).getId() : null;
+
+        long totalCount = "팔로잉".equals(userType)
+                ? followRepository.countByFollower(userId)
+                : followRepository.countByFollowee(userId);
+
+        String nextCursor = nextIdAfter != null ? nextIdAfter.toString() : "";
+
+        log.info("{} 조회 완료: count={}, hasNext={}", userType, dtos.size(), hasNext);
+
+        return new FollowListResponse(
+                dtos,
+                nextCursor,
+                nextIdAfter,
+                hasNext,
+                totalCount,
+                "id",
+                "ASCENDING"
         );
     }
 }
