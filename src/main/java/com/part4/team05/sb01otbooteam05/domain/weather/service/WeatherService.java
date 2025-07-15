@@ -258,8 +258,9 @@ public class WeatherService {
       } catch (Exception e) {
         throw new WeatherBatchException("시스템 오류로 인한 날씨 데이터 처리 실패");
       }
+    } else {
+      log.info("날씨 데이터 존재: x={}, y={}", x, y);
     }
-
     return weatherAPILocation;
   }
 
