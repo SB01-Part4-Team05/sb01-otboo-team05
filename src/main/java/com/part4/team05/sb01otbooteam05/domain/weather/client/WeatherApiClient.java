@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.weather;
+package com.part4.team05.sb01otbooteam05.domain.weather.client;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherResponse;
