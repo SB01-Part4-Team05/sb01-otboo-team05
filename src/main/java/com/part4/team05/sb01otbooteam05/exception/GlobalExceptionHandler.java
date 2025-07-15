@@ -82,6 +82,9 @@ public class GlobalExceptionHandler {
 			// 400 Bad Request
 			case INVALID_REQUEST -> HttpStatus.BAD_REQUEST;
 
+			// 409 Conflict
+			case EMAIL_ALREADY_EXISTS -> HttpStatus.CONFLICT;
+
 			// 500 Internal Server Error
 			case INTERNAL_SERVER_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
 

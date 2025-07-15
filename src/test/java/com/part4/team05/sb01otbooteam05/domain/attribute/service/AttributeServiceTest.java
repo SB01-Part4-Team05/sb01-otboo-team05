@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefDto;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefDtoCursorResponse;
@@ -17,6 +18,7 @@ import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.mapper.AttributeDefinitionMapper;
 import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeDefinitionRepository;
 import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeRepository;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import java.util.Collections;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -46,6 +49,9 @@ class AttributeServiceTest {
 
   @Mock
   AttributeDefinitionRepository attributeDefinitionRepository;
+
+  @Mock
+  JwtTokenProvider jwtTokenProvider;
 
   @Test
   void createAndReturnList() {

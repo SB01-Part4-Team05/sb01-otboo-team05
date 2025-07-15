@@ -6,6 +6,9 @@ spring:
     username: sa
     password:
     driver-class-name: org.h2.Driver
+  mail:
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
 
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
@@ -19,10 +22,10 @@ spring:
         sql_uuid: true
     open-in-view: false
 
-    h2:
-      console:
-        enabled: true
-        path: /h2-console
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 
 logging:
   level:
@@ -32,3 +35,8 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.hibernate.engine.jdbc.spi.SqlExceptionHelper: DEBUG
     com.discodeit: debug
+
+admin:
+  email: ${ADMIN_EMAIL}
+  password: ${ADMIN_PASSWORD}
+  name: ${ADMIN_NAME}

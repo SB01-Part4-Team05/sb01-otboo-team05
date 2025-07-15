@@ -12,9 +12,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeRepository;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
@@ -28,6 +30,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -58,6 +61,9 @@ class ClothesControllerTest {
 
   @MockitoBean
   JpaMetamodelMappingContext context;
+
+  @MockitoBean
+  JwtTokenProvider jwtTokenProvider;
 
   @Test
   @WithMockUser
