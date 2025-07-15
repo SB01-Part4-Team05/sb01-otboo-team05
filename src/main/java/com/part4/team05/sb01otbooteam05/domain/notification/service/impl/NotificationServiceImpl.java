@@ -8,11 +8,14 @@ import com.part4.team05.sb01otbooteam05.domain.notification.mapper.NotificationM
 import com.part4.team05.sb01otbooteam05.domain.notification.repository.NotificationRepository;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
+import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
+import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -57,5 +60,14 @@ public class NotificationServiceImpl implements NotificationService {
                 "createdAt",
                 "DESCENDING"
         );
+    }
+
+    @Transactional
+    @Override
+    public void markAsRead(UUID notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new OtbooException(ErrorCode.NOTIFICATION_NOT_FOUND));
+
+        notification.markAsRead();
     }
 }

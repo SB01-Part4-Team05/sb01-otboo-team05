@@ -7,4 +7,6 @@ import java.util.UUID;
 
 public interface NotificationService {
     NotificationDtoCursorResponse getNotifications(User user, UUID idAfter, int limit);
+
+    void markAsRead(UUID notificationId);
 }
