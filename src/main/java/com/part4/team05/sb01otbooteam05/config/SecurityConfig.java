@@ -41,16 +41,41 @@ public class SecurityConfig {
         .csrf(csrf -> csrf
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(requestHandler)
+            //겟요청인 애들
+            .ignoringRequestMatchers(request ->
+                "/api/clothes/attribute-defs".equals(request.getRequestURI()) && "GET".equals(request.getMethod())
+            )
+            .ignoringRequestMatchers(request ->
+                "/api/feeds".equals(request.getRequestURI()) && "GET".equals(request.getMethod())
+            )
+            .ignoringRequestMatchers(request ->
+                "/api/users".equals(request.getRequestURI()) && "GET".equals(request.getMethod())
+            )
+            .ignoringRequestMatchers(request ->
+                "/api/clothes".equals(request.getRequestURI()) && "GET".equals(request.getMethod())
+            )
             .ignoringRequestMatchers(
                 "/api/auth/sign-in",      // 로그인 (초기 인증이므로 CSRF 토큰이 없음)
                 "/api/auth/refresh",      // 토큰 재발급
-                "/api/auth/me",          // 토큰 조회 (GET 요청이므로 제외)
+                "/api/auth/me",          // 엑세스 토큰 조회
                 "/api/auth/csrf-token",  // CSRF 토큰 조회 (토큰을 받기 위한 요청이므로 제외)
                 "/api/auth/reset-password", //비번 초기화
                 "/",
                 "/index.html", // 기본 페이지 및 아이콘
                 "/assets/**",       // 프론트엔드
-                "/uploads/**" //사진
+                "/uploads/**", //사진
+                "/api/direct-messages",
+                "/api/feeds/*/comments",
+                "/api/notifications",
+                "/api/users/*/profiles",
+                "/api/follows/summary",
+                "/api/follows/followings",
+                "/api/follows/followers",
+                "/api/clothes/extractions",
+                "/api/recommendations",
+                "/api/weathers",
+                "/api/weathers/location",
+                "/api/sse"
                 //todo 옷 사진도 여기에 넣어야함!
             )
             .ignoringRequestMatchers(request ->

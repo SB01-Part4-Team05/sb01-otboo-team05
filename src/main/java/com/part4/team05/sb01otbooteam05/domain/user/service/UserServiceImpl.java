@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+//import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +21,7 @@ import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.ProfileDto;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.ProfileUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.GenderType;
-import com.part4.team05.sb01otbooteam05.domain.user.util.LccGridConverter;
+//import com.part4.team05.sb01otbooteam05.domain.user.util.LccGridConverter;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
-  private final KakaoApiService kakaoApiService;
+//  private final KakaoApiService kakaoApiService;
 
   // 파일 업로드 경로 (프로필 이미지)
   @Value("${file.upload-dir:uploads/profile}")
@@ -119,26 +119,42 @@ public class UserServiceImpl implements UserService {
       user.updateBirthDate(request.birthDate());
     }
 
-    // 위치 정보 업데이트
+    // 위치 정보 업데이트 - 날씨 서비스에서 계산된 값을 받아서 저장
     if (request.location() != null) {
       ProfileUpdateRequest.LocationRequest loc = request.location();
 
-      // 위도,경도를 가지고 x, y 계산
-      LccGridConverter.XY gridXY = LccGridConverter.toGrid(loc.latitude(), loc.longitude());
-      log.info("위경도({},{}) → 변환 결과 x={}, y={}",
-          loc.latitude(), loc.longitude(), gridXY.x, gridXY.y);
+      // ===== 기존 계산 로직 주석처리 (제거하면 됨 일단 혹시 몰라서 냅둠) =====
+  /*
+  // 위도,경도를 가지고 x, y 계산
+  LccGridConverter.XY gridXY = LccGridConverter.toGrid(loc.latitude(), loc.longitude());
+  log.info("위경도({},{}) → 변환 결과 x={}, y={}",
+      loc.latitude(), loc.longitude(), gridXY.x, gridXY.y);
 
-      // 카카오 API를 통해 지역명 조회
-      List<String> locationNames = kakaoApiService.getLocationNames(loc.latitude(), loc.longitude());
-      log.info("조회된 지역명 목록: {}", locationNames);
+  // 카카오 API를 통해 지역명 조회
+  List<String> locationNames = kakaoApiService.getLocationNames(loc.latitude(), loc.longitude());
+  log.info("조회된 지역명 목록: {}", locationNames);
 
-      // 계산된 값들로 업데이트
+  // 계산된 값들로 업데이트
+  user.updateLocation(
+      loc.latitude(),
+      loc.longitude(),
+      gridXY.x,
+      gridXY.y,
+      locationNames
+  );
+  */
+
+      // 날씨 서비스에서 계산된 값 사용
+      log.info("프론트엔드에서 전달받은 위치 정보 저장: latitude={}, longitude={}, x={}, y={}, locationNames={}",
+          loc.latitude(), loc.longitude(), loc.x(), loc.y(), loc.locationNames());
+
+      // 날씨 서비스에서 계산되어 전달받은 값들을 그대로 저장
       user.updateLocation(
           loc.latitude(),
           loc.longitude(),
-          gridXY.x,
-          gridXY.y,
-          locationNames
+          loc.x(),
+          loc.y(),
+          loc.locationNames()
       );
     }
 
