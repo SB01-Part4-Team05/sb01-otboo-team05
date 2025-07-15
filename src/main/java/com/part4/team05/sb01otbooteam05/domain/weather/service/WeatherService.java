@@ -80,7 +80,8 @@ public class WeatherService {
         .collect(Collectors.toSet());
 
     // 필요한 전날 데이터들 DB에서 한 번에 조회
-    List<Weather> yesterdayWeathers = weatherRepository.findByLocationXAndLocationYAndForecastAtIn(x, y, missingYesterdays);
+    List<Weather> yesterdayWeathers = weatherRepository.findByLocationXAndLocationYAndForecastAtIn(
+        x, y, missingYesterdays);
 
     // DB 결과를 Map으로 빠르게 조회
     Map<LocalDateTime, Weather> yesterdayMap = yesterdayWeathers.stream()
@@ -98,7 +99,8 @@ public class WeatherService {
       String rehStr = values.get("REH");
 
       if (tmpStr == null || tmpStr.isBlank() || rehStr == null || rehStr.isBlank()) {
-        log.warn("기온 or 습도 값이 null 또는 빈 값임: TMP={}, REH={}, forecastAt={}", tmpStr, rehStr, forecastAt);
+        log.warn("기온 or 습도 값이 null 또는 빈 값임: TMP={}, REH={}, forecastAt={}", tmpStr, rehStr,
+            forecastAt);
         continue; // 해당 데이터는 스킵
       }
 
@@ -219,7 +221,8 @@ public class WeatherService {
       LocalTime targetTime = i < 2 ? requestedTime : LocalTime.MIDNIGHT;
       LocalDateTime targetForecastAt = LocalDateTime.of(targetDate, targetTime);
       targetForecastAtList.add(targetForecastAt);
-      log.info("요청 기준 forecastAt (targetForecastAt): {}, x = {}, y = {}", targetForecastAt, weatherAPILocation.x(), weatherAPILocation.y());
+      log.info("요청 기준 forecastAt (targetForecastAt): {}, x = {}, y = {}", targetForecastAt,
+          weatherAPILocation.x(), weatherAPILocation.y());
     }
 
     List<Weather> weathers = weatherRepository.findByLocationXAndLocationYAndForecastAtIn(
@@ -238,7 +241,8 @@ public class WeatherService {
   }
 
   // 날씨 단건 조회 시 날씨 데이터 생성 ( singleLocationWeatherJob 실행 )
-  public WeatherAPILocation getWeatherAPILocationAndGenerateWeather(double longitude, double latitude) {
+  public WeatherAPILocation getWeatherAPILocationAndGenerateWeather(double longitude,
+      double latitude) {
     WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
     int x = weatherAPILocation.x();
     int y = weatherAPILocation.y();
@@ -254,9 +258,9 @@ public class WeatherService {
         jobLauncher.run(singleLocationWeatherJob, parameters);
       } catch (JobExecutionException e) {
         log.error("단일 위치 날씨 배치 실행 실패: x={}, y={}", x, y);
-        throw new WeatherBatchException("날씨 데이터 배치 처리 실패");
+        throw new WeatherBatchException();
       } catch (Exception e) {
-        throw new WeatherBatchException("시스템 오류로 인한 날씨 데이터 처리 실패");
+        throw new WeatherBatchException();
       }
     } else {
       log.info("날씨 데이터 존재: x={}, y={}", x, y);
@@ -269,7 +273,7 @@ public class WeatherService {
     List<String> locationNames = kakaoApiService.getLocationNames(latitude, longitude);
     LccGridConverter.XY gridXY = LccGridConverter.toGrid(latitude, longitude);
 
-    log.info("WeatherAPILocation 생성 : longitude = {}, latitude = {}",longitude, latitude);
+    log.info("WeatherAPILocation 생성 : longitude = {}, latitude = {}", longitude, latitude);
     return new WeatherAPILocation(
         latitude,
         longitude,

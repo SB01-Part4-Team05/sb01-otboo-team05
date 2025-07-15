@@ -60,14 +60,16 @@ public class WeatherApiClient {
 
     // 예보 등록 기준 시간
     WeatherResponse.Item firstItem = items.get(0);
-    LocalDateTime forecastedDateTime = BaseTimeUtils.toDateTime(firstItem.getBaseDate(), firstItem.getBaseTime());
+    LocalDateTime forecastedDateTime = BaseTimeUtils.toDateTime(firstItem.getBaseDate(),
+        firstItem.getBaseTime());
 
     // 시간별 생성
     Map<LocalDateTime, Map<String, String>> forecastMap = new HashMap<>();
 
     for (WeatherResponse.Item item : items) {
       //예보 시간
-      LocalDateTime forecastDateTime = BaseTimeUtils.toDateTime(item.getFcstDate(), item.getFcstTime());
+      LocalDateTime forecastDateTime = BaseTimeUtils.toDateTime(item.getFcstDate(),
+          item.getFcstTime());
 
       forecastMap
           .computeIfAbsent(forecastDateTime, k -> new HashMap<>())

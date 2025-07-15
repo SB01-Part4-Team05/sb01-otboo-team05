@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class BaseTimeUtils {
+
   // 기상청 예보 발표 시간
   private static final List<LocalTime> BASE_TIMES = List.of(
       LocalTime.of(2, 0),
