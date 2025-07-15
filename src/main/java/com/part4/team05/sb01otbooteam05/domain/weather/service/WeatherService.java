@@ -212,14 +212,19 @@ public class WeatherService {
 
     WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
     LocalDateTime now = LocalDateTime.now();
-    LocalTime requestedTime = now.toLocalTime().truncatedTo(ChronoUnit.HOURS);
+    LocalTime requestedTime = now.toLocalTime()
+        .truncatedTo(ChronoUnit.HOURS)
+        .withSecond(0)
+        .withNano(0);
     List<LocalDateTime> targetForecastAtList = new ArrayList<>();
 
     // 기상청 날씨 정보가 3일 뒤부터는 매 시간마다 정보를 주지 않아 00시로 고정
     for (int i = 0; i <= 4; i++) {
       LocalDate targetDate = now.toLocalDate().plusDays(i);
       LocalTime targetTime = i < 2 ? requestedTime : LocalTime.MIDNIGHT;
-      LocalDateTime targetForecastAt = LocalDateTime.of(targetDate, targetTime);
+      LocalDateTime targetForecastAt = LocalDateTime.of(targetDate, targetTime)
+          .withSecond(0)
+          .withNano(0);
       targetForecastAtList.add(targetForecastAt);
       log.info("요청 기준 forecastAt (targetForecastAt): {}, x = {}, y = {}", targetForecastAt,
           weatherAPILocation.x(), weatherAPILocation.y());
