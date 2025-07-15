@@ -3,10 +3,12 @@ package com.part4.team05.sb01otbooteam05.domain.recommend.controller;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.recommend.service.RecommendService;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import javax.security.sasl.AuthenticationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,8 +26,7 @@ public class RecommendController {
   private final RecommendService recommendService;
 
   @GetMapping
-  public ResponseEntity<List<List<ClothesDto>>> getRecommendSet(@RequestParam UUID weatherId)
-      throws AuthenticationException {
+  public ResponseEntity<List<List<ClothesDto>>> getRecommendSet(@RequestParam UUID weatherId) {
     UUID userId;
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -33,7 +34,7 @@ public class RecommendController {
       CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
       userId = userDetails.getUserId();
     } else {
-      throw new AuthenticationException("로그인 된 유저가 없습니다.");
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.emptyList());
     }
 
     return ResponseEntity.ok(recommendService.getRecommend(userId,weatherId));
