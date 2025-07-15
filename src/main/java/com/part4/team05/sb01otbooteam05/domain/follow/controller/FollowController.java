@@ -66,4 +66,11 @@ public class FollowController {
         FollowListResponse response = followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{followId}")
+    public ResponseEntity<Void> unfollow(@PathVariable UUID followId) {
+        log.info("팔로우 취소 요청: followId={}", followId);
+        followService.unfollow(followId);
+        return ResponseEntity.noContent().build();
+    }
 }

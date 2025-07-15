@@ -188,4 +188,13 @@ public class FollowServiceImpl implements FollowService {
                 "ASCENDING"
         );
     }
+
+    @Override
+    public void unfollow(UUID followId) {
+        Follow follow = followRepository.findById(followId)
+                .orElseThrow(() -> new FollowException(INVALID_REQUEST));
+
+        followRepository.delete(follow);
+        log.info("팔로우 취소 완료: followId={}", followId);
+    }
 }
