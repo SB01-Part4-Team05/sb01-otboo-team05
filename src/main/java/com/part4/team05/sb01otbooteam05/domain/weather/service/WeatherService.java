@@ -177,6 +177,7 @@ public class WeatherService {
     return tmpPerDay;
   }
 
+  // x, y, forecastedAt 값으로 날씨 데이터 유무 확인
   public boolean existWeather(int x, int y, LocalDateTime forecastedAt) {
     return weatherRepository.existsByLocationXAndLocationYAndForecastedAt(x, y, forecastedAt);
   }
@@ -215,6 +216,7 @@ public class WeatherService {
     return result;
   }
 
+  // 날씨 단건 조회 시 날씨 데이터 생성 ( singleLocationWeatherJob 실행 )
   public WeatherAPILocation getWeatherAPILocationAndGenerateWeather(double longitude, double latitude) {
     WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
     int x = weatherAPILocation.x();
@@ -232,14 +234,12 @@ public class WeatherService {
       } catch (Exception e) {
         log.error("단일 위치 날씨 배치 실행 실패", e);
       }
-    } else {
-      log.info("해당 위치의 날씨 데이터 이미 존재함: x = {}, y = {}", x, y);
     }
 
     return weatherAPILocation;
   }
 
-
+  // 위도 경도 값으로 WeatherAPILocation 생성
   public WeatherAPILocation getWeatherAPILocation(double longitude, double latitude) {
     List<String> locationNames = kakaoApiService.getLocationNames(latitude, longitude);
     LccGridConverter.XY gridXY = LccGridConverter.toGrid(latitude, longitude);
@@ -254,6 +254,4 @@ public class WeatherService {
     );
 
   }
-
-
 }

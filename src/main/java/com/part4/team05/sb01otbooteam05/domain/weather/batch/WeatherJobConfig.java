@@ -25,6 +25,7 @@ public class WeatherJobConfig {
   private final WeatherItemWriter writer;
   private final SingleLocationWeatherItemReader singleLocationWeatherItemReader;
 
+  // 날씨 데이터 정기 배치
   @Bean
   public Job weatherJob() {
     return new JobBuilder("weatherJob", jobRepository)
@@ -35,13 +36,14 @@ public class WeatherJobConfig {
   @Bean
   public Step weatherStep() {
     return new StepBuilder("weatherStep", jobRepository)
-        .<Pair<Integer, Integer>, List<Weather>>chunk(10, platformTransactionManager)
+        .<Pair<Integer, Integer>, List<Weather>>chunk(20, platformTransactionManager)
         .reader(reader)
         .processor(processor)
         .writer(writer)
         .build();
   }
 
+  // 날씨 데이터 단건 배치
   @Bean
   public Job singleLocationWeatherJob() {
     return new JobBuilder("singleLocationWeatherJob", jobRepository)
