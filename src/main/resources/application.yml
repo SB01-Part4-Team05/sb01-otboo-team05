@@ -15,7 +15,7 @@ spring:
     properties:
       hibernate:
         jdbc:
-          time_zone: UTC
+          time_zone: Asia/Seoul
   # 스프링 배치 설정
   batch:
     jdbc:
