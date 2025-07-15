@@ -31,6 +31,7 @@ public enum ErrorCode {
 	// follow 관련 에러 코드
 	FOLLOW_SELF_NOT_ALLOWED("자기 자신을 팔로우할 수 없습니다."),
 	ALREADY_FOLLOWED("이미 팔로우한 사용자입니다."),
+	FOLLOW_NOT_FOUND("팔로우 관계를 찾을 수 없습니다."),
 
 	// 서버 관련 에러 코드
 	INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다."),

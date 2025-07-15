@@ -189,10 +189,11 @@ public class FollowServiceImpl implements FollowService {
         );
     }
 
+    @Transactional
     @Override
     public void unfollow(UUID followId) {
         Follow follow = followRepository.findById(followId)
-                .orElseThrow(() -> new FollowException(INVALID_REQUEST));
+                .orElseThrow(() -> new OtbooException(FOLLOW_NOT_FOUND));
 
         followRepository.delete(follow);
         log.info("팔로우 취소 완료: followId={}", followId);
