@@ -17,6 +17,18 @@ spring:
         jdbc:
           time_zone: UTC
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   web:
     resources:
       static-locations:
@@ -53,3 +65,9 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: 1800000
   refresh-token-expiration: 604800000
+
+# 어드민 계정 설정
+admin:
+  email: ${ADMIN_EMAIL}
+  password: ${ADMIN_PASSWORD}
+  name: ${ADMIN_NAME}

@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.auth.controller;
 
+import com.part4.team05.sb01otbooteam05.domain.auth.dto.ResetPasswordRequest;
 import com.part4.team05.sb01otbooteam05.domain.auth.dto.SignInRequest;
 import com.part4.team05.sb01otbooteam05.domain.auth.dto.SignInResponse;
 import com.part4.team05.sb01otbooteam05.domain.auth.dto.TokenRefreshRequest;
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -116,5 +118,14 @@ public class AuthController {
     cookie.setMaxAge(7 * 24 * 60 * 60); // 7일
     // cookie.setAttribute("SameSite", "Lax");  // TODO: 추후 주석 제거 예정
     response.addCookie(cookie);
+  }
+
+  /**
+   * 비밀번호 초기화
+   */
+  @PostMapping("/reset-password")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    authService.resetPassword(request.email());
   }
 }

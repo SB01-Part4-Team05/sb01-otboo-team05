@@ -20,4 +20,7 @@ public interface AuthService {
   // 액세스 토큰만 조회 (리프레시 토큰 유지)
   String getAccessTokenOnly(TokenRefreshRequest request);
 
+  //비밀번호 초기화
+  void resetPassword(String email);
+
 }

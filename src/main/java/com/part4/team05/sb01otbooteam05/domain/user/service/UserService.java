@@ -21,4 +21,7 @@ public interface UserService {
 
   // 프로필 업데이트
   ProfileDto updateProfile(UUID userId, ProfileUpdateRequest request, MultipartFile image);
+
+  //비밀번호 변경
+  void changePassword(UUID userId, String newPassword);
 }

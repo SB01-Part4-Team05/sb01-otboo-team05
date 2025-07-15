@@ -127,4 +127,36 @@ public class User extends BaseEntity {
     this.profileImageUrl = profileImageUrl;
   }
 
+  // 권한 변경
+  public void updateRole(UserRole role) {
+    if (role != null) {
+      this.role = role;
+    }
+  }
+
+  // 잠금 상태 변경
+  public void updateLocked(boolean locked) {
+    this.locked = locked;
+  }
+
+  //
+  public void setTempPassword(String encodedTempPassword, LocalDateTime expireAt) {
+    this.password = encodedTempPassword;    // 임시 비번도 해시해서 저장
+    this.isTempPassword = true;
+    this.passwordExpiresAt = expireAt;
+  }
+
+  public void clearTempPassword() {
+    this.isTempPassword = false;
+    this.passwordExpiresAt = null;
+  }
+
+  public boolean isTempPasswordExpired() {
+    return isTempPassword && passwordExpiresAt != null
+        && passwordExpiresAt.isBefore(LocalDateTime.now());
+  }
+
+  public void setPassword(String encodedPassword) {
+    this.password = encodedPassword;
+  }
 }

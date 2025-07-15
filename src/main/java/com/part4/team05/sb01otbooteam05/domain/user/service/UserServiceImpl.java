@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.user.service;
 
+import com.part4.team05.sb01otbooteam05.domain.user.exception.EmailAlreadyExistsException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,7 +51,7 @@ public class UserServiceImpl implements UserService {
 
     // 이메일 중복 확인
     if (userRepository.existsByEmail(request.email())) {
-      throw new IllegalArgumentException("이미 사용 중인 이메일입니다"); //todo 추후 예외처리 예정
+      throw new EmailAlreadyExistsException();
     }
 
     // 비밀번호 암호화
@@ -192,4 +193,19 @@ public class UserServiceImpl implements UserService {
       throw new RuntimeException("프로필 이미지 저장에 실패했습니다", e);
     }
   }
+
+  @Override
+  @Transactional
+  public void changePassword(UUID userId, String newPassword) {
+    User user = getUserEntityByIdOrThrow(userId);
+
+    // 비밀번호 암호화해서 저장
+    user.setPassword(passwordEncoder.encode(newPassword));
+
+    // 임시비밀번호 상태 해제(클리어)
+    user.clearTempPassword();
+
+    userRepository.save(user);
+  }
+
 }

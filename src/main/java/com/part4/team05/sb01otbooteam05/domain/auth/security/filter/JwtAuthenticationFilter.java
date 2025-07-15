@@ -25,18 +25,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtTokenProvider jwtTokenProvider;
 
+
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
-    try {
-      //수정
-      if (SecurityContextHolder.getContext().getAuthentication() != null &&
-          SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
-        filterChain.doFilter(request, response);
-        return;
-      }
+    if (SecurityContextHolder.getContext().getAuthentication() != null &&
+        SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
+      filterChain.doFilter(request, response);
+      return;
+    }
 
+    try {
       String jwt = getJwtFromRequest(request);
 
       if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
@@ -49,13 +49,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
             userDetails,
             null,
-            userDetails.getAuthorities()  // 코드래빗 참고
+            userDetails.getAuthorities()
         );
+
+        log.info("Authentication success! User: {}, Authorities: {}",
+            userDetails.getUsername(), userDetails.getAuthorities());
 
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        log.debug("JWT 인증 성공: userId={}, email={}", userId, email);
+      } else if (StringUtils.hasText(jwt)) {
+        log.error("JWT validation failed for token: {}", jwt);
       }
     } catch (Exception ex) {
       log.error("Security Context에 사용자 인증을 설정할 수 없습니다", ex);
