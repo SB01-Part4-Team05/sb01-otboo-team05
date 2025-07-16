@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.service;
 
+import static com.part4.team05.sb01otbooteam05.domain.weather.Mapper.WeatherMapper.toDto;
 import static java.lang.Double.*;
 
 import com.part4.team05.sb01otbooteam05.domain.user.service.KakaoApiService;
@@ -8,7 +9,6 @@ import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.exception.InvalidDataException;
 import com.part4.team05.sb01otbooteam05.domain.weather.exception.WeatherBatchException;
-import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -234,7 +234,7 @@ public class WeatherService {
     List<WeatherDto> result = targetForecastAtList.stream()
         .map(weatherMap::get)
         .filter(Objects::nonNull)
-        .map(weather -> WeatherMapper.toDto(weather, weatherAPILocation))
+        .map(weather -> toDto(weather, weatherAPILocation))
         .collect(Collectors.toList());
 
     return result;

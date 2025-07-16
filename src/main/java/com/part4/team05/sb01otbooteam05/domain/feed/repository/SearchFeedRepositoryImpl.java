@@ -27,7 +27,7 @@ import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
-public class SearchFeedRepositoryImpl implements SearchFeedRepository{
+public class SearchFeedRepositoryImpl implements SearchFeedRepository {
     private final JPAQueryFactory queryFactory;
     private final FeedMapper feedMapper;
     private final UserRepository userRepository;
@@ -61,21 +61,42 @@ public class SearchFeedRepositoryImpl implements SearchFeedRepository{
         if (request.authorIdEqual() != null) {
             builder.and(feed.author.id.eq(request.authorIdEqual()));
         }
-
+        // todo 커서 , idAfter 관련 코드 이상한듯
         // 커서 기반 페이지네이션 조건 추가
         if (!request.cursor().isEmpty()) {
-            LocalDateTime cursorTime = LocalDateTime.parse(request.cursor());
 
-            if (request.sortDirection() == SortDirection.DESCENDING) {
-                builder.and(
-                        feed.createdAt.lt(cursorTime)
-                                .or(feed.createdAt.eq(cursorTime).and(feed.id.lt(request.idAfter())))
-                );
+            if (request.sortDirection() == SortDirection.ASCENDING) {
+                if (request.sortBy().equals(SortType.createdAt)) {
+                    LocalDateTime cursorTime = LocalDateTime.parse(request.cursor());
+                    builder.and(
+                            feed.createdAt.gt(cursorTime) // 커서 시간 이후 데이터
+                                    .or(feed.createdAt.eq(cursorTime)
+                                            .and(feed.id.gt(request.idAfter()))) // tie-break: ID가 더 큰 것
+                    );
+                } else {
+                    long cursorLikeCount = Long.parseLong(request.cursor());
+                    builder.and(
+                            feed.likeCount.gt(cursorLikeCount)
+                                    .or(feed.likeCount.eq(cursorLikeCount)
+                                            .and(feed.id.gt(request.idAfter())))
+                    );
+                }
             } else {
-                builder.and(
-                        feed.createdAt.gt(cursorTime)
-                                .or(feed.createdAt.eq(cursorTime).and(feed.id.gt(request.idAfter())))
-                );
+                if (request.sortBy().equals(SortType.createdAt)) {
+                    LocalDateTime cursorTime = LocalDateTime.parse(request.cursor());
+                    builder.and(
+                            feed.createdAt.lt(cursorTime) // 커서 시간 이전 데이터
+                                    .or(feed.createdAt.eq(cursorTime)
+                                            .and(feed.id.lt(request.idAfter()))) // tie-break: ID가 더 작은 것
+                    );
+                } else {
+                    long cursorLikeCount = Long.parseLong(request.cursor());
+                    builder.and(
+                            feed.likeCount.lt(cursorLikeCount)
+                                    .or(feed.likeCount.eq(cursorLikeCount)
+                                            .and(feed.id.lt(request.idAfter())))
+                    );
+                }
             }
         }
 
@@ -107,8 +128,9 @@ public class SearchFeedRepositoryImpl implements SearchFeedRepository{
         // 다음 페이지가 있다면 커서와 IdAfter 반환하고, 추가로 불러온 데이터 제거
         if (hasNext) {
             Feed lastFeed = feedEntityList.get(request.limit());
+            nextIdAfter = lastFeed.getId().toString();
             nextCursor = (request.sortBy() == SortType.createdAt) ? lastFeed.getCreatedAt().toString() : lastFeed.getLikeCount().toString();
-            feedEntityList.remove(request.limit());
+            feedEntityList.remove(lastFeed);
         }
 
         // hasNext 판별을 위한 추가 데이터가 있다면 제거하고, Dto 변환
@@ -117,9 +139,9 @@ public class SearchFeedRepositoryImpl implements SearchFeedRepository{
     }
 
     // 정렬방식 지정 메서드
-    private OrderSpecifier<?> getOrderSpecifier (SortType sortType, SortDirection direction){
-        Order order = (direction == SortDirection.DESCENDING) ? Order.DESC : Order.ASC;
+    private OrderSpecifier<?> getOrderSpecifier(SortType sortType, SortDirection direction) {
 
+        Order order = (direction == SortDirection.DESCENDING) ? Order.DESC : Order.ASC;
         // 정렬할 기준필드 설정
         return switch (sortType) {
             case createdAt -> new OrderSpecifier<>(order, feed.createdAt);
