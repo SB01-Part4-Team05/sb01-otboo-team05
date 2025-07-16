@@ -32,9 +32,9 @@ public class WeatherBatchScheduler {
     }
   }
 
-  @Scheduled(cron = "0 15 2 * * *")
+  @Scheduled(cron = "0 30 2 * * *")
   public void runDeleteOldWeatherJob() {
-    LocalDateTime deleteTime = LocalDateTime.now().minusHours(25).withMinute(0).withSecond(0).withNano(0);
+    LocalDateTime deleteTime = LocalDateTime.now().minusHours(24).withMinute(0).withSecond(0).withNano(0);
     try {
       JobParameters parameters = new JobParametersBuilder()
           .addString("deleteTime", deleteTime.toString())
