@@ -1,11 +1,11 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.batch;
 
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.ItemProcessor.WeatherItemProcessor;
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.ItemReader.OldWeatherItemReader;
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.ItemReader.SingleLocationWeatherItemReader;
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.ItemReader.WeatherItemReader;
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.ItemWriter.WeatherDeleteItemWriter;
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.ItemWriter.WeatherItemWriter;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemProcessor.WeatherItemProcessor;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemReader.OldWeatherItemReader;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemReader.SingleLocationWeatherItemReader;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemReader.WeatherItemReader;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemWriter.WeatherDeleteItemWriter;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemWriter.WeatherItemWriter;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import java.util.List;
 import java.util.UUID;

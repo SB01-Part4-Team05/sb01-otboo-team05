@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.weather.batch.ItemProcessor;
+package com.part4.team05.sb01otbooteam05.domain.weather.batch.itemProcessor;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
