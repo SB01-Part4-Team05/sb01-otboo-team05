@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.weather.batch;
+package com.part4.team05.sb01otbooteam05.domain.weather.batch.ItemReader;
 
 import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
