@@ -6,6 +6,11 @@ on:
   pull_request:
     types: [synchronize]
 
+permissions:
+  pull-requests: write
+  contents: read
+  actions: write
+
 jobs:
   automerge:
     runs-on: ubuntu-latest
