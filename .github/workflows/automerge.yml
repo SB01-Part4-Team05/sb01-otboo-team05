@@ -1,0 +1,43 @@
+name: AutoMerge with 2+ Approvals
+
+on:
+  pull_request_review:
+    types: [submitted]
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check approved reviews count
+        id: check_approvals
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const core = require('@actions/core');
+            const { owner, repo, number: pull_number } = context.issue;
+            const reviews = await github.rest.pulls.listReviews({
+              owner,
+              repo,
+              pull_number,
+            });
+            
+            const latestReviewsByUser = new Map();
+            for (const review of reviews.data) {
+              latestReviewsByUser.set(review.user.login, review.state);
+            }
+            
+            const approvedCount = [...latestReviewsByUser.values()].filter(state => state === 'APPROVED').length;
+            core.setOutput('approved_count', approvedCount);
+
+      - name: Auto-merge if 2 or more approved
+        if: steps.check_approvals.outputs.approved_count >= 2
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Discord
+        if: steps.check_approvals.outputs.approved_count >= 2
+        uses: th0th/notify-discord@v0.4.1
+        with:
+          webhook-url: ${{secrets.DISCORD_WEBHOOK}}
+          content: "auto merge success!"
