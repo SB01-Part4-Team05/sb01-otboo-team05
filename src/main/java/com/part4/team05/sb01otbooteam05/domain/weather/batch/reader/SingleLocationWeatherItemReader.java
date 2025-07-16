@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.weather.batch.itemReader;
+package com.part4.team05.sb01otbooteam05.domain.weather.batch.reader;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.exception.InvalidDataException;
 import org.apache.commons.lang3.tuple.Pair;
