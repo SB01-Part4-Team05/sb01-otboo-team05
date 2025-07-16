@@ -17,11 +17,11 @@ public class WeatherDeleteItemWriter implements ItemWriter<UUID> {
 
   private final JdbcTemplate jdbcTemplate;
 
-  int total = 0;
-
   //JDBC 기반 반복 삭제
   @Override
   public void write(Chunk<? extends UUID> items) {
+    int total = 0;
+
     for (UUID id : items) {
       int result = jdbcTemplate.update("DELETE FROM weathers WHERE id = ?", id);
       total += result;
