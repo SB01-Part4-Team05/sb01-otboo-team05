@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.weather.batch;
+package com.part4.team05.sb01otbooteam05.domain.weather.batch.itemWriter;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.repository.WeatherRepository;
@@ -29,7 +29,7 @@ public class WeatherItemWriter implements ItemWriter<List<Weather>> {
         total += weatherList.size();
       }
     }
-    log.info("날씨 데이터 저장 완료: 총 {}건", total);
+    log.info("날씨 데이터 저장 완료: 한 청크 내 총 {}건", total);
   }
 
 }

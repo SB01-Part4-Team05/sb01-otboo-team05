@@ -31,7 +31,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.part4.team05.sb01otbooteam05.domain.weather.WeatherApiClient;
+import com.part4.team05.sb01otbooteam05.domain.weather.client.WeatherApiClient;
 import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherCategoryMapper;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
@@ -80,7 +80,7 @@ public class WeatherService {
         .collect(Collectors.toSet());
 
     // 필요한 전날 데이터들 DB에서 한 번에 조회
-    List<Weather> yesterdayWeathers = weatherRepository.findByLocationXAndLocationYAndForecastAtIn(
+    List<Weather> yesterdayWeathers = weatherRepository.findLatestByLocationAndForecastAtIn(
         x, y, missingYesterdays);
 
     // DB 결과를 Map으로 빠르게 조회
@@ -212,20 +212,25 @@ public class WeatherService {
 
     WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
     LocalDateTime now = LocalDateTime.now();
-    LocalTime requestedTime = now.toLocalTime().truncatedTo(ChronoUnit.HOURS);
+    LocalTime requestedTime = now.toLocalTime()
+        .truncatedTo(ChronoUnit.HOURS)
+        .withSecond(0)
+        .withNano(0);
     List<LocalDateTime> targetForecastAtList = new ArrayList<>();
 
     // 기상청 날씨 정보가 3일 뒤부터는 매 시간마다 정보를 주지 않아 00시로 고정
     for (int i = 0; i <= 4; i++) {
       LocalDate targetDate = now.toLocalDate().plusDays(i);
       LocalTime targetTime = i < 2 ? requestedTime : LocalTime.MIDNIGHT;
-      LocalDateTime targetForecastAt = LocalDateTime.of(targetDate, targetTime);
+      LocalDateTime targetForecastAt = LocalDateTime.of(targetDate, targetTime)
+          .withSecond(0)
+          .withNano(0);
       targetForecastAtList.add(targetForecastAt);
       log.info("요청 기준 forecastAt (targetForecastAt): {}, x = {}, y = {}", targetForecastAt,
           weatherAPILocation.x(), weatherAPILocation.y());
     }
 
-    List<Weather> weathers = weatherRepository.findByLocationXAndLocationYAndForecastAtIn(
+    List<Weather> weathers = weatherRepository.findLatestByLocationAndForecastAtIn(
         weatherAPILocation.x(), weatherAPILocation.y(), targetForecastAtList);
 
     Map<LocalDateTime, Weather> weatherMap = weathers.stream()
