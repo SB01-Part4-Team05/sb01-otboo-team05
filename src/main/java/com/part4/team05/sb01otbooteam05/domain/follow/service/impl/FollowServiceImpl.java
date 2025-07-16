@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -187,5 +186,20 @@ public class FollowServiceImpl implements FollowService {
                 "id",
                 "ASCENDING"
         );
+    }
+
+    @Transactional
+    @Override
+    public void unfollow(UUID followId, UUID currentUserId) {
+        Follow follow = followRepository.findById(followId)
+                .orElseThrow(() -> new OtbooException(FOLLOW_NOT_FOUND));
+
+        if (!follow.getFollower().equals(currentUserId)) {
+            log.warn("권한 없는 팔로우 취소 시도: followId={}, 요청자={}", followId, currentUserId);
+            throw new OtbooException(ErrorCode.FOLLOW_UNAUTHORIZED);
+        }
+
+        followRepository.delete(follow);
+        log.info("팔로우 취소 완료: followId={}, by user={}", followId, currentUserId);
     }
 }
