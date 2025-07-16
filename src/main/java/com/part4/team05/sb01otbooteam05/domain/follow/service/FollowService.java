@@ -16,5 +16,5 @@ public interface FollowService {
 
     FollowListResponse getFollowers(UUID followerId, String cursor, UUID idAfter, int limit, String nameLike);
 
-    void unfollow(UUID followId);
+    void unfollow(UUID followId, UUID currentUserId);
 }

@@ -191,11 +191,16 @@ public class FollowServiceImpl implements FollowService {
 
     @Transactional
     @Override
-    public void unfollow(UUID followId) {
+    public void unfollow(UUID followId, UUID currentUserId) {
         Follow follow = followRepository.findById(followId)
                 .orElseThrow(() -> new OtbooException(FOLLOW_NOT_FOUND));
 
+        if (!follow.getFollower().equals(currentUserId)) {
+            log.warn("권한 없는 팔로우 취소 시도: followId={}, 요청자={}", followId, currentUserId);
+            throw new OtbooException(ErrorCode.FOLLOW_UNAUTHORIZED);
+        }
+
         followRepository.delete(follow);
-        log.info("팔로우 취소 완료: followId={}", followId);
+        log.info("팔로우 취소 완료: followId={}, by user={}", followId, currentUserId);
     }
 }
