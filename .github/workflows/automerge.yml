@@ -1,0 +1,53 @@
+name: AutoMerge with 2+ Approvals
+
+on:
+  pull_request_review:
+    types: [submitted]
+  pull_request:
+    types: [synchronize]
+
+env:
+  OOTD_TOKEN: ${{ secrets.OOTD_ACCESS_TOKEN }}
+
+permissions:
+  pull-requests: read
+  statuses: write
+  contents: read
+  actions: write
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Check approved reviews count
+        id: check_approvals
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.OOTD_ACCESS_TOKEN }}
+          script: |
+            const { owner, repo, number: pull_number } = context.issue;
+            const reviews = await github.rest.pulls.listReviews({
+              owner,
+              repo,
+              pull_number,
+            });
+          
+            const latestReviewsByUser = new Map();
+            for (const review of reviews.data) {
+              latestReviewsByUser.set(review.user.login, review.state);
+            }
+            
+            const approvedCount = [...latestReviewsByUser.values()].filter(state => state === 'APPROVED').length;
+            core.setOutput('approved_count', approvedCount);
+
+      - name: Auto-merge if 2 or more approved
+        if: steps.check_approvals.outputs.approved_count >= 2
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.OOTD_ACCESS_TOKEN }}
+
