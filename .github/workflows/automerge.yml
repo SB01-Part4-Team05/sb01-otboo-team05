@@ -19,7 +19,7 @@ jobs:
         id: check_approvals
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.OOTD_ACCESS_TOKEN }}
           script: |
             const { owner, repo, number: pull_number } = context.issue;
             const reviews = await github.rest.pulls.listReviews({
