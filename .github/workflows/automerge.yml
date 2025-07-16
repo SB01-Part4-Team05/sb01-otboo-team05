@@ -49,5 +49,5 @@ jobs:
         if: steps.check_approvals.outputs.approved_count >= 2
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.OOTD_ACCESS_TOKEN }}
 
