@@ -170,7 +170,7 @@ CREATE TABLE feed_likes
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
-CREATE INDEX idx_weather_location_forecast ON weathers(location_x, location_y, forecast_at);
+CREATE INDEX idx_weather_location_forecast_latest ON weathers(location_x, location_y, forecast_at, forecasted_at DESC);
 
 -- 스프링 배치 테이블
 CREATE TABLE BATCH_JOB_INSTANCE  (
