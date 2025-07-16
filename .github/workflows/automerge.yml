@@ -7,6 +7,9 @@ jobs:
   automerge:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Check approved reviews count
         id: check_approvals
         uses: actions/github-script@v7
