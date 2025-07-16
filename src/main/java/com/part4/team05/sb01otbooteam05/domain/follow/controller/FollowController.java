@@ -68,9 +68,11 @@ public class FollowController {
     }
 
     @DeleteMapping("/{followId}")
-    public ResponseEntity<Void> unfollow(@PathVariable UUID followId) {
-        log.info("팔로우 취소 요청: followId={}", followId);
-        followService.unfollow(followId);
+    public ResponseEntity<Void> unfollow(@PathVariable UUID followId,
+                                         @RequestHeader("X-USER-ID") UUID currentUserId
+    ) {
+        log.info("팔로우 취소 요청: followId={}, currentUserId", followId, currentUserId);
+        followService.unfollow(followId, currentUserId);
         return ResponseEntity.noContent().build();
     }
 }
