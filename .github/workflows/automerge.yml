@@ -3,6 +3,9 @@ name: AutoMerge with 2+ Approvals
 on:
   pull_request_review:
     types: [submitted]
+  pull_request:
+    types: [synchronize]
+
 jobs:
   automerge:
     runs-on: ubuntu-latest
