@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.weather.batch.itemWriter;
+package com.part4.team05.sb01otbooteam05.domain.weather.batch.writer;
 
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
