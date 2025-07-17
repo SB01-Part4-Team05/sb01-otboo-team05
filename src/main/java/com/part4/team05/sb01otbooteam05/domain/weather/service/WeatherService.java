@@ -7,7 +7,6 @@ import com.part4.team05.sb01otbooteam05.domain.user.util.LccGridConverter;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.exception.InvalidDataException;
-import com.part4.team05.sb01otbooteam05.domain.weather.exception.WeatherBatchException;
 import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,11 +22,6 @@ import java.util.UUID;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecutionException;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,8 +43,6 @@ public class WeatherService {
   private final WeatherApiClient weatherApiClient;
   private final WeatherRepository weatherRepository;
   private final KakaoApiService kakaoApiService;
-  private final JobLauncher jobLauncher;
-  private final Job singleLocationWeatherJob;
 
   @Transactional
   public List<Weather> generateWeather(int x, int y) {
@@ -137,8 +129,8 @@ public class WeatherService {
           .forecastAt(forecastAt)
           .skyStatusType(WeatherCategoryMapper.toSkyStatusType(values.get("SKY")))
           .precipitationType(WeatherCategoryMapper.toPrecipitationType(values.get("PTY")))
-          .precipitationAmount(WeatherCategoryMapper.toPrecipitation(values.get("PCP")))
-          .precipitationProbability(parseDouble(values.get("POP")))
+          .precipitationAmount(WeatherCategoryMapper.toPrecipitationAmount(values.get("PCP")))
+          .precipitationProbability(WeatherCategoryMapper.toPrecipitationProbability(values.get("POP")))
           .humidityCurrent(reh)
           .humidityComparedToDayBefore(rehDiff)
           .temperatureCurrent(tmp)
@@ -245,7 +237,9 @@ public class WeatherService {
     return result;
   }
 
+
   // 날씨 단건 조회 시 날씨 데이터 생성 ( singleLocationWeatherJob 실행 )
+  @Transactional
   public WeatherAPILocation getWeatherAPILocationAndGenerateWeather(double longitude,
       double latitude) {
     WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
@@ -253,19 +247,11 @@ public class WeatherService {
     int y = weatherAPILocation.y();
     boolean exists = weatherRepository.existsByLocationXAndLocationY(x, y);
     if (!exists) {
-      try {
-        JobParameters parameters = new JobParametersBuilder()
-            .addString("x", String.valueOf(x))
-            .addString("y", String.valueOf(y))
-            .addLong("timestamp", System.currentTimeMillis())
-            .toJobParameters();
-        log.info("단일 위치 배치 실행: x={}, y={}", x, y);
-        jobLauncher.run(singleLocationWeatherJob, parameters);
-      } catch (JobExecutionException e) {
-        log.error("단일 위치 날씨 배치 실행 실패: x={}, y={}", x, y);
-        throw new WeatherBatchException();
-      } catch (Exception e) {
-        throw new WeatherBatchException();
+      // 날씨 서비스 generateWeather 호출 시 트랜잭션 오류 방지 위해 직접 호출
+      ParsedForecastDto parsedForecastDto = weatherApiClient.fetchForecast(x, y);
+      List<Weather> weatherList = parsedForecastDtoToWeathers(parsedForecastDto, x, y);
+      if (weatherList != null && !weatherList.isEmpty()) {
+        weatherRepository.saveAll(weatherList);
       }
     } else {
       log.info("날씨 데이터 존재: x={}, y={}", x, y);
@@ -278,7 +264,7 @@ public class WeatherService {
     List<String> locationNames = kakaoApiService.getLocationNames(latitude, longitude);
     LccGridConverter.XY gridXY = LccGridConverter.toGrid(latitude, longitude);
 
-    log.info("WeatherAPILocation 생성 : longitude = {}, latitude = {}", longitude, latitude);
+    log.info("WeatherAPILocation 생성 : longitude = {}, latitude = {}, x = {}, y = {}", longitude, latitude, gridXY.x, gridXY.y);
     return new WeatherAPILocation(
         latitude,
         longitude,
