@@ -1,0 +1,17 @@
+name: notification to discord
+
+on:
+  workflow_run:
+    workflows: ["AutoMerge with 2+ Approvals"]
+    types: [completed]
+
+jobs:
+  notification:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Discord
+        uses: th0th/notify-discord@v0.4.1
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: "auto merge success!"

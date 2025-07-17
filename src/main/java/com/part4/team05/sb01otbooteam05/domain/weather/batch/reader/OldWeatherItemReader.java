@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.weather.batch.itemReader;
+package com.part4.team05.sb01otbooteam05.domain.weather.batch.reader;
 
 import jakarta.annotation.PostConstruct;
 import java.time.LocalDateTime;
