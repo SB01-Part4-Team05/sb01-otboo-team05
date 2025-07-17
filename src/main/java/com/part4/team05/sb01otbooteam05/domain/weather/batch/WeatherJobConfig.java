@@ -1,11 +1,11 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.batch;
 
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemProcessor.WeatherItemProcessor;
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemReader.OldWeatherItemReader;
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemReader.SingleLocationWeatherItemReader;
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemReader.WeatherItemReader;
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemWriter.WeatherDeleteItemWriter;
-import com.part4.team05.sb01otbooteam05.domain.weather.batch.itemWriter.WeatherItemWriter;
+
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.reader.OldWeatherItemReader;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.reader.WeatherItemReader;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.processor.WeatherItemProcessor;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.writer.WeatherDeleteItemWriter;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.writer.WeatherItemWriter;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +30,6 @@ public class WeatherJobConfig {
   private final WeatherItemReader reader;
   private final WeatherItemProcessor processor;
   private final WeatherItemWriter writer;
-  private final SingleLocationWeatherItemReader singleLocationWeatherItemReader;
   private final OldWeatherItemReader oldWeatherItemReader;
   private final WeatherDeleteItemWriter weatherDeleteItemWriter;
 
@@ -48,24 +47,6 @@ public class WeatherJobConfig {
     return new StepBuilder("weatherStep", jobRepository)
         .<Pair<Integer, Integer>, List<Weather>>chunk(20, platformTransactionManager)
         .reader(reader)
-        .processor(processor)
-        .writer(writer)
-        .build();
-  }
-
-  // 날씨 단건 수집 작업을 정의하는 Spring Batch Job
-  @Bean
-  public Job singleLocationWeatherJob() {
-    return new JobBuilder("singleLocationWeatherJob", jobRepository)
-        .start(singelLocationWeatherStep())
-        .build();
-  }
-
-  @Bean
-  public Step singelLocationWeatherStep() {
-    return new StepBuilder("singleLocationWeatherStep", jobRepository)
-        .<Pair<Integer, Integer>, List<Weather>>chunk(5, platformTransactionManager)
-        .reader(singleLocationWeatherItemReader)
         .processor(processor)
         .writer(writer)
         .build();
