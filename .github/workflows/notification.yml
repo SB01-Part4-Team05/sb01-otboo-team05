@@ -7,7 +7,7 @@ on:
 
 env:
   DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
-  GITHUB_JOB_STATUS: ${{ job.status }}
+  GITHUB_JOB_STATUS: "success"
 
 jobs:
   notification:
