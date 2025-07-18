@@ -22,4 +22,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOriginPatterns("*")
                 .withSockJS(); // SockJs fallback 지원
     }
+
+    private String[] getAllowedOrigins() {
+        return new String[] {
+                "http://localhost:3000"
+        };
+    }
 }

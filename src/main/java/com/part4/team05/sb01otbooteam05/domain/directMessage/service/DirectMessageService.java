@@ -10,5 +10,6 @@ public interface DirectMessageService {
 
     DirectMessageDto sendMessage(DirectMessageCreateRequest request);
 
-    DirectMessageDtoCursorResponse getMessages(UUID userId1, UUID userId2, UUID idAfter, int limit);
+    DirectMessageDtoCursorResponse getMessages(UUID userId1, UUID userId2, UUID idAfter, int limit, String sortBy,
+                                               String direction);
 }

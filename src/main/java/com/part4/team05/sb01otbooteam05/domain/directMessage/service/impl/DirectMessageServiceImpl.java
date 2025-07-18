@@ -29,6 +29,10 @@ public class DirectMessageServiceImpl implements DirectMessageService {
     @Override
     @Transactional
     public DirectMessageDto sendMessage(DirectMessageCreateRequest request) {
+        if (request.content() == null || request.content().trim().isEmpty()) {
+            throw new OtbooException(ErrorCode.INVALID_MESSAGE_CONTENT);
+        }
+
         User sender = userRepository.findById(request.senderId())
                 .orElseThrow(() -> new OtbooException(ErrorCode.USER_NOT_FOUND));
         User receiver = userRepository.findById(request.receiverId())
@@ -42,7 +46,12 @@ public class DirectMessageServiceImpl implements DirectMessageService {
 
     @Override
     @Transactional(readOnly = true)
-    public DirectMessageDtoCursorResponse getMessages(UUID userId1, UUID userId2, UUID idAfter, int limit) {
+    public DirectMessageDtoCursorResponse getMessages(UUID userId1, UUID userId2, UUID idAfter, int limit, String sortBy,
+                                                      String direction) {
+        if (limit <= 0 || limit > 100) {
+            throw new OtbooException(ErrorCode.INVALID_PAGINATION_LIMIT);
+        }
+
         PageRequest pageRequest = PageRequest.of(0, limit);
         List<DirectMessage> messages = directMessageRepository.findMessages(userId1, userId2, idAfter, pageRequest);
 
@@ -60,8 +69,8 @@ public class DirectMessageServiceImpl implements DirectMessageService {
                 nextIdAfter,
                 messages.size() == limit,
                 totalCount,
-                "id",
-                "DESC"
+                sortBy,
+                direction
         );
     }
 
