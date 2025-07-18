@@ -36,10 +36,9 @@ public class DirectMessageRestController {
             @RequestParam(defaultValue = "DESC") String direction
             ) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof CustomUserDetails)) {
+        if (!(auth != null && auth.getPrincipal() instanceof CustomUserDetails userDetails)) {
             throw new OtbooException(ErrorCode.UNAUTHORIZED);
         }
-        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
         UUID currentUserId = userDetails.getUserId();
 
         return ResponseEntity.ok(
