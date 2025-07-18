@@ -5,6 +5,10 @@ on:
     types:
       - closed
 
+env:
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
+  GITHUB_JOB_STATUS: ${{ job.status }}
+
 jobs:
   notification:
     if: github.event.pull_request.merged == true
@@ -13,5 +17,4 @@ jobs:
       - name: Notify Discord
         uses: th0th/notify-discord@v0.4.1
         with:
-          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
           content: "auto merge success!"
