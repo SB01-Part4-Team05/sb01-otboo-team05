@@ -31,7 +31,7 @@ public class WeatherCategoryMapper {
   }
 
   // 강수량 변환
-  public static double toPrecipitation(String pcpCode) {
+  public static double toPrecipitationAmount(String pcpCode) {
     try {
       if (pcpCode.equals("강수없음")) {
         return 0.0;
@@ -53,6 +53,15 @@ public class WeatherCategoryMapper {
 
     } catch (NumberFormatException e) {
       throw new InvalidDataException("알수없는 코드값: " + pcpCode);
+    }
+  }
+
+  // 강수확률 변환
+  public static double toPrecipitationProbability(String popCode) {
+    try {
+      return Double.parseDouble(popCode) / 100.0;
+    } catch (NumberFormatException e) {
+      throw new InvalidDataException("알수없는 코드값: " + popCode);
     }
   }
 

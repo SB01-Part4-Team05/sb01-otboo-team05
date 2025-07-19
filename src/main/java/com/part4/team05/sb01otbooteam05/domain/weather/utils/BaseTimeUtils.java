@@ -10,7 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 public class BaseTimeUtils {
 
   // 기상청 예보 발표 시간
-  private static final List<LocalTime> BASE_TIMES = List.of(
+  private static final List<LocalTime> STANDARD_TIMES = List.of(
       LocalTime.of(2, 0),
       LocalTime.of(5, 0),
       LocalTime.of(8, 0),
@@ -26,16 +26,19 @@ public class BaseTimeUtils {
     LocalDate nowDate = LocalDate.now();
     LocalTime nowTime = LocalTime.now();
 
-    LocalTime latestBaseTime = BASE_TIMES.stream()
-        .filter(time -> !nowTime.isBefore(time))
-        .reduce((first, second) -> second)
-        .orElse(null);
+    LocalTime latestBaseTime = standardTime(nowTime);
 
     if (latestBaseTime != null) {
       return Pair.of(nowDate, formatTime(latestBaseTime));
     }
-
     return Pair.of(nowDate.minusDays(1), "2300");
+  }
+
+  public static LocalTime standardTime(LocalTime localTime) {
+    return STANDARD_TIMES.stream()
+        .filter(time -> !localTime.isBefore(time))
+        .reduce((first, second) -> second)
+        .orElse(null);
   }
 
   private static String formatTime(LocalTime time) {

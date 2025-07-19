@@ -23,14 +23,16 @@ public enum ErrorCode {
 	// Weather 관련 에러 코드
 	WEATHER_NOT_FOUND("해당 날씨를 찾을 수 없습니다."),
 	INVALID_DATA("잘못된 값입니다."),
-	WEATHER_BATCH_FAILED("배치 실행 실패하였습니다."),
 
     // Notification 관련 에러 코드
 	NOTIFICATION_NOT_FOUND("알림이 존재하지 않습니다."),
+	NOTIFICATION_UNAUTHORIZED("다른 사용자의 알림은 읽을 수 없습니다."),
 
 	// follow 관련 에러 코드
 	FOLLOW_SELF_NOT_ALLOWED("자기 자신을 팔로우할 수 없습니다."),
 	ALREADY_FOLLOWED("이미 팔로우한 사용자입니다."),
+	FOLLOW_NOT_FOUND("팔로우 관계를 찾을 수 없습니다."),
+	FOLLOW_UNAUTHORIZED("팔로우를 취소할 권한이 없습니다."),
 
 	// 서버 관련 에러 코드
 	INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다."),

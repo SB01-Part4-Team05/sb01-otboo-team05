@@ -1,8 +1,11 @@
-package com.part4.team05.sb01otbooteam05.domain.weather.batch;
+package com.part4.team05.sb01otbooteam05.domain.weather.batch.processor;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
+import com.part4.team05.sb01otbooteam05.domain.weather.utils.BaseTimeUtils;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +27,12 @@ public class WeatherItemProcessor implements ItemProcessor<Pair<Integer, Integer
     int x = location.getLeft();
     int y = location.getRight();
 
-    LocalDateTime now = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
+    LocalDate nowDate = LocalDate.now();
+    LocalTime time = BaseTimeUtils.standardTime(LocalTime.now()).withNano(0);
+    LocalDateTime forecastedAt = LocalDateTime.of(nowDate, time);
 
-    if(weatherService.existWeather(x, y, now)) {
-      log.info("이미 날씨 데이터 존재: x={}, y={}, forecastedAt = {}", x, y, now);
+    if(weatherService.existWeather(x, y, forecastedAt)) {
+      log.info("이미 날씨 데이터 존재: x={}, y={}, forecastedAt = {}", x, y, forecastedAt);
       return null;
     }
 

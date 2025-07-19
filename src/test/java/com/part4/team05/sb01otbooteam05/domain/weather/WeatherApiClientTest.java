@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.weather;
 
+import com.part4.team05.sb01otbooteam05.domain.weather.client.WeatherApiClient;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

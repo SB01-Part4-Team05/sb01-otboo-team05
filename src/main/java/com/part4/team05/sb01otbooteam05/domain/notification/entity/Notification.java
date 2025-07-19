@@ -35,4 +35,8 @@ public class Notification extends BaseEntity {
 
   @Column(nullable = false)
   private UUID receiverId;
+
+  public void markAsRead() {
+    this.isRead = true;
+  }
 }
