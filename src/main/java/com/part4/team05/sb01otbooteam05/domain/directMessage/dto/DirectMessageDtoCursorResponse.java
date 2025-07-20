@@ -1,4 +1,15 @@
 package com.part4.team05.sb01otbooteam05.domain.directMessage.dto;
 
-public class DirectMessageDtoCursorResponse {
+import java.util.List;
+import java.util.UUID;
+
+public record DirectMessageDtoCursorResponse(
+        List<DirectMessageDto> data,
+        String nextCursor,
+        UUID nextIdAfter,
+        boolean hasNext,
+        long totalCount,
+        String sortBy,
+        String sortDirection
+) {
 }

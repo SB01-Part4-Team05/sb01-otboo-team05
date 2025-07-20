@@ -34,6 +34,11 @@ public enum ErrorCode {
 	FOLLOW_NOT_FOUND("팔로우 관계를 찾을 수 없습니다."),
 	FOLLOW_UNAUTHORIZED("팔로우를 취소할 권한이 없습니다."),
 
+	// DirectMessage 관련 에러 코드
+	DM_SENDER_MISMATCH("인증된 사용자만 자신의 ID로 메시지를 보낼 수 있습니다."),
+	INVALID_PAGINATION_LIMIT("잘못된 limit 값입니다."),
+	INVALID_MESSAGE_CONTENT("메시지 내용이 비어있을 수 없습니다."),
+
 	// 서버 관련 에러 코드
 	INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다."),
 	INVALID_REQUEST("잘못된 요청입니다.");
