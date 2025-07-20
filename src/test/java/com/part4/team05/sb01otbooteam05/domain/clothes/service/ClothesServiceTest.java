@@ -1,14 +1,21 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
 
-import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
@@ -20,18 +27,6 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.exception.ClothesNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.test.context.support.WithMockUser;
 
 @ExtendWith(MockitoExtension.class)
 class ClothesServiceTest {
@@ -65,7 +60,7 @@ class ClothesServiceTest {
   }
 
   @Test
-  void getClothesEntityByIdOrThrow() {
+  void getClothesEntityByIdOrThrowOrThrow() {
     UUID clothesId = UUID.randomUUID();
     Clothes clothe = Clothes.builder().id(clothesId)
         .name("Clothes1").build();
@@ -78,7 +73,7 @@ class ClothesServiceTest {
   }
 
   @Test
-  void getClothesEntityByIdOrThrow_Fail() {
+  void getClothesEntityByIdOrThrowOrThrow_Fail() {
     UUID clothesId = UUID.randomUUID();
 
     assertThrows(ClothesNotFoundException.class,() -> clothesService.getClothesEntityByIdOrThrow(clothesId));
