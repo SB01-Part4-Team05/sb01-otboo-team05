@@ -19,14 +19,7 @@ import com.part4.team05.sb01otbooteam05.domain.feed.exception.FeedNotFoundExcept
 import com.part4.team05.sb01otbooteam05.domain.feed.mapper.FeedMapper;
 import com.part4.team05.sb01otbooteam05.domain.feed.repository.FeedRepository;
 import com.part4.team05.sb01otbooteam05.domain.feed.repository.SearchFeedRepository;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDto;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDtoCursorResponse;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCreateRequest;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindCommentsRequest;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.entity.Comment;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.mapper.CommentMapper;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.repository.FeedCommentRepository;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.repository.SearchCommentRepository;
 import com.part4.team05.sb01otbooteam05.domain.feedLike.entity.FeedLike;
 import com.part4.team05.sb01otbooteam05.domain.feedLike.repository.FeedLikeRepository;
 import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
@@ -51,9 +44,7 @@ public class BasicFeedService implements FeedService {
     private final FeedLikeRepository feedLikeRepository;
     private final FeedCommentRepository feedCommentRepository;
     private final FeedMapper feedMapper;
-    private final CommentMapper commentMapper;
     private final SearchFeedRepository searchFeedRepository;
-    private final SearchCommentRepository searchCommentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -175,24 +166,6 @@ public class BasicFeedService implements FeedService {
     }
 
     @Override
-    public CommentDto createFeedComment(UUID userId, UUID feedId, CommentCreateRequest request) {
-
-        checkUserIdEquality(userId, request.authorId());
-
-        // 1. 피드, 유저 조회
-        Feed feed = feedRepository.findById(feedId).orElseThrow(() -> FeedNotFoundException.withId(feedId));
-        User author = userService.getUserEntityByIdOrThrow(userId);
-
-        // 2. 댓글 생성
-        Comment newComment = new Comment(feed, author, request.content());
-        feedCommentRepository.save(newComment);
-
-        // 3. 댓글 Dto 반환
-        log.info("댓글 생성 성공: commentId={}", newComment.getId());
-        return commentMapper.toCommentDto(newComment);
-    }
-
-    @Override
     public FeedDto updateFeed(UUID userId, UUID feedId, FeedUpdateRequest request) {
 
         // 1. 피드, 유저 조회
@@ -214,11 +187,6 @@ public class BasicFeedService implements FeedService {
         return feedMapper.toFeedDto(feed, likeCount, commentCount, likedByMe);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public CommentDtoCursorResponse findComments(UUID userId, FindCommentsRequest request) {
-        return searchCommentRepository.findCommentDtosWithCursor(userId, request);
-    }
 
     // todo 유저 검증 실패 관련 예외로 변경하기
     // 요청 Id와 파라미터 Id가 같은지 검증 등, ID 동일성 검증용 메서드

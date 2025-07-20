@@ -30,6 +30,7 @@ import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDto;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindCommentsRequest;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.service.FeedCommentService;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 
@@ -44,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FeedController {
 
     private final FeedService feedService;
-
+    private final FeedCommentService feedCommentService;
 
     // 피드 목록조회
     @GetMapping
@@ -117,7 +118,7 @@ public class FeedController {
     ) {
         UUID userId = user.getUserId();
         FindCommentsRequest request = new FindCommentsRequest(feedId, cursor, idAfter, limit);
-        CommentDtoCursorResponse feedCommentDtos = feedService.findComments(userId, request);
+        CommentDtoCursorResponse feedCommentDtos = feedCommentService.findComments(userId, request);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(feedCommentDtos);
@@ -130,7 +131,7 @@ public class FeedController {
             @Validated @RequestBody CommentCreateRequest request
     ) {
         UUID userId = user.getUserId();
-        CommentDto commentDto = feedService.createFeedComment(userId, feedId, request);
+        CommentDto commentDto = feedCommentService.createFeedComment(userId, feedId, request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(commentDto);

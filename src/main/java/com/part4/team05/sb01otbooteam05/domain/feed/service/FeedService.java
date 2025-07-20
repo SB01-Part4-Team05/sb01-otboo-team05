@@ -1,16 +1,12 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.service;
 
+import java.util.UUID;
+
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FeedUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FindFeedsRequest;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDto;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDtoCursorResponse;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCreateRequest;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindCommentsRequest;
-
-import java.util.UUID;
 
 public interface FeedService {
 
@@ -24,10 +20,5 @@ public interface FeedService {
 
     FeedDto unlikeFeed(UUID userId, UUID feedId);
 
-    CommentDto createFeedComment(UUID userId, UUID feedId, CommentCreateRequest request);
-
-
     FeedDto updateFeed(UUID userId, UUID feedId, FeedUpdateRequest request);
-
-    CommentDtoCursorResponse findComments(UUID userId, FindCommentsRequest request);
 }
