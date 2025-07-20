@@ -8,7 +8,6 @@ import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.exception.InvalidDataException;
 import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper;
-import com.part4.team05.sb01otbooteam05.domain.weather.exception.WeatherBatchException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -232,7 +231,7 @@ public class WeatherService {
     List<WeatherDto> result = targetForecastAtList.stream()
         .map(weatherMap::get)
         .filter(Objects::nonNull)
-        .map(weather -> toDto(weather, weatherAPILocation))
+        .map(weather -> WeatherMapper.toDto(weather, weatherAPILocation))
         .collect(Collectors.toList());
 
     return result;

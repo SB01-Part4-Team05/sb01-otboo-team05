@@ -1,6 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.mapper;
 
-import static com.part4.team05.sb01otbooteam05.domain.weather.Mapper.WeatherMapper.*;
+import static com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper.*;
 
 import java.util.Collections;
 import java.util.List;

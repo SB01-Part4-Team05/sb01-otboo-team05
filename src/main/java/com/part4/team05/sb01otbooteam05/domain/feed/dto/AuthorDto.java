@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 
 public record AuthorDto(
 	@NotNull
-	UUID userId,
+	UUID id,
 
 	@NotBlank
 	@Size(min = 1, max = 20) //User 객체의 length 값을 따름

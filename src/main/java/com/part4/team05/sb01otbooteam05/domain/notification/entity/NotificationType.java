@@ -6,5 +6,6 @@ public enum NotificationType {
     LIKE_OR_COMMENT_ON_FEED,
     FOLLOWEE_CREATED_FEED,
     NEW_FOLLOWER,
-    RECEIVED_DM
+    RECEIVED_DM,
+    RECEIVED_COMMENT
 }
