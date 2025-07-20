@@ -1,5 +1,12 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.mapper;
 
+import static com.part4.team05.sb01otbooteam05.domain.weather.Mapper.WeatherMapper.*;
+
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.AuthorDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.entity.Feed;
@@ -12,13 +19,8 @@ import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
-import java.util.Collections;
-import java.util.List;
-
-import static com.part4.team05.sb01otbooteam05.domain.weather.Mapper.WeatherMapper.*;
 
 
 @Component
@@ -29,7 +31,7 @@ public class FeedMapper {
 	private final FeedCommentRepository feedCommentRepository;
 	private final OotdMapper ootdMapper;
 
-
+	// 각 피드마다 조회한 user의 좋아요 여부를 확인하기 위해 유저 또한 dto 생성에 파라미터로 주입된다.
 	public List<FeedDto> toFeedDtoList(List<Feed> feeds, User user){
 		return feeds.stream().map(
 				feed -> toFeedDto(feed, countFeedLikeByFeed(feed), countCommentByFeed(feed), isLikedByMe(feed, user)
@@ -78,8 +80,7 @@ public class FeedMapper {
 		);
 	}
 
-	/*@Mapping(source = "weather.windSpeed", target = "weather.windSpeed", qualifiedByName = "windSpeedDtoToDouble")
-	Feed toEntity(FeedDto feedDto);*/
+
 
 
 
@@ -98,13 +99,6 @@ public class FeedMapper {
 		);
 	}
 
-
-
-	/*@Named("windSpeedDtoToDouble")
-	default Double map(WindSpeedDto dto) {
-		return dto != null ? dto.speed() : null;
-	}*/
-
 	private Long countFeedLikeByFeed(Feed feed) {
 		return feedLikeRepository.countByFeed(feed);
 	}
@@ -116,4 +110,13 @@ public class FeedMapper {
 	private boolean isLikedByMe(Feed feed, User user){
 		return feedLikeRepository.findByFeedAndAuthor(feed, user).isPresent();
 	}
+
+	// 피드매퍼 로직을 전반적으로 수정했는데, 민주님이 작성해주신 코드들은 이후에 사용하실까봐 주석처리해두었어요 !
+	/*@Mapping(source = "weather.windSpeed", target = "weather.windSpeed", qualifiedByName = "windSpeedDtoToDouble")
+	Feed toEntity(FeedDto feedDto);*/
+
+	/*@Named("windSpeedDtoToDouble")
+	default Double map(WindSpeedDto dto) {
+		return dto != null ? dto.speed() : null;
+	}*/
 }

@@ -1,10 +1,14 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.dto;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+import java.util.List;
+import java.util.UUID;
+
 import org.hibernate.query.SortDirection;
 
-import java.util.List;
+import com.part4.team05.sb01otbooteam05.domain.feed.enums.SortType;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 public record FeedDtoCursorResponse(
 
@@ -14,7 +18,7 @@ public record FeedDtoCursorResponse(
 
 	String nextCursor,
 
-	String IdAfter,
+	UUID nextIdAfter,
 
 	@NotNull
 	Boolean hasNext,
@@ -23,7 +27,7 @@ public record FeedDtoCursorResponse(
 	Long totalCount,
 
 	@NotNull
-	String sortBy,
+	SortType sortBy,
 
 	@NotNull
 	SortDirection direction
