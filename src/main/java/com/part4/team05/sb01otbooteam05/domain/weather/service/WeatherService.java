@@ -1,14 +1,8 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.service;
 
+import static com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper.*;
 import static java.lang.Double.*;
 
-import com.part4.team05.sb01otbooteam05.domain.user.service.KakaoApiService;
-import com.part4.team05.sb01otbooteam05.domain.user.util.LccGridConverter;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
-import com.part4.team05.sb01otbooteam05.domain.weather.exception.InvalidDataException;
-import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper;
-import com.part4.team05.sb01otbooteam05.domain.weather.exception.WeatherBatchException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -20,18 +14,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.part4.team05.sb01otbooteam05.domain.user.service.KakaoApiService;
+import com.part4.team05.sb01otbooteam05.domain.user.util.LccGridConverter;
 import com.part4.team05.sb01otbooteam05.domain.weather.client.WeatherApiClient;
-import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherCategoryMapper;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
+import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
+import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
-import com.part4.team05.sb01otbooteam05.domain.weather.repository.WeatherRepository;
+import com.part4.team05.sb01otbooteam05.domain.weather.exception.InvalidDataException;
 import com.part4.team05.sb01otbooteam05.domain.weather.exception.WeatherNotFoundException;
+import com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherCategoryMapper;
+import com.part4.team05.sb01otbooteam05.domain.weather.repository.WeatherRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

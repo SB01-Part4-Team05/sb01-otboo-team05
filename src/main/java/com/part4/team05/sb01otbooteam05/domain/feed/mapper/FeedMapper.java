@@ -1,6 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.mapper;
 
-import static com.part4.team05.sb01otbooteam05.domain.weather.Mapper.WeatherMapper.*;
+import static com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -66,17 +66,11 @@ public class FeedMapper {
 	}
 
 	public FeedDto toFeedDto(Feed feed, User user) {
-		return new FeedDto(
-				feed.getId(),
-				feed.getCreatedAt(),
-				feed.getUpdatedAt(),
-				toAuthorDto(feed.getAuthor()),
-				toWeatherDto(feed.getWeather()),
-				toOotdDtoList(feed.getOotds()),
-				feed.getContent(),
-				countFeedLikeByFeed(feed),
-				countCommentByFeed(feed),
-				isLikedByMe(feed, user)
+		return toFeedDto(
+		feed,
+		countFeedLikeByFeed(feed),
+		countCommentByFeed(feed),
+		isLikedByMe(feed, user)
 		);
 	}
 

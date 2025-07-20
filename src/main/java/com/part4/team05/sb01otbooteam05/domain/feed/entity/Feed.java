@@ -1,17 +1,25 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.entity;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.part4.team05.sb01otbooteam05.domain.base.BaseEntity;
 import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
-import jakarta.persistence.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 @Entity
 @Table(name = "feeds")
@@ -91,6 +99,7 @@ public class Feed extends BaseEntity {
   }
 
   // likeCount 객체 생성, 삭제 시 새로 카운트된다.
+  //todo 외부에서 변경가능성있어, 이후 수정 필요함.
   public void setLikeCount(Long newCount){
     this.likeCount = newCount;
   }
