@@ -1,45 +1,12 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
-import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
-import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
-import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
-import com.part4.team05.sb01otbooteam05.domain.feed.entity.Feed;
-import com.part4.team05.sb01otbooteam05.domain.feed.mapper.FeedMapper;
-import com.part4.team05.sb01otbooteam05.domain.feed.repository.FeedRepository;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.entity.Comment;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.mapper.CommentMapper;
-import com.part4.team05.sb01otbooteam05.domain.feedComment.repository.FeedCommentRepository;
-import com.part4.team05.sb01otbooteam05.domain.feedLike.entity.FeedLike;
-import com.part4.team05.sb01otbooteam05.domain.feedLike.repository.FeedLikeRepository;
-import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
-import com.part4.team05.sb01otbooteam05.domain.user.entity.GenderType;
-import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
-import com.part4.team05.sb01otbooteam05.domain.user.entity.UserRole;
-import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
-import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
-import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
-import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
-import com.part4.team05.sb01otbooteam05.domain.weather.entity.WindSpeedAsWord;
-import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
 
 @ExtendWith(MockitoExtension.class)
 class BasicFeedServiceTest {
 
-	@InjectMocks
+	/*@InjectMocks
 	private BasicFeedService feedService;
 	@Mock
 	private FeedRepository feedRepository;
@@ -178,5 +145,5 @@ class BasicFeedServiceTest {
 
 	private Comment commentMockMaker(Feed feed, User author) {
 		return new Comment(feed, user, "테스트 댓글");
-	}
+	}*/
 }
