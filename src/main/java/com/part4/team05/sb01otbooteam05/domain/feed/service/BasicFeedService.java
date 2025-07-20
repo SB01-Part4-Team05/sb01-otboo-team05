@@ -1,5 +1,12 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.service;
 
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Stream;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
@@ -19,6 +26,7 @@ import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindComme
 import com.part4.team05.sb01otbooteam05.domain.feedComment.entity.Comment;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.mapper.CommentMapper;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.repository.FeedCommentRepository;
+import com.part4.team05.sb01otbooteam05.domain.feedComment.repository.SearchCommentRepository;
 import com.part4.team05.sb01otbooteam05.domain.feedLike.entity.FeedLike;
 import com.part4.team05.sb01otbooteam05.domain.feedLike.repository.FeedLikeRepository;
 import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
@@ -26,14 +34,9 @@ import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -50,7 +53,7 @@ public class BasicFeedService implements FeedService {
     private final FeedMapper feedMapper;
     private final CommentMapper commentMapper;
     private final SearchFeedRepository searchFeedRepository;
-
+    private final SearchCommentRepository searchCommentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -214,7 +217,7 @@ public class BasicFeedService implements FeedService {
     @Override
     @Transactional(readOnly = true)
     public CommentDtoCursorResponse findComments(UUID userId, FindCommentsRequest request) {
-        return null;
+        return searchCommentRepository.findCommentDtosWithCursor(userId, request);
     }
 
     // todo 유저 검증 실패 관련 예외로 변경하기

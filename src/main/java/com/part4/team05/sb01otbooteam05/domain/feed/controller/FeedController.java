@@ -1,5 +1,23 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.controller;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.hibernate.query.SortDirection;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDtoCursorResponse;
@@ -14,16 +32,9 @@ import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCr
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.FindCommentsRequest;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.query.SortDirection;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @Slf4j
 @Validated
@@ -99,8 +110,8 @@ public class FeedController {
     public ResponseEntity<CommentDtoCursorResponse> findFeedComments(
             @AuthenticationPrincipal CustomUserDetails user,
             // 값이 들어왔는데 변환할 타입과 맞지않을경우(ex. 지정한 상수로 변환될 수 없는 문자 들어옴) 스프링이 400 반환)
-            @RequestParam(value = "feedId") UUID feedId,
-            @RequestParam(value = "cursor", defaultValue = "") String cursor,
+            @RequestParam(value = "feedId", required = true) UUID feedId,
+            @RequestParam(value = "cursor", defaultValue = "")LocalDateTime cursor,
             @RequestParam(value = "idAfter", defaultValue = "") UUID idAfter,
             @RequestParam(value = "limit") Integer limit
     ) {
