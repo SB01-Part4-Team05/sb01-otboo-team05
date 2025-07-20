@@ -25,9 +25,9 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
+import com.part4.team05.sb01otbooteam05.domain.clothes.exception.ClothesNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
-import com.part4.team05.sb01otbooteam05.domain.user.exception.UserNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -61,7 +61,7 @@ public class ClothesService {
 
   @Transactional(readOnly = true)
   public Clothes getClothesEntityByIdOrThrow(UUID clothesId) {
-	  return clothesRepository.findById(clothesId).orElseThrow(()-> new UserNotFoundException());
+	  return clothesRepository.findById(clothesId).orElseThrow(()-> new ClothesNotFoundException());
   }
   @Transactional(readOnly = true)
   public Optional<Clothes> getClothesEntityById(UUID clothesId) {
