@@ -1,14 +1,13 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.service;
 
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
@@ -18,15 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.part4.team05.sb01otbooteam05.domain.attribute.dto.AttributeDto;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
-import com.part4.team05.sb01otbooteam05.domain.clothes.exception.ClothesNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
+import com.part4.team05.sb01otbooteam05.domain.clothes.exception.ClothesNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
 
@@ -62,7 +61,11 @@ public class ClothesService {
 
   @Transactional(readOnly = true)
   public Clothes getClothesEntityByIdOrThrow(UUID clothesId) {
-	  return clothesRepository.findById(clothesId).orElseThrow(() -> ClothesNotFoundException.withId(clothesId));
+	  return clothesRepository.findById(clothesId).orElseThrow(()-> new ClothesNotFoundException());
+  }
+  @Transactional(readOnly = true)
+  public Optional<Clothes> getClothesEntityById(UUID clothesId) {
+    return clothesRepository.findById(clothesId);
   }
 
   @Transactional

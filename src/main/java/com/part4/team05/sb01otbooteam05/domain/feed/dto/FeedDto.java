@@ -11,7 +11,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record FeedDto (
+// todo 캐싱으로 count 등 계산 효율화 필요
+public record FeedDto(
 	@NotNull
 	UUID id,
 
@@ -43,5 +44,5 @@ public record FeedDto (
 
 	@NotNull
 	Boolean likedByMe
-	) {
+) {
 }

@@ -1,13 +1,16 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.dto;
 
 import java.util.List;
+import java.util.UUID;
 
-import org.springframework.data.domain.Sort;
+import org.hibernate.query.SortDirection;
+
+import com.part4.team05.sb01otbooteam05.domain.feed.enums.SortType;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
-public record FeedsPageResponse(
+public record FeedDtoCursorResponse(
 
 	@NotNull
 	@Valid
@@ -15,7 +18,7 @@ public record FeedsPageResponse(
 
 	String nextCursor,
 
-	String IdAfter,
+	UUID nextIdAfter,
 
 	@NotNull
 	Boolean hasNext,
@@ -24,9 +27,9 @@ public record FeedsPageResponse(
 	Long totalCount,
 
 	@NotNull
-	String sortBy,
+	SortType sortBy,
 
 	@NotNull
-	Sort.Direction direction
+	SortDirection direction
 ) {
 }

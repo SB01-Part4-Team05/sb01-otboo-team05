@@ -13,7 +13,7 @@ public record OotdDto(
 
 
 	@NotNull
-	UUID clothesID,
+	UUID clothesId,
 
 
 	@NotBlank

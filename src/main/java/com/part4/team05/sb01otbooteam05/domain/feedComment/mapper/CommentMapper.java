@@ -1,19 +1,36 @@
 package com.part4.team05.sb01otbooteam05.domain.feedComment.mapper;
 
-import java.util.List;
-
-import org.mapstruct.Mapper;
-
+import com.part4.team05.sb01otbooteam05.domain.feed.dto.AuthorDto;
+import com.part4.team05.sb01otbooteam05.domain.feed.mapper.FeedMapper;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.CommentDto;
 import com.part4.team05.sb01otbooteam05.domain.feedComment.entity.Comment;
+import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface CommentMapper {
-	CommentDto toDto(Comment comment);
+import java.util.List;
 
-	List<CommentDto> toDtoList(List<Comment> comments);
+@Component
+@RequiredArgsConstructor
+public class CommentMapper {
 
-	Comment toEntity(CommentDto commentDto);
+    private final FeedMapper feedMapper;
 
-	List<Comment> toEntityList(List<CommentDto> commentDtos);
+    public List<CommentDto> toCommentDtoList(List<Comment> comments) {
+        return comments.stream().map(this::toCommentDto).toList();
+    }
+
+    public AuthorDto toAuthorDto(User user) {
+        return feedMapper.toAuthorDto(user);
+    }
+
+    public CommentDto toCommentDto(Comment comment) {
+        return new CommentDto(
+                comment.getId(),
+                comment.getCreatedAt(),
+                comment.getFeed().getId(),
+                toAuthorDto(comment.getAuthor()),
+                comment.getContent()
+        );
+    }
 }

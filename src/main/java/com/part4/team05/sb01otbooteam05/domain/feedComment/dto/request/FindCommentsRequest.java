@@ -1,15 +1,16 @@
 package com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 public record FindCommentsRequest(
-	@NotNull(message = "유효한 요청이 아닙니다: 작성자 ID 누락")
+	@NotNull(message = "유효한 요청이 아닙니다: feed ID 누락")
 	UUID feedId,
 
-	String cursor,
+	LocalDateTime cursor,
 	UUID idAfter,
 
 	@NotNull(message = "유효한 요청이 아닙니다: limit 값 누락")
