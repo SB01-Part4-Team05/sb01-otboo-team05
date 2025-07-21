@@ -28,12 +28,11 @@ jobs:
           script: |
             const headBranch = context.payload.workflow_run.head_branch;
             const { owner, repo } = context.repo;
-            const headParam = headBranch.includes(':') ? headBranch:`${owner}:${headBranch}`;
-            const pulls = await github.rest.pulls.list({
-            owner,
-            repo,
-            state: "open",
-            head: headParam,
+            const commitSha = context.payload.workflow_run.head_sha;
+            const pulls = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner,
+              repo,
+              commit_sha: commitSha,
             });
 
             if (pulls.data.length === 0) {
