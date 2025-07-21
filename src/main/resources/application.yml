@@ -88,10 +88,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: info, health, metrics, loggers
+        include: info, health, metrics, loggers, prometheus
   info:
     env:
       enabled: true
+  metrics:
+    enable:
+      all: true
+
 # 기상청 API 설정
 weather:
   api:
