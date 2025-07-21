@@ -8,6 +8,10 @@ on:
       - reopened
       - ready_for_review
       - edited
+  pull_request_review:
+    types: [ submitted ]
+  pull_request:
+    types: [ synchronize ]
 
 env:
   OOTD_TOKEN: ${{ secrets.OOTD_ACCESS_TOKEN }}
