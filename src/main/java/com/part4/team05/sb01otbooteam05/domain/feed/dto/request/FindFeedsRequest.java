@@ -5,7 +5,7 @@ import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.data.domain.Sort;
+import org.hibernate.query.SortDirection;
 
 import java.util.UUID;
 
@@ -22,7 +22,7 @@ public record FindFeedsRequest(
         SortType sortBy,
 
         @NotNull(message = "유효한 요청이 아닙니다: 정렬 방향 누락")
-        Sort.Direction sortDirection,
+        SortDirection sortDirection,
 
         String keywordLike,
         SkyStatusType skyStatusEqual,

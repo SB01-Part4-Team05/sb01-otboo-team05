@@ -17,7 +17,7 @@ import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Sort;
+import org.hibernate.query.SortDirection;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -46,7 +46,7 @@ public class FeedController {
             @RequestParam(value = "idAfter", required = false) UUID idAfter,
             @RequestParam(value = "limit", defaultValue = "20", required = true) Integer limit,
             @RequestParam(value = "sortBy", required = false) SortType sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "ASCENDING", required = true) Sort.Direction sortDirection,
+            @RequestParam(value = "sortDirection", defaultValue = "DESCENDING", required = true) SortDirection sortDirection,
             @RequestParam(value = "keywordLike", defaultValue = "", required = false) String keywordLike,
             @RequestParam(value = "skyStatusEqual", required = false) SkyStatusType skyStatusEqual,
             @RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,

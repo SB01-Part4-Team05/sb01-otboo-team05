@@ -18,7 +18,6 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.query.SortDirection;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -39,7 +38,6 @@ public class SearchFeedRepositoryImpl implements SearchFeedRepository {
     @Override
     public FeedDtoCursorResponse findFeedDtosWithCursor(UUID userId, FindFeedsRequest request) {
 
-        SortDirection sortDirection = (request.sortDirection() == Sort.Direction.DESC) ? SortDirection.DESCENDING : SortDirection.ASCENDING;
         BooleanBuilder builder = new BooleanBuilder();
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException());
 
@@ -67,7 +65,7 @@ public class SearchFeedRepositoryImpl implements SearchFeedRepository {
         // 커서가 존재할 경우 커서 기반 페이지네이션 조건 추가
         if (!(request.cursor().isEmpty()) && (request.idAfter() != null)) {
             // 1. 기본값인 최신순 or 좋아요순일 경우, 내림차순(DESCENDING)으로 설정.
-            if (sortDirection == SortDirection.DESCENDING) {
+            if (request.sortDirection() == SortDirection.DESCENDING) {
                 // 1-1. 최신순인 경우(정렬기준이 생성일)
                 if (request.sortBy().equals(SortType.createdAt)) {
                     LocalDateTime cursorTime = LocalDateTime.parse(request.cursor());
@@ -116,7 +114,7 @@ public class SearchFeedRepositoryImpl implements SearchFeedRepository {
                 .fetchOne();
 
         // 정렬 방식 설정
-        OrderSpecifier<?>[] orderSpecifiers = getOrderSpecifiers(request.sortBy(), sortDirection);
+        OrderSpecifier<?>[] orderSpecifiers = getOrderSpecifiers(request.sortBy(), request.sortDirection());
         // 조회
         List<Feed> feedEntityList = queryFactory
                 .selectFrom(feed)
@@ -135,11 +133,11 @@ public class SearchFeedRepositoryImpl implements SearchFeedRepository {
         }
         // 검색된 피드가 없다면 빈 데이터 반환
         if (feedEntityList.isEmpty()) {
-            return new FeedDtoCursorResponse(Collections.emptyList(), null, null, false, totalCount, request.sortBy(), sortDirection);
+            return new FeedDtoCursorResponse(Collections.emptyList(), null, null, false, totalCount, request.sortBy(), request.sortDirection());
         }
 
         // 정렬방향과 정렬필드는 이번 조회에 사용됐던 값을 그대로 반환한다.
-        SortDirection nextDirection = sortDirection;
+        SortDirection nextDirection = request.sortDirection();
         SortType nextSortBy = request.sortBy();
 
         // 검색값의 마지막 객체가 커서로서 사용된다.
