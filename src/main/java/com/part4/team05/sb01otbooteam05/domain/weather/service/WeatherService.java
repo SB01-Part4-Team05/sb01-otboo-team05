@@ -205,6 +205,7 @@ public class WeatherService {
     WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
     LocalDateTime now = LocalDateTime.now();
     LocalTime requestedTime = now.toLocalTime()
+        .plusHours(1)
         .truncatedTo(ChronoUnit.HOURS)
         .withSecond(0)
         .withNano(0);
@@ -213,7 +214,7 @@ public class WeatherService {
     // 기상청 날씨 정보가 3일 뒤부터는 매 시간마다 정보를 주지 않아 00시로 고정
     for (int i = 0; i <= 4; i++) {
       LocalDate targetDate = now.toLocalDate().plusDays(i);
-      LocalTime targetTime = i < 2 ? requestedTime : LocalTime.MIDNIGHT;
+      LocalTime targetTime = i < 3 ? requestedTime : LocalTime.MIDNIGHT;
       LocalDateTime targetForecastAt = LocalDateTime.of(targetDate, targetTime)
           .withSecond(0)
           .withNano(0);
