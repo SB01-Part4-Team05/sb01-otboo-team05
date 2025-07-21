@@ -1,12 +1,5 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.service;
 
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Stream;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
@@ -27,9 +20,14 @@ import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -83,7 +81,7 @@ public class BasicFeedService implements FeedService {
         }
 
         log.info("피드 생성 성공: feedId={}", newFeed.getId());
-        return feedMapper.toFeedDto(newFeed, 0L, 0, true);
+        return feedMapper.toFeedDto(newFeed, 0L, 0, false);
     }
 
     // 피드 삭제
