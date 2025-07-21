@@ -28,11 +28,12 @@ jobs:
           script: |
             const headBranch = context.payload.workflow_run.head_branch;
             const { owner, repo } = context.repo;
+            const headParam = headBranch.includes(':') ? headBranch:`${owner}:${headBranch}`;
             const pulls = await github.rest.pulls.list({
-              owner,
-              repo,
-              state: "open",
-              head: `${owner}:${headBranch}`,
+            owner,
+            repo,
+            state: "open",
+            head: headParam,
             });
 
             if (pulls.data.length === 0) {
@@ -98,7 +99,7 @@ jobs:
             core.setOutput('approved_count', approvedCount);
 
       - name: Enable AutoMerge
-        if: steps.check_approvals.outputs.approved_count >= 2
+        if:  ${{ fromJson(steps.check_approvals.outputs.approved_count) >= 2 }}
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
           token: ${{ secrets.OOTD_ACCESS_TOKEN }}
