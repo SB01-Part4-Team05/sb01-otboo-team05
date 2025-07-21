@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.notification.controller;
 
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,13 +29,13 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<NotificationDtoCursorResponse> getNotifications(
+            @AuthenticationPrincipal CustomUserDetails authUser,
             @RequestParam(name = "idAfter", required = false) UUID idAfter,
-            @RequestParam(name = "limit", defaultValue = "5") @Min(1) @Max(50) int limit,
-            @RequestHeader("X-USER-ID") UUID userId // 인증 안되니까 헤더로 임시 처리
-            ) {
-        log.info("알림 조회 API 호출: userId={}, limit={}, idAfter={}", userId, limit, idAfter);
+            @RequestParam(name = "limit", defaultValue = "5") @Min(1) @Max(50) int limit
+    ) {
+        log.info("알림 조회 API 호출: userId={}, limit={}, idAfter={}", authUser.getUserId(), limit, idAfter);
 
-        User user = userService.getUserEntityByIdOrThrow(userId);
+        User user = userService.getUserEntityByIdOrThrow(authUser.getUserId());
 
         NotificationDtoCursorResponse response = notificationService.getNotifications(user, idAfter, limit);
 
@@ -48,8 +50,8 @@ public class NotificationController {
 
     @DeleteMapping("/{notificationId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void markAsRead(@PathVariable UUID notificationId,
-                           @RequestHeader("X-USER-ID") UUID userId) {
-        notificationService.markAsRead(notificationId, userId);
+    public void markAsRead(@AuthenticationPrincipal CustomUserDetails authUser,
+                           @PathVariable UUID notificationId) {
+        notificationService.markAsRead(notificationId, authUser.getUserId());
     }
 }

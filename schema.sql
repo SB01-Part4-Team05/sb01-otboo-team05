@@ -3,6 +3,22 @@ create type clothes_type as ENUM (
     'SHOES','SOCKS','CAP','BAG','SCARF'
     );
 
+create type notification_type as ENUM (
+    'ROLE_CHANGED',
+    'SUSPICIOUS_ACTIVITY',
+    'LIKE_OR_COMMENT_ON_FEED',
+    'FOLLOWEE_CREATED_FEED',
+    'NEW_FOLLOWER',
+    'RECEIVED_DM',
+    'RECEIVED_COMMENT'
+    );
+
+create type notification_level as ENUM (
+    'INFO',
+    'WARNING',
+    'ERROR'
+    );
+
 -- 사용자 테이블 (프로필 + 비밀번호 리셋 통합)
 CREATE TABLE users
 (
@@ -100,14 +116,14 @@ create table attribute_values
 CREATE TABLE notifications
 (
     id          UUID PRIMARY KEY,
-    type        VARCHAR(30) NOT NULL,
+    type        notification_type NOT NULL,
     entity_id   UUID,
     title       VARCHAR(100),
     content     TEXT,
-    level       VARCHAR(20),
+    level       notification_level,
     is_read     BOOLEAN DEFAULT FALSE,
-    created_at  TIMESTAMP   NOT NULL,
-    receiver_id UUID        NOT NULL,
+    created_at  TIMESTAMP         NOT NULL,
+    receiver_id UUID              NOT NULL,
     CONSTRAINT fk_notifications_receiver FOREIGN KEY (receiver_id) REFERENCES users (id)
 );
 
@@ -170,11 +186,11 @@ CREATE TABLE feed_likes
     UNIQUE (feed_id, user_id)
 );
 
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
-CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
-CREATE INDEX idx_weather_location_forecast_latest ON weathers(location_x, location_y, forecast_at, forecasted_at DESC);
-CREATE INDEX idx_weather_forecasted_at ON weathers(forecasted_at);
+CREATE INDEX idx_users_email ON users (email);
+CREATE INDEX idx_refresh_tokens_token ON refresh_tokens (token);
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens (user_id);
+CREATE INDEX idx_weather_location_forecast_latest ON weathers (location_x, location_y, forecast_at, forecasted_at DESC);
+CREATE INDEX idx_weather_forecasted_at ON weathers (forecasted_at);
 
 -- 스프링 배치 테이블
 CREATE TABLE BATCH_JOB_INSTANCE
