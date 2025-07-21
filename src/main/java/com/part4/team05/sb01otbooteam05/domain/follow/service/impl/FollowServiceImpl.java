@@ -9,6 +9,9 @@ import com.part4.team05.sb01otbooteam05.domain.follow.exception.FollowException;
 import com.part4.team05.sb01otbooteam05.domain.follow.mapper.FollowMapper;
 import com.part4.team05.sb01otbooteam05.domain.follow.repository.FollowRepository;
 import com.part4.team05.sb01otbooteam05.domain.follow.service.FollowService;
+import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDto;
+import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
+import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
@@ -38,6 +41,7 @@ public class FollowServiceImpl implements FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
     private final FollowMapper followMapper;
+    private final NotificationService notificationService;
 
     @Transactional
     @Override
@@ -79,6 +83,20 @@ public class FollowServiceImpl implements FollowService {
 
         Map<UUID, User> userMap = userRepository.findAllById(List.of(followerId, followeeId)).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
+
+        User follower = userMap.get(followerId);
+        User followee = userMap.get(followeeId);
+
+        // [여기서 알림 전송]
+        NotificationDto notification = new NotificationDto(
+                UUID.randomUUID(),
+                java.time.LocalDateTime.now(),
+                followeeId, // 알림 받을 사용자
+                "새로운 팔로워",
+                follower.getName() + "님이 나를 팔로우했습니다.",
+                NotificationLevel.INFO
+        );
+        notificationService.sendNotification(notification);
 
         return followMapper.toDto(saved, userMap);
     }

@@ -16,9 +16,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -26,6 +30,9 @@ import java.util.UUID;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
+
+    private static final Long TIMEOUT = 60L * 1000 * 60; // 1시간
+    private final Map<UUID, SseEmitter> emitterMap = new ConcurrentHashMap<>();
 
     @Override
     public NotificationDtoCursorResponse getNotifications(User user, UUID idAfter, int limit) {
@@ -75,4 +82,40 @@ public class NotificationServiceImpl implements NotificationService {
         notification.markAsRead();
         log.info("알림 읽음 처리 완료: notificationId={}", notificationId);
     }
+
+    @Override
+    public SseEmitter connect(UUID userId, UUID lastEventId) {
+        SseEmitter emitter = new SseEmitter(TIMEOUT);
+        emitterMap.put(userId, emitter);
+
+        emitter.onCompletion(() -> emitterMap.remove(userId));
+        emitter.onTimeout(() -> emitterMap.remove(userId));
+
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("connect")
+                    .data(Map.of("time", System.currentTimeMillis())));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+        }
+
+        return emitter;
+    }
+
+    @Override
+    public void sendNotification(NotificationDto notification) {
+        SseEmitter emitter = emitterMap.get(notification.receiverId());
+        if (emitter != null) {
+            try {
+                emitter.send(SseEmitter.event()
+                        .id(notification.id().toString())
+                        .name("notifications")
+                        .data(notification));
+            } catch (IOException e) {
+                emitterMap.remove(notification.receiverId());
+                emitter.completeWithError(e);
+            }
+        }
+    }
+
 }
