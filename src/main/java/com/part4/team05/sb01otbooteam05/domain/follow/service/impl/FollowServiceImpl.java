@@ -87,16 +87,17 @@ public class FollowServiceImpl implements FollowService {
         User follower = userMap.get(followerId);
         User followee = userMap.get(followeeId);
 
-        // [여기서 알림 전송]
-        NotificationDto notification = new NotificationDto(
-                UUID.randomUUID(),
-                java.time.LocalDateTime.now(),
-                followeeId, // 알림 받을 사용자
-                "새로운 팔로워",
-                follower.getName() + "님이 나를 팔로우했습니다.",
-                NotificationLevel.INFO
-        );
-        notificationService.sendNotification(notification);
+        // 알림 전송
+        try {
+            notificationService.createAndSendNotification(
+                    followeeId,
+                    "새로운 팔로워",
+                    follower.getName() + "님이 나를 팔로우했습니다.",
+                    NotificationLevel.INFO
+            );
+        } catch (Exception e) {
+            log.warn("알림 전송 실패: followerId={}, followeeId={}", followerId, followeeId, e);
+        }
 
         return followMapper.toDto(saved, userMap);
     }

@@ -3,6 +3,7 @@ package com.part4.team05.sb01otbooteam05.domain.notification.service.impl;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDto;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.Notification;
+import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
 import com.part4.team05.sb01otbooteam05.domain.notification.exception.NotificationNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.notification.mapper.NotificationMapper;
 import com.part4.team05.sb01otbooteam05.domain.notification.repository.NotificationRepository;
@@ -19,10 +20,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Service
@@ -32,7 +36,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
 
     private static final Long TIMEOUT = 60L * 1000 * 60; // 1시간
-    private final Map<UUID, SseEmitter> emitterMap = new ConcurrentHashMap<>();
+    private final Map<UUID, List<SseEmitter>> emittersMap = new ConcurrentHashMap<>();
 
     @Override
     public NotificationDtoCursorResponse getNotifications(User user, UUID idAfter, int limit) {
@@ -86,10 +90,12 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public SseEmitter connect(UUID userId, UUID lastEventId) {
         SseEmitter emitter = new SseEmitter(TIMEOUT);
-        emitterMap.put(userId, emitter);
 
-        emitter.onCompletion(() -> emitterMap.remove(userId));
-        emitter.onTimeout(() -> emitterMap.remove(userId));
+        emittersMap.computeIfAbsent(userId, k -> new CopyOnWriteArrayList<>()).add(emitter);
+
+        emitter.onCompletion(() -> removeEmitter(userId, emitter));
+        emitter.onTimeout(() -> removeEmitter(userId, emitter));
+        emitter.onError((e) -> removeEmitter(userId, emitter));
 
         try {
             emitter.send(SseEmitter.event()
@@ -104,18 +110,52 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendNotification(NotificationDto notification) {
-        SseEmitter emitter = emitterMap.get(notification.receiverId());
-        if (emitter != null) {
-            try {
-                emitter.send(SseEmitter.event()
-                        .id(notification.id().toString())
-                        .name("notifications")
-                        .data(notification));
-            } catch (IOException e) {
-                emitterMap.remove(notification.receiverId());
-                emitter.completeWithError(e);
+        // 1. DB에 저장
+        Notification entity = NotificationMapper.toEntity(notification);
+        notificationRepository.save(entity);
+
+        // 2. SSE 실시간 전송 (멀티 연결 지원)
+        List<SseEmitter> emitters = emittersMap.get(notification.receiverId());
+        if (emitters != null && !emitters.isEmpty()) {
+            List<SseEmitter> deadEmitters = new ArrayList<>();
+            for (SseEmitter emitter : emitters) {
+                try {
+                    emitter.send(SseEmitter.event()
+                            .id(notification.id().toString())
+                            .name("notifications")
+                            .data(notification));
+                } catch (IOException e) {
+                    deadEmitters.add(emitter);
+                    emitter.completeWithError(e);
+                }
+            }
+            deadEmitters.forEach(emitter -> removeEmitter(notification.receiverId(), emitter));
+        }
+    }
+
+    @Transactional
+    public void createAndSendNotification(UUID receiverId, String title, String content, NotificationLevel level) {
+        NotificationDto notificationDto = new NotificationDto(
+                UUID.randomUUID(),
+                LocalDateTime.now(),
+                receiverId,
+                title,
+                content,
+                level
+        );
+
+        sendNotification(notificationDto);
+    }
+
+    private void removeEmitter(UUID userId, SseEmitter emitter) {
+        List<SseEmitter> emitters = emittersMap.get(userId);
+        if (emitters != null) {
+            emitters.remove(emitter);
+            if (emitters.isEmpty()) {
+                emittersMap.remove(userId);
             }
         }
     }
+
 
 }

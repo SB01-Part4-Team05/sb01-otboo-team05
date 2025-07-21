@@ -31,12 +31,6 @@ public class Notification extends BaseEntity {
   @Column(nullable = false)
   private UUID receiverId;
 
-  @Column(nullable = false)
-  private LocalDateTime createdAt;
-
-  @Column(nullable = false)
-  private LocalDateTime updatedAt;
-
   public void markAsRead() {
     this.isRead = true;
   }

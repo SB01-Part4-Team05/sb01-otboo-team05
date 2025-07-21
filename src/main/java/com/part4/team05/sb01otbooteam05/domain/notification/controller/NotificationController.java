@@ -5,6 +5,8 @@ import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoC
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
+import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
+import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -60,9 +62,9 @@ public class NotificationController {
 
     private UUID extractUserId(String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("잘못된 Authorization 헤더");
+            throw new OtbooException(ErrorCode.UNAUTHORIZED);
         }
-        String token = authorizationHeader.substring(7);
+        String token = authorizationHeader.substring(7).trim();
         return jwtTokenProvider.getUserIdFromToken(token);
     }
 }
