@@ -4,7 +4,6 @@ import com.part4.team05.sb01otbooteam05.domain.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity

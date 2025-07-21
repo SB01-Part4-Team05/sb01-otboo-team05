@@ -9,7 +9,6 @@ import com.part4.team05.sb01otbooteam05.domain.follow.exception.FollowException;
 import com.part4.team05.sb01otbooteam05.domain.follow.mapper.FollowMapper;
 import com.part4.team05.sb01otbooteam05.domain.follow.repository.FollowRepository;
 import com.part4.team05.sb01otbooteam05.domain.follow.service.FollowService;
-import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDto;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
@@ -85,7 +84,6 @@ public class FollowServiceImpl implements FollowService {
                 .collect(Collectors.toMap(User::getId, Function.identity()));
 
         User follower = userMap.get(followerId);
-        User followee = userMap.get(followeeId);
 
         // 알림 전송
         try {
