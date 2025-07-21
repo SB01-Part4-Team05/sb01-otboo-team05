@@ -46,8 +46,8 @@ public class SecurityConfig {
         // CSRF 설정 추가
         .cors(withDefaults())
         .csrf(csrf -> csrf
-                .csrfTokenRepository(csrfTokenRepository)
-                .csrfTokenRequestHandler(requestHandler)
+            .csrfTokenRepository(csrfTokenRepository)
+            .csrfTokenRequestHandler(requestHandler)
             //겟요청인 애들
             .ignoringRequestMatchers(request ->
                 "/api/clothes/attribute-defs".equals(request.getRequestURI()) && "GET".equals(request.getMethod())
