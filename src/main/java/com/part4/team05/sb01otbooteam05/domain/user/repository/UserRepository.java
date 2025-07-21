@@ -24,4 +24,7 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
   // 등록된 위치 정보 중복,null 제외 후 조회
   @Query("SELECT DISTINCT u.locationX, u.locationY FROM User u WHERE u.locationX IS NOT NULL AND u.locationY IS NOT NULL")
   List<Object[]> findDistinctLocations();
+
+  Optional<User> findByProviderAndProviderId(String provider, String providerId);
+
 }

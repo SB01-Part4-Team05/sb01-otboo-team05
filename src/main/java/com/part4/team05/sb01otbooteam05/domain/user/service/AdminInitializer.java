@@ -40,6 +40,7 @@ public class AdminInitializer implements CommandLineRunner {
           .password(passwordEncoder.encode(adminPassword))
           .role(UserRole.ADMIN)
           .locked(false)
+          .provider("LOCAL")
           .isTempPassword(false)
           .build();
 

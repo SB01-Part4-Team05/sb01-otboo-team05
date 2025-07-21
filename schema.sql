@@ -10,10 +10,11 @@ CREATE TABLE users
     id                      UUID PRIMARY KEY,
     email                   VARCHAR(255) UNIQUE NOT NULL,
     name                    VARCHAR(20)         NOT NULL,
-    password                VARCHAR(255)        NOT NULL,               -- 임시 비밀번호 요청 시 이 값이 덮어씌워짐
+    password                VARCHAR(255),               -- 임시 비밀번호 요청 시 이 값이 덮어씌워짐
     role                    VARCHAR(20)         NOT NULL DEFAULT 'USER',
-    locked                  BOOLEAN                      DEFAULT FALSE,
-
+    locked                  BOOLEAN             NOT NULL DEFAULT FALSE,
+    provider                VARCHAR(20),     -- 소셜 로그인
+    provider_id             VARCHAR(255),
     -- 프로필 정보 (초기값 NULL 허용)
     gender                  VARCHAR(10),
     birth_date              DATE,
@@ -26,7 +27,7 @@ CREATE TABLE users
     profile_image_url       VARCHAR(500),
 
     -- 임시 비밀번호 관련
-    is_temp_password        BOOLEAN                      DEFAULT FALSE, -- 현재 비밀번호가 임시 비밀번호인지 여부 추가
+    is_temp_password        BOOLEAN             NOT NULL DEFAULT FALSE, -- 현재 비밀번호가 임시 비밀번호인지 여부 추가
     password_expires_at     TIMESTAMP,                                  -- 임시 비밀번호 만료 시간 추가
 
     created_at              TIMESTAMP           NOT NULL,
@@ -175,6 +176,7 @@ CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 CREATE INDEX idx_weather_location_forecast_latest ON weathers(location_x, location_y, forecast_at, forecasted_at DESC);
 CREATE INDEX idx_weather_forecasted_at ON weathers(forecasted_at);
+CREATE INDEX idx_users_provider_provider_id ON users(provider, provider_id);
 
 -- 스프링 배치 테이블
 CREATE TABLE BATCH_JOB_INSTANCE
