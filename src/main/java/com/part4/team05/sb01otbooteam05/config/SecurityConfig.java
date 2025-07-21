@@ -133,7 +133,8 @@ public class SecurityConfig {
                 "/*.png",
                 "/*.ico",
                 "/images/**",
-                "/error"
+                "/error",
+                "/actuator/prometheus" // 도커로 배포 시 바꿔야 함 (보안이슈)
             ).permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
 
