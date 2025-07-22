@@ -1,9 +1,12 @@
 package com.part4.team05.sb01otbooteam05.domain.notification.controller;
 
+import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
+import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
+import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -24,16 +27,19 @@ public class NotificationController {
 
     private final NotificationService notificationService;
     private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @GetMapping
     public ResponseEntity<NotificationDtoCursorResponse> getNotifications(
             @RequestParam(name = "idAfter", required = false) UUID idAfter,
             @RequestParam(name = "limit", defaultValue = "5") @Min(1) @Max(50) int limit,
-            @RequestHeader("X-USER-ID") UUID userId // 인증 안되니까 헤더로 임시 처리
+            @RequestHeader("Authorization") String authorizationHeader
             ) {
-        log.info("알림 조회 API 호출: userId={}, limit={}, idAfter={}", userId, limit, idAfter);
 
+        UUID userId = extractUserId(authorizationHeader);
         User user = userService.getUserEntityByIdOrThrow(userId);
+
+        log.info("알림 조회 API 호출: userId={}, limit={}, idAfter={}", userId, limit, idAfter);
 
         NotificationDtoCursorResponse response = notificationService.getNotifications(user, idAfter, limit);
 
@@ -49,7 +55,16 @@ public class NotificationController {
     @DeleteMapping("/{notificationId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void markAsRead(@PathVariable UUID notificationId,
-                           @RequestHeader("X-USER-ID") UUID userId) {
+                           @RequestHeader("Authorization") String authorizationHeader) {
+        UUID userId = extractUserId(authorizationHeader);
         notificationService.markAsRead(notificationId, userId);
+    }
+
+    private UUID extractUserId(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new OtbooException(ErrorCode.UNAUTHORIZED);
+        }
+        String token = authorizationHeader.substring(7).trim();
+        return jwtTokenProvider.getUserIdFromToken(token);
     }
 }
