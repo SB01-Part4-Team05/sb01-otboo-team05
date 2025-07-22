@@ -40,3 +40,9 @@ admin:
   email: ${ADMIN_EMAIL}
   password: ${ADMIN_PASSWORD}
   name: ${ADMIN_NAME}
+
+# 기상청 API 설정
+weather:
+  api:
+    serviceKey: ${WEATHER_API_KEY}
+    url: ${WEATHER_API_URL}
