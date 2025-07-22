@@ -1,0 +1,30 @@
+name: CD - Push Docker Image to ECR
+
+on:
+  push:
+    branches: [ develop ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-2
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+
+      - name: Login to ECR
+        run: aws ecr get-login-password | podman login --username AWS --password-stdin ${{ secrets.AWS_URL }}
+
+      - name: Push Docker image
+        uses: redhat-actions/push-to-registry@v2.8
+        with:
+          image: ootdImage
+          tags: |
+            latest
+            sha-${{ github.sha }}
+          registry: ${{ secrets.AWS_URL }}

@@ -1,0 +1,48 @@
+name: build .jar file
+
+on:
+  pull_request_target:
+    types:
+      - closed
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build .jar file with Gradle
+        run: ./gradlew build
+
+      - name: Extract build metadata
+        id: meta
+        run: |
+          echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          echo "build_date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Buildah Build
+        uses: redhat-actions/buildah-build@v2.13
+        with:
+          image: ootdImage
+          tags: |
+            latest
+            pr-${{ steps.meta.outputs.pr_number }}
+            sha-${{ steps.meta.outputs.sha_short }}
+            date-${{ steps.meta.outputs.build_date }}
+          dockerfiles: |
+            ./Dockerfile
+          context: .
+          content: |
+            build/libs/*.jar
+          layers: true
+          tls-verify: true
