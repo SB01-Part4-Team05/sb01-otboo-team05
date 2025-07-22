@@ -5,6 +5,7 @@ import com.part4.team05.sb01otbooteam05.domain.auth.dto.SignInRequest;
 import com.part4.team05.sb01otbooteam05.domain.auth.dto.SignInResponse;
 import com.part4.team05.sb01otbooteam05.domain.auth.dto.TokenRefreshRequest;
 import com.part4.team05.sb01otbooteam05.domain.auth.entity.RefreshToken;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.auth.exception.InvalidTokenException;
 import com.part4.team05.sb01otbooteam05.domain.auth.exception.UnauthorizedException;
@@ -201,5 +202,47 @@ public class AuthServiceImpl implements AuthService {
     userRepository.save(user);
 
     emailService.sendTempPassword(user.getEmail(), tempPassword, expireAt); // 평문은 메일로만 발송
+  }
+
+  /**
+   * 소셜 로그인 사용자를 위한 토큰 발급
+   */
+  @Override
+  @Transactional
+  public SignInResponse signInOAuthUser(CustomUserDetails userDetails) {
+    User user = userRepository.findById(userDetails.getUserId())
+        .orElseThrow(() -> new UserNotFoundException());
+
+    // 기존 로그인된 계정이 있을 경우 강제 로그아웃 처리
+    boolean hasExistingLogin = refreshTokenRepository.existsByUserIdAndRevokedFalse(user.getId());
+    if (hasExistingLogin) {
+      log.info("기존 로그인 세션 발견, 강제 로그아웃 처리: userId={}", user.getId());
+      refreshTokenRepository.revokeAllByUserId(user.getId());
+    }
+
+    // 토큰 생성
+    String accessToken = jwtTokenProvider.createAccessToken(user);
+    String refreshTokenValue = jwtTokenProvider.createRefreshToken();
+
+    // 리프레시 토큰 저장
+    RefreshToken refreshToken = RefreshToken.builder()
+        .user(user)
+        .token(refreshTokenValue)
+        .expiresAt(LocalDateTime.now().plusSeconds(jwtProperties.getRefreshTokenExpiration() / 1000))
+        .revoked(false)
+        .build();
+
+    refreshTokenRepository.save(refreshToken);
+
+    log.info("소셜 로그인 성공 및 토큰 발급: userId={}, email={}", user.getId(), user.getEmail());
+
+    return SignInResponse.builder()
+        .accessToken(accessToken)
+        .refreshToken(refreshTokenValue)
+        .userId(user.getId())
+        .email(user.getEmail())
+        .name(user.getName())
+        .role(user.getRole().name())
+        .build();
   }
 }

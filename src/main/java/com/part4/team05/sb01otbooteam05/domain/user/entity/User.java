@@ -34,7 +34,7 @@ public class User extends BaseEntity {
   @Column(nullable = false, length = 20)
   private String name;
 
-  @Column(nullable = false)
+  @Column // 소셜 로그인 사용자는 비밀번호가 null일 수 있음
   private String password;
 
   @Enumerated(EnumType.STRING)
@@ -43,6 +43,12 @@ public class User extends BaseEntity {
 
   @Column(nullable = false)
   private boolean locked;
+
+  @Column(length = 20)
+  private String provider; //"LOCAL", "GOOGLE", "KAKAO"
+
+  @Column
+  private String providerId; // 소셜 서비스에서 발급하는 고유 ID
 
   // 프로필 정보 (NULL 허용) (기존 Profile 테이블)
   @Enumerated(EnumType.STRING)
@@ -83,7 +89,7 @@ public class User extends BaseEntity {
   @Column(name = "password_expires_at")
   private LocalDateTime passwordExpiresAt;
 
-  //회원가입
+  // 기존 회원가입 메서드
   public static User createUser(String email, String name, String password) {
     return User.builder()
         .email(email)
@@ -92,6 +98,20 @@ public class User extends BaseEntity {
         .role(UserRole.USER)
         .locked(false)
         .isTempPassword(false)
+        .provider("LOCAL") // 일반 가입자는 "LOCAL"로 저장
+        .build();
+  }
+  // 소셜 로그인 사용자를 위한 생성 메서드
+  public static User createOAuthUser(String name, String email, String provider, String providerId) {
+    return User.builder()
+        .name(name)
+        .email(email)
+        .password(null) // 소셜 로그인 사용자는 비밀번호 없음
+        .role(UserRole.USER)
+        .locked(false)
+        .isTempPassword(false)
+        .provider(provider)
+        .providerId(providerId)
         .build();
   }
 
@@ -139,7 +159,6 @@ public class User extends BaseEntity {
     this.locked = locked;
   }
 
-  //
   public void setTempPassword(String encodedTempPassword, LocalDateTime expireAt) {
     this.password = encodedTempPassword;    // 임시 비번도 해시해서 저장
     this.isTempPassword = true;
@@ -159,4 +178,5 @@ public class User extends BaseEntity {
   public void setPassword(String encodedPassword) {
     this.password = encodedPassword;
   }
+
 }
