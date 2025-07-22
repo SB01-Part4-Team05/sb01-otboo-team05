@@ -85,7 +85,6 @@ public class WeatherJobConfig {
         .listener(customStepExecutionListener)
         .listener(customChunkListener)
         .listener(customItemReadListener)
-        .listener(customItemProcessListener)
         .build();
   }
 }
