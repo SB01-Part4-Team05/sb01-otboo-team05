@@ -15,4 +15,14 @@ public class NotificationMapper {
                 n.getLevel()
         );
     }
+
+    public static Notification toEntity(NotificationDto dto) {
+        return Notification.builder()
+                .receiverId(dto.receiverId())
+                .title(dto.title())
+                .content(dto.content())
+                .level(dto.level())
+                .isRead(false)
+                .build();
+    }
 }
