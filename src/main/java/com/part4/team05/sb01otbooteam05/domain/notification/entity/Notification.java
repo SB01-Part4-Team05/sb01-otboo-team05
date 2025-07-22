@@ -14,12 +14,6 @@ import java.util.UUID;
 @Builder
 public class Notification extends BaseEntity {
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 30)
-  private NotificationType type;
-
-  private UUID entityId;
-
   @Column(length = 100)
   private String title;
 

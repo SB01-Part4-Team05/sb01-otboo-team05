@@ -4,7 +4,6 @@ import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDto;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.Notification;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
-import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationType;
 import com.part4.team05.sb01otbooteam05.domain.notification.exception.NotificationNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.notification.mapper.NotificationMapper;
 import com.part4.team05.sb01otbooteam05.domain.notification.repository.NotificationRepository;
@@ -18,9 +17,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Service
@@ -28,6 +34,9 @@ import java.util.UUID;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
+
+    private static final Long TIMEOUT = 60L * 1000 * 60; // 1시간
+    private final Map<UUID, List<SseEmitter>> emittersMap = new ConcurrentHashMap<>();
 
     @Override
     public NotificationDtoCursorResponse getNotifications(User user, UUID idAfter, int limit) {
@@ -42,7 +51,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         boolean hasNext = results.size() > limit;
-        if (hasNext) {
+        if(hasNext) {
             results = results.subList(0, limit);
         }
 
@@ -70,7 +79,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new OtbooException(ErrorCode.NOTIFICATION_NOT_FOUND));
 
-        if (!notification.getReceiverId().equals(userId)) {
+        if(!notification.getReceiverId().equals(userId)) {
             throw new OtbooException(ErrorCode.NOTIFICATION_UNAUTHORIZED);
         }
 
@@ -78,22 +87,75 @@ public class NotificationServiceImpl implements NotificationService {
         log.info("알림 읽음 처리 완료: notificationId={}", notificationId);
     }
 
-    // 피드에 댓글이 달릴 시 작성자에게 발송될 알림 생성 (댓글이 달린 피드의 작성자에게 알림을 보내라는 이벤트로 인해 동작함)
-    // todo 메서드 만들었다고 알려드리기
-    @Transactional
     @Override
-    public void sendNotification(UUID targetUserId, String title, String content, UUID feedId, NotificationType type, NotificationLevel level) {
-        Notification notification = Notification.builder()
-                .receiverId(targetUserId)
-                .title(title)
-                .content(content)
-                .type(type)
-                .entityId(feedId)
-                .isRead(false)
-                .level(level)// 피드 ID 연관 알림 //todo 엔티티아이디에 피드아이디 들어가도되는건지 확인
-                .build();
+    public SseEmitter connect(UUID userId, UUID lastEventId) {
+        SseEmitter emitter = new SseEmitter(TIMEOUT);
 
-        notificationRepository.save(notification);
-        log.info("댓글 알림 발송 완료 : notificationId={}, receiverId={}", notification.getId(), notification.getReceiverId());
+        emittersMap.computeIfAbsent(userId, k -> new CopyOnWriteArrayList<>()).add(emitter);
+
+        emitter.onCompletion(() -> removeEmitter(userId, emitter));
+        emitter.onTimeout(() -> removeEmitter(userId, emitter));
+        emitter.onError((e) -> removeEmitter(userId, emitter));
+
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("connect")
+                    .data(Map.of("time", System.currentTimeMillis())));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+        }
+
+        return emitter;
     }
+
+    @Override
+    public void sendNotification(NotificationDto notification) {
+        // 1. DB에 저장
+        Notification entity = NotificationMapper.toEntity(notification);
+        notificationRepository.save(entity);
+
+        // 2. SSE 실시간 전송 (멀티 연결 지원)
+        List<SseEmitter> emitters = emittersMap.get(notification.receiverId());
+        if (emitters != null && !emitters.isEmpty()) {
+            List<SseEmitter> deadEmitters = new ArrayList<>();
+            for (SseEmitter emitter : emitters) {
+                try {
+                    emitter.send(SseEmitter.event()
+                            .id(notification.id().toString())
+                            .name("notifications")
+                            .data(notification));
+                } catch (IOException e) {
+                    deadEmitters.add(emitter);
+                    emitter.completeWithError(e);
+                }
+            }
+            deadEmitters.forEach(emitter -> removeEmitter(notification.receiverId(), emitter));
+        }
+    }
+
+    @Transactional
+    public void createAndSendNotification(UUID receiverId, String title, String content, NotificationLevel level) {
+        NotificationDto notificationDto = new NotificationDto(
+                UUID.randomUUID(),
+                LocalDateTime.now(),
+                receiverId,
+                title,
+                content,
+                level
+        );
+
+        sendNotification(notificationDto);
+    }
+
+    private void removeEmitter(UUID userId, SseEmitter emitter) {
+        List<SseEmitter> emitters = emittersMap.get(userId);
+        if (emitters != null) {
+            emitters.remove(emitter);
+            if (emitters.isEmpty()) {
+                emittersMap.remove(userId);
+            }
+        }
+    }
+
+
 }

@@ -4,6 +4,7 @@ import com.part4.team05.sb01otbooteam05.domain.auth.dto.SignInRequest;
 import com.part4.team05.sb01otbooteam05.domain.auth.dto.SignInResponse;
 import com.part4.team05.sb01otbooteam05.domain.auth.dto.TokenRefreshRequest;
 
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import java.util.UUID;
 
 public interface AuthService {
@@ -22,5 +23,9 @@ public interface AuthService {
 
   //비밀번호 초기화
   void resetPassword(String email);
+
+  //소셜 로그인
+  SignInResponse signInOAuthUser(CustomUserDetails userDetails);
+
 
 }

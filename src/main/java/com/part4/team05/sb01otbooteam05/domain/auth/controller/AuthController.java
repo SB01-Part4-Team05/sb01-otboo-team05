@@ -62,6 +62,12 @@ public class AuthController {
     refreshTokenCookie.setPath("/");
     response.addCookie(refreshTokenCookie);
 
+    // access_token 쿠키도 삭제
+    Cookie accessTokenCookie = new Cookie("access_token", null);
+    accessTokenCookie.setMaxAge(0);
+    accessTokenCookie.setPath("/");
+    response.addCookie(accessTokenCookie);
+
     return ResponseEntity.noContent().build();
   }
 
