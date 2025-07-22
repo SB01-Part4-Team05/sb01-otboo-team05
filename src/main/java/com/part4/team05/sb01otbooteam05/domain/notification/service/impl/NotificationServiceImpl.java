@@ -4,6 +4,7 @@ import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDto;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.Notification;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
+import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationType;
 import com.part4.team05.sb01otbooteam05.domain.notification.exception.NotificationNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.notification.mapper.NotificationMapper;
 import com.part4.team05.sb01otbooteam05.domain.notification.repository.NotificationRepository;
@@ -33,9 +34,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
-    private final NotificationRepository notificationRepository;
-
     private static final Long TIMEOUT = 60L * 1000 * 60; // 1시간
+    private final NotificationRepository notificationRepository;
     private final Map<UUID, List<SseEmitter>> emittersMap = new ConcurrentHashMap<>();
 
     @Override
@@ -51,7 +51,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         boolean hasNext = results.size() > limit;
-        if(hasNext) {
+        if (hasNext) {
             results = results.subList(0, limit);
         }
 
@@ -79,7 +79,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new OtbooException(ErrorCode.NOTIFICATION_NOT_FOUND));
 
-        if(!notification.getReceiverId().equals(userId)) {
+        if (!notification.getReceiverId().equals(userId)) {
             throw new OtbooException(ErrorCode.NOTIFICATION_UNAUTHORIZED);
         }
 
@@ -145,6 +145,11 @@ public class NotificationServiceImpl implements NotificationService {
         );
 
         sendNotification(notificationDto);
+    }
+
+    @Override
+    public void sendNotification(UUID targetUserId, String title, String content, UUID feedId, NotificationType type, NotificationLevel level) {
+
     }
 
     private void removeEmitter(UUID userId, SseEmitter emitter) {

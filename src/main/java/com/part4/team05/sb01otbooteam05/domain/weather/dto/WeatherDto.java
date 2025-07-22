@@ -2,34 +2,37 @@ package com.part4.team05.sb01otbooteam05.domain.weather.dto;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Builder
 public record WeatherDto(
-    @NotNull
-    UUID id,
+        @NotNull
+        UUID id,
 
-    @NotNull
-    LocalDateTime forecastedAt,
+        @NotNull
+        LocalDateTime forecastedAt,
 
-    @NotNull
-    LocalDateTime forecastAt,
+        @NotNull
+        LocalDateTime forecastAt,
 
-    @NotNull
-    WeatherAPILocation location,
+        @NotNull
+        WeatherAPILocation location,
 
-    @NotNull
-    SkyStatusType skyStatus,
+        @NotNull
+        SkyStatusType skyStatus,
 
-    @NotNull
-    PrecipitationDto precipitation,
+        @NotNull
+        PrecipitationDto precipitation,
 
-    HumidityDto humidity,
+        HumidityDto humidity,
 
-    TemperatureDto temperature,
+        TemperatureDto temperature,
 
-    @NotNull
-    WindSpeedDto windSpeed
+        @NotNull
+        WindSpeedDto windSpeed
 ) {
 
 }

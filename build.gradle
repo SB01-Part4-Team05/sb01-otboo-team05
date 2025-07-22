@@ -68,6 +68,10 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.batch:spring-batch-test'
+    testImplementation 'io.rest-assured:rest-assured:5.3.0'
+    testImplementation 'io.rest-assured:json-path:5.3.0'  // JSON 응답 분석용
+    testImplementation 'io.rest-assured:json-schema-validator:5.3.0' // JSON 스키마 검증용 (선택)
+
 
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'     //oauth
 
@@ -79,6 +83,10 @@ sourceSets {
             srcDir "build/generated/querydsl"
         }
     }
+}
+
+test {
+    systemProperty "spring.profiles.active", "test"
 }
 
 tasks.named('test', Test) {

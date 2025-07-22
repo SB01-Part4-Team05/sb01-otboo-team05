@@ -6,10 +6,6 @@ spring:
     username: sa
     password:
     driver-class-name: org.h2.Driver
-  mail:
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
@@ -21,11 +17,33 @@ spring:
       type_descriptor:
         sql_uuid: true
     open-in-view: false
-
   h2:
     console:
       enabled: true
       path: /h2-console
+  # 스프링 배치 설정
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: dummy
+    password: dummy
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  web:
+    resources:
+      static-locations:
+        - classpath:/static/
+        - file:/home/ubuntu/app/images/
+
 
 logging:
   level:
@@ -34,15 +52,34 @@ logging:
     org.hibernate.type.descriptor.sql: trace
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.hibernate.engine.jdbc.spi.SqlExceptionHelper: DEBUG
-    com.discodeit: debug
 
+# 액츄에이터
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics, loggers
+  info:
+    env:
+      enabled: true
+# 기상청 API 설정
+weather:
+  api:
+    serviceKey: dummy-key
+    url: https://dummy.weather.api
+
+#카카오 지역명 추출 API
+kakao:
+  rest-api-key: dummy-key
+
+# JWT 설정 추가
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 1800000
+  refresh-token-expiration: 604800000
+
+# 어드민 계정 설정
 admin:
   email: ${ADMIN_EMAIL}
   password: ${ADMIN_PASSWORD}
   name: ${ADMIN_NAME}
-
-# 기상청 API 설정
-weather:
-  api:
-    serviceKey: ${WEATHER_API_KEY}
-    url: ${WEATHER_API_URL}
