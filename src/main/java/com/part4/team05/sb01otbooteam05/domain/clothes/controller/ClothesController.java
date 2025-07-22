@@ -42,8 +42,9 @@ public class ClothesController {
   }
 
   @PostMapping
-  public ResponseEntity<ClothesDto> saveClothes(@RequestBody ClothesCreateRequest request){
-    return ResponseEntity.status(HttpStatus.CREATED).body(clothesService.create(request));
+  public ResponseEntity<ClothesDto> saveClothes(@RequestPart("request") ClothesCreateRequest request,
+      @RequestPart(required = false, value = "image")MultipartFile image){
+    return ResponseEntity.status(HttpStatus.CREATED).body(clothesService.create(request,image));
   }
 
   @DeleteMapping("/{clothesId}")

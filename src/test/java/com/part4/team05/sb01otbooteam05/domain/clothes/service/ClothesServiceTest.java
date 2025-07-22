@@ -101,7 +101,7 @@ class ClothesServiceTest {
         given(attributeService.createAndReturnList(any(List.class), any(Clothes.class)))
                 .willReturn(Collections.emptyList());
 
-        ClothesDto clothesDto = clothesService.create(request);
+        ClothesDto clothesDto = clothesService.create(request,null);
 
         assertEquals(clothesId, clothesDto.getId());
         assertEquals(request.name(), clothesDto.getName());
