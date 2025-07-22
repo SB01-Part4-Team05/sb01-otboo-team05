@@ -52,9 +52,9 @@ jobs:
       - name: Fetch and merge dev branch
         id: merge_dev
         run: |
-          git fetch origin dev
+          git fetch origin develop
           set +e
-          git merge origin/dev --no-edit
+          git merge origin/develop --no-edit
           status=$?
           set -e
           if [ $status -ne 0 ]; then
