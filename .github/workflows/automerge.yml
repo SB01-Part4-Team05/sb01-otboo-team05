@@ -1,28 +1,76 @@
 name: AutoMerge with 2+ Approvals
 
 on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - edited
   pull_request_review:
-    types: [submitted]
+    types: [ submitted ]
   pull_request:
-    types: [synchronize]
+    types: [ synchronize ]
 
 env:
   OOTD_TOKEN: ${{ secrets.OOTD_ACCESS_TOKEN }}
 
 permissions:
-  pull-requests: read
-  statuses: write
-  contents: read
+  pull-requests: write
+  contents: write
   actions: write
+  statuses: write
 
 jobs:
   automerge:
+    if: |
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.state == 'open' &&
+      github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Get PR info
+        id: pr_info
+        run: |
+          echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          echo "branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+
+      - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ steps.pr_info.outputs.branch }}
+          token: ${{ secrets.OOTD_ACCESS_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch and merge dev branch
+        id: merge_dev
+        run: |
+          git fetch origin develop
+          set +e
+          git merge origin/develop --no-edit
+          status=$?
+          set -e
+          if [ $status -ne 0 ]; then
+            echo "Merge conflict detected"
+            echo "conflict=true" >> $GITHUB_OUTPUT
+          else
+            echo "Merged with dev successfully"
+            echo "conflict=false" >> $GITHUB_OUTPUT
+            git push origin HEAD
+          fi
+
+      - name: Abort on merge conflict
+        if: steps.merge_dev.outputs.conflict == 'true'
+        run: |
+          echo "Merge conflict occurred while merging dev. Aborting automerge."
+          exit 1
 
       - name: Check approved reviews count
         id: check_approvals
@@ -30,24 +78,21 @@ jobs:
         with:
           github-token: ${{ secrets.OOTD_ACCESS_TOKEN }}
           script: |
-            const { owner, repo, number: pull_number } = context.issue;
-            const reviews = await github.rest.pulls.listReviews({
-              owner,
-              repo,
-              pull_number,
-            });
-          
-            const latestReviewsByUser = new Map();
+            const pr_number = Number("${{ steps.pr_info.outputs.pr_number }}");
+            const { owner, repo } = context.repo;
+            const reviews = await github.rest.pulls.listReviews({ owner, repo, pull_number: pr_number });
+
+            const latest = new Map();
             for (const review of reviews.data) {
-              latestReviewsByUser.set(review.user.login, review.state);
+              latest.set(review.user.login, review.state);
             }
-            
-            const approvedCount = [...latestReviewsByUser.values()].filter(state => state === 'APPROVED').length;
+
+            const approvedCount = [...latest.values()].filter(state => state === 'APPROVED').length;
             core.setOutput('approved_count', approvedCount);
 
-      - name: Auto-merge if 2 or more approved
-        if: steps.check_approvals.outputs.approved_count >= 2
+      - name: Enable AutoMerge
+        if: ${{ fromJson(steps.check_approvals.outputs.approved_count) >= 2 }}
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
           token: ${{ secrets.OOTD_ACCESS_TOKEN }}
-
+          pull-request-number: ${{ steps.pr_info.outputs.pr_number }}
