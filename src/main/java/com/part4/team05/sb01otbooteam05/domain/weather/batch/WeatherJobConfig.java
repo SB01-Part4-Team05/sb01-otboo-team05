@@ -1,6 +1,11 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.batch;
 
 
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.listener.CustomChunkListener;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.listener.CustomItemProcessListener;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.listener.CustomItemReadListener;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.listener.CustomJobExecutionListener;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.listener.CustomStepExecutionListener;
 import com.part4.team05.sb01otbooteam05.domain.weather.batch.reader.OldWeatherItemReader;
 import com.part4.team05.sb01otbooteam05.domain.weather.batch.reader.WeatherItemReader;
 import com.part4.team05.sb01otbooteam05.domain.weather.batch.processor.WeatherItemProcessor;
@@ -32,6 +37,11 @@ public class WeatherJobConfig {
   private final WeatherItemWriter writer;
   private final OldWeatherItemReader oldWeatherItemReader;
   private final WeatherDeleteItemWriter weatherDeleteItemWriter;
+  private final CustomJobExecutionListener customJobExecutionListener;
+  private final CustomStepExecutionListener customStepExecutionListener;
+  private final CustomItemReadListener customItemReadListener;
+  private final CustomItemProcessListener customItemProcessListener;
+  private final CustomChunkListener customChunkListener;
 
 
   // 날씨 일괄 수집 작업을 정의하는 Spring Batch Job
@@ -39,6 +49,7 @@ public class WeatherJobConfig {
   public Job weatherJob() {
     return new JobBuilder("weatherJob", jobRepository)
         .start(weatherStep())
+        .listener(customJobExecutionListener)
         .build();
   }
 
@@ -49,6 +60,10 @@ public class WeatherJobConfig {
         .reader(reader)
         .processor(processor)
         .writer(writer)
+        .listener(customStepExecutionListener)
+        .listener(customChunkListener)
+        .listener(customItemReadListener)
+        .listener(customItemProcessListener)
         .build();
   }
 
@@ -57,6 +72,7 @@ public class WeatherJobConfig {
   public Job deleteOldWeatherJob() {
     return new JobBuilder("deleteOldWeatherJob", jobRepository)
         .start(deleteOldWeatherStep())
+        .listener(customJobExecutionListener)
         .build();
   }
 
@@ -66,6 +82,9 @@ public class WeatherJobConfig {
         .<UUID, UUID>chunk(100, platformTransactionManager)
         .reader(oldWeatherItemReader)
         .writer(weatherDeleteItemWriter)
+        .listener(customStepExecutionListener)
+        .listener(customChunkListener)
+        .listener(customItemReadListener)
         .build();
   }
 }

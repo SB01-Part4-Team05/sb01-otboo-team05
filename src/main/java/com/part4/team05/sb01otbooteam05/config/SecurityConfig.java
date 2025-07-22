@@ -46,8 +46,8 @@ public class SecurityConfig {
         // CSRF 설정 추가
         .cors(withDefaults())
         .csrf(csrf -> csrf
-                .csrfTokenRepository(csrfTokenRepository)
-                .csrfTokenRequestHandler(requestHandler)
+            .csrfTokenRepository(csrfTokenRepository)
+            .csrfTokenRequestHandler(requestHandler)
             //겟요청인 애들
             .ignoringRequestMatchers(request ->
                 "/api/clothes/attribute-defs".equals(request.getRequestURI()) && "GET".equals(request.getMethod())
@@ -133,7 +133,8 @@ public class SecurityConfig {
                 "/*.png",
                 "/*.ico",
                 "/images/**",
-                "/error"
+                "/error",
+                "/actuator/prometheus" // 도커로 배포 시 바꿔야 함 (보안이슈)
             ).permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
 
