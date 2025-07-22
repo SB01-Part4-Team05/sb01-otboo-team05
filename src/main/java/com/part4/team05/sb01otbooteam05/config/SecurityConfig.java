@@ -3,6 +3,8 @@ package com.part4.team05.sb01otbooteam05.config;
 import static org.springframework.security.config.Customizer.withDefaults;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.filter.JwtAuthenticationFilter;
 
+import com.part4.team05.sb01otbooteam05.domain.auth.security.handler.OAuth2AuthenticationFailureHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
@@ -11,36 +13,41 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.handler.OAuth2AuthenticationSuccessHandler;
+import com.part4.team05.sb01otbooteam05.domain.user.service.CustomOAuth2UserService;
+import com.part4.team05.sb01otbooteam05.domain.auth.service.CustomOidcUserService;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 @EnableMethodSecurity(prePostEnabled = true)
+@EnableConfigurationProperties(AppOAuth2Properties.class)
 public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-  @Bean
-  public PasswordEncoder passwordEncoder() { //비밀번호 암호화
-    return new BCryptPasswordEncoder();
-  }
+  private final CustomOAuth2UserService customOAuth2UserService;
+  private final CustomOidcUserService customOidcUserService; // 추가
+  private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+  private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
     requestHandler.setCsrfRequestAttributeName(null);
+    CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+    csrfTokenRepository.setCookieName("XSRF-TOKEN");
+    csrfTokenRepository.setHeaderName("X-XSRF-TOKEN");
     http
         // CSRF 설정 추가
         .cors(withDefaults())
         .csrf(csrf -> csrf
-            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-            .csrfTokenRequestHandler(requestHandler)
+                .csrfTokenRepository(csrfTokenRepository)
+                .csrfTokenRequestHandler(requestHandler)
             //겟요청인 애들
             .ignoringRequestMatchers(request ->
                 "/api/clothes/attribute-defs".equals(request.getRequestURI()) && "GET".equals(request.getMethod())
@@ -64,6 +71,7 @@ public class SecurityConfig {
                 "/index.html", // 기본 페이지 및 아이콘
                 "/assets/**",       // 프론트엔드
                 "/uploads/**", //사진
+                "/images/**", //옷 이미지 위치
                 "/api/direct-messages",
                 "/api/feeds/*/comments",
                 "/api/notifications",
@@ -75,8 +83,8 @@ public class SecurityConfig {
                 "/api/recommendations",
                 "/api/weathers",
                 "/api/weathers/location",
-                "/api/sse"
-                //todo 옷 사진도 여기에 넣어야함!
+                "/api/sse",
+                "/ws/**"
             )
             .ignoringRequestMatchers(request ->
                 "/api/users".equals(request.getRequestURI()) &&
@@ -84,6 +92,29 @@ public class SecurityConfig {
         )
         .sessionManagement(session ->
             session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
+        .exceptionHandling(exceptions -> exceptions
+            .authenticationEntryPoint((request, response, authException) -> {
+              String requestURI = request.getRequestURI();
+
+              // WebSocket 관련 요청은 401 응답 (리다이렉트 하지 않음)
+              if (requestURI.startsWith("/ws/") || requestURI.equals("/ws")) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Unauthorized WebSocket connection");
+                return;
+              }
+
+              // API 요청은 JSON 응답
+              if (requestURI.startsWith("/api/")) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
+                return;
+              }
+
+              // 일반 페이지 요청만 로그인 페이지로 리다이렉트
+              response.sendRedirect("/sign-in");
+            })
         )
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(
@@ -93,7 +124,16 @@ public class SecurityConfig {
                 "/",
                 "/index.html",
                 "/assets/**",
-                "/uploads/**"
+                "/uploads/**",
+                "/sign-in",         // 로그인 페이지 허용 추가
+                "/sign-up",
+                "/login/oauth2/**",
+                "/oauth2/**",
+                "/ws/**",
+                "/*.png",
+                "/*.ico",
+                "/images/**",
+                "/error"
             ).permitAll()
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
 
@@ -105,6 +145,14 @@ public class SecurityConfig {
 
             // 위에서 지정하지 않은 나머지 모든 요청은 인증만 되면 접근 가능
             .anyRequest().authenticated()
+        )
+        .oauth2Login(oauth2 -> oauth2
+            .userInfoEndpoint(userInfo -> userInfo
+                .userService(customOAuth2UserService) // 일반 OAuth2용
+                .oidcUserService(customOidcUserService) // OIDC용 (Google)
+            )
+            .successHandler(oAuth2AuthenticationSuccessHandler)
+            .failureHandler(oAuth2AuthenticationFailureHandler)
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();

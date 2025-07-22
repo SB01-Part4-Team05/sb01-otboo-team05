@@ -1,4 +1,4 @@
-name: Java CI with Gradle
+name: Run test
 
 on:
   pull_request:
@@ -17,6 +17,8 @@ env:
   ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
   ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
   ADMIN_NAME: ${{ secrets.ADMIN_NAME }}
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
 jobs:
   test:
