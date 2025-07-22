@@ -38,6 +38,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
       log.info("토큰 발급 완료");
 
       addRefreshTokenCookie(response, authResponse.getRefreshToken());
+      addAccessTokenCookie(response, authResponse.getAccessToken());
 
       String targetUrl = appOAuth2Properties.getRedirect().getSuccessUrl();
 
@@ -58,5 +59,16 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     cookie.setPath("/");
     cookie.setMaxAge(7 * 24 * 60 * 60); // 7일
     response.addCookie(cookie);
+  }
+
+  private void addAccessTokenCookie(HttpServletResponse response, String accessToken) {
+    Cookie cookie = new Cookie("access_token", accessToken);
+    cookie.setHttpOnly(false);
+    cookie.setSecure(false);   // HTTP 환경
+    cookie.setPath("/");
+    cookie.setMaxAge(30 * 60); // 30분
+    response.addCookie(cookie);
+
+    log.info("AccessToken 쿠키 설정 완료");
   }
 }
