@@ -21,7 +21,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
   @Override
   public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-      AuthenticationException exception) throws IOException, ServletException {
+      AuthenticationException exception) throws IOException {
 
     String errorMessage = "Social login failed";
 
@@ -35,6 +35,9 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
           break;
         case "email_used_by_other_provider":
           errorMessage = oauthException.getError().getDescription();
+          break;
+        case "account_locked":
+          errorMessage = "Account is locked";
           break;
         default:
           errorMessage = "Authentication failed";
