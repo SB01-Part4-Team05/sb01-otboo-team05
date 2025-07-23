@@ -3,6 +3,7 @@ package com.part4.team05.sb01otbooteam05.domain.weather.service;
 import static com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper.*;
 import static java.lang.Double.*;
 
+import com.part4.team05.sb01otbooteam05.domain.weather.utils.BaseTimeUtils;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -239,14 +240,18 @@ public class WeatherService {
   }
 
 
-  // 날씨 단건 조회 시 날씨 데이터 생성 ( singleLocationWeatherJob 실행 )
+  // 날씨 단건 조회 시 날씨 데이터 생성
   @Transactional
   public WeatherAPILocation getWeatherAPILocationAndGenerateWeather(double longitude,
       double latitude) {
     WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
     int x = weatherAPILocation.x();
     int y = weatherAPILocation.y();
-    boolean exists = weatherRepository.existsByLocationXAndLocationY(x, y);
+    LocalDate nowDate = LocalDate.now();
+    LocalTime time = BaseTimeUtils.standardTime(LocalTime.now()).withNano(0);
+    LocalDateTime forecastedAt = LocalDateTime.of(nowDate, time);
+    boolean exists = existWeather(x, y, forecastedAt);
+
     if (!exists) {
       // 날씨 서비스 generateWeather 호출 시 트랜잭션 오류 방지 위해 직접 호출
       ParsedForecastDto parsedForecastDto = weatherApiClient.fetchForecast(x, y);
