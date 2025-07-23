@@ -41,7 +41,7 @@ public class ClothesController {
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<ClothesDto> saveClothes(@RequestPart("request") ClothesCreateRequest request,
       @RequestPart(required = false, value = "image")MultipartFile image){
     return ResponseEntity.status(HttpStatus.CREATED).body(clothesService.create(request,image));

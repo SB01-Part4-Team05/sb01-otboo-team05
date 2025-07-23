@@ -1,9 +1,12 @@
 name: build .jar file
 
 on:
-  pull_request_target:
+  pull_request:
     types:
       - closed
+    branches:
+      - main
+      - develop
 
 jobs:
   build:
@@ -19,6 +22,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Build .jar file with Gradle
         run: ./gradlew build
