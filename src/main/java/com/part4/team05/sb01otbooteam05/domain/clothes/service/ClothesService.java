@@ -69,7 +69,7 @@ public class ClothesService {
   }
 
   @Transactional
-  public ClothesDto create(ClothesCreateRequest request){
+  public ClothesDto create(ClothesCreateRequest request, MultipartFile image){
     Clothes clothes = Clothes.builder()
         .ownerId(request.ownerId())
         .type(ClothesType.valueOf(request.type()))
@@ -78,6 +78,11 @@ public class ClothesService {
 
     List<AttributeValue> list = attributeService.createAndReturnList(request.attributes(),clothes);
     clothes.setAttributeValues(list);
+
+    if(image!= null && !image.isEmpty()){
+      String url = storeImage(image);
+      clothes.setImageUrl(url);
+    }
 
     clothesRepository.save(clothes);
 
