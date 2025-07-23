@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CustomOAuth2UserService extends DefaultOAuth2UserService { //카카오 로그인
 
   private final UserRepository userRepository;
@@ -87,6 +88,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService { //카카
     Optional<User> existingSocialUser = userRepository.findByProviderAndProviderId(provider, providerId);
     if (existingSocialUser.isPresent()) {
       User user = existingSocialUser.get();
+
+      // 계정 잠금 상태 체크 추가
+      if (user.isLocked()) {
+        log.warn("잠금된 계정으로 소셜 로그인 시도: userId={}, email={}", user.getId(), user.getEmail());
+        throw new OAuth2AuthenticationException(
+            new OAuth2Error("account_locked", "Account is locked", null)
+        );
+      }
+
       log.info("기존 소셜 계정으로 로그인: userId={}, email={}", user.getId(), user.getEmail());
       return user;
     }
