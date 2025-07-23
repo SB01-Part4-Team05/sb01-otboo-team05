@@ -1,6 +1,5 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.batch.reader;
 
-import jakarta.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
@@ -24,7 +23,7 @@ public class OldWeatherItemReader implements ItemReader<UUID> {
   private String deleteTimeStr;
 
   private Iterator<UUID> iterator;
-@PostConstruct
+
   @BeforeStep
   public void init() {
     LocalDateTime delete = LocalDateTime.parse(deleteTimeStr);
