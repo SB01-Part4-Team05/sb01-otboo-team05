@@ -1,6 +1,5 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.scheduler;
 
-import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherNotificationService;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,6 @@ public class WeatherScheduler {
   private final JobLauncher jobLauncher;
   private final Job weatherJob;
   private final Job deleteOldWeatherJob;
-  private final WeatherNotificationService weatherNotificationService;
 
   @Scheduled(cron = "0 5 2,5,8,11,14,17,20,23 * * *")
   public void runWeatherJob() {
@@ -48,15 +46,4 @@ public class WeatherScheduler {
       log.error("날씨 정기 삭제 배치 실행 중 오류 발생", e);
     }
   }
-
-  @Scheduled(cron = "0 30 2,5,8,11,14,17,20,23 * * *")
-  public void generateWeatherNotification() {
-    try {
-      weatherNotificationService.generateNotification();
-      log.info("날씨 알림 생성 완료");
-    } catch (Exception e) {
-      log.error("날씨 알림 생성 중 오류", e);
-    }
-  }
-
 }

@@ -29,5 +29,5 @@ public interface WeatherRepository extends JpaRepository<Weather, UUID> {
       @Param("forecastAts") Collection<LocalDateTime> forecastAts
   );
 
-  List<Weather> findByForecastAt(LocalDateTime forecastAt);
+  List<Weather> findByForecastAtAndLocationXAndLocationY(LocalDateTime forecastAt, Integer locationX, Integer locationY);
 }

@@ -11,6 +11,7 @@ import com.part4.team05.sb01otbooteam05.domain.weather.batch.reader.WeatherItemR
 import com.part4.team05.sb01otbooteam05.domain.weather.batch.processor.WeatherItemProcessor;
 import com.part4.team05.sb01otbooteam05.domain.weather.batch.writer.WeatherDeleteItemWriter;
 import com.part4.team05.sb01otbooteam05.domain.weather.batch.writer.WeatherItemWriter;
+import com.part4.team05.sb01otbooteam05.domain.weather.batch.writer.WeatherNotificationItemWriter;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import java.util.List;
 import java.util.UUID;
@@ -32,9 +33,10 @@ public class WeatherJobConfig {
   private final JobRepository jobRepository;
   private final PlatformTransactionManager platformTransactionManager;
 
-  private final WeatherItemReader reader;
-  private final WeatherItemProcessor processor;
-  private final WeatherItemWriter writer;
+  private final WeatherItemReader weatherItemReader;
+  private final WeatherItemProcessor weatherItemProcessor;
+  private final WeatherItemWriter weatherItemWriter;
+  private final WeatherNotificationItemWriter weatherNotificationItemWriter;
   private final OldWeatherItemReader oldWeatherItemReader;
   private final WeatherDeleteItemWriter weatherDeleteItemWriter;
   private final CustomJobExecutionListener customJobExecutionListener;
@@ -43,27 +45,41 @@ public class WeatherJobConfig {
   private final CustomItemProcessListener customItemProcessListener;
   private final CustomChunkListener customChunkListener;
 
-
-  // 날씨 일괄 수집 작업을 정의하는 Spring Batch Job
+  // 날씨 일괄 수집 작업 및 날씨 변동 알림을 정의하는 Spring Batch Job
   @Bean
   public Job weatherJob() {
     return new JobBuilder("weatherJob", jobRepository)
         .start(weatherStep())
+        .next(weatherNotificationStep())
         .listener(customJobExecutionListener)
         .build();
   }
 
+  // 날씨 일괄 수집 작업을 하는 Step
   @Bean
   public Step weatherStep() {
     return new StepBuilder("weatherStep", jobRepository)
         .<Pair<Integer, Integer>, List<Weather>>chunk(20, platformTransactionManager)
-        .reader(reader)
-        .processor(processor)
-        .writer(writer)
+        .reader(weatherItemReader)
+        .processor(weatherItemProcessor)
+        .writer(weatherItemWriter)
         .listener(customStepExecutionListener)
         .listener(customChunkListener)
         .listener(customItemReadListener)
         .listener(customItemProcessListener)
+        .build();
+  }
+
+  // 날씨 변동 알림 작업을 하는 Step
+  @Bean
+  public Step weatherNotificationStep() {
+    return new StepBuilder("weatherNotificationStep", jobRepository)
+        .<Pair<Integer, Integer>, Pair<Integer, Integer>>chunk(50, platformTransactionManager)
+        .reader(weatherItemReader)
+        .writer(weatherNotificationItemWriter)
+        .listener(customStepExecutionListener)
+        .listener(customChunkListener)
+        .listener(customItemReadListener)
         .build();
   }
 

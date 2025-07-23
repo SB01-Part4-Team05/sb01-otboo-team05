@@ -34,7 +34,7 @@ public class WeatherNotificationService {
     RAIN_SNOW_STARTED
   }
 
-  public void generateNotification() {
+  public void generateNotifications(int x, int y) {
     LocalDateTime now = LocalDateTime.now()
         .withMinute(0)
         .withSecond(0)
@@ -43,12 +43,10 @@ public class WeatherNotificationService {
     // 현재 시간의 한시간 뒤 날씨 데이터 기준
     LocalDateTime forecastAt = now.plusHours(1);
 
-    List<Weather> weatherList = weatherRepository.findByForecastAt(forecastAt);
+    List<Weather> weatherList = weatherRepository.findByForecastAtAndLocationXAndLocationY(forecastAt, x, y);
 
-    if(weatherList.isEmpty()) {
-      log.warn("예보 데이터 없음: forecastAt = {}", forecastAt);
-      return;
-    }
+    // 날씨 데이터 forecastedAt이 한 가지만 있을 때는 빈값 반환
+    if (weatherList.size() < 2) return;
 
     Map<Location, Pair<Weather, Weather>> comparisonMap = getComparisonMap(weatherList);
 
@@ -70,7 +68,8 @@ public class WeatherNotificationService {
               message,
               NotificationLevel.WARNING
           );
-          log.info("📨 알림 전송: userId={}, loc=({}, {}), message={}", userId, location.x(), location.y(), message);
+          log.info("알림 전송: userId={}, x={}, y={}), message={}",
+              userId, location.x(), location.y(), message);
         }
       }
     }
@@ -131,7 +130,4 @@ public class WeatherNotificationService {
       }
     };
   }
-
-
-
 }
