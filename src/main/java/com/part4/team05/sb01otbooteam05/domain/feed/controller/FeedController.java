@@ -102,9 +102,9 @@ public class FeedController {
             @AuthenticationPrincipal CustomUserDetails user,
             // 값이 들어왔는데 변환할 타입과 맞지않을경우(ex. 지정한 상수로 변환될 수 없는 문자 들어옴) 스프링이 400 반환)
             @RequestParam(value = "feedId", required = true) UUID feedId,
-            @RequestParam(value = "cursor", defaultValue = "") LocalDateTime cursor,
-            @RequestParam(value = "idAfter", defaultValue = "") UUID idAfter,
-            @RequestParam(value = "limit") Integer limit
+            @RequestParam(value = "cursor", required = false) LocalDateTime cursor,
+            @RequestParam(value = "idAfter", required = false) UUID idAfter,
+            @RequestParam(value = "limit", required = false) Integer limit
     ) {
         UUID userId = user.getUserId();
         FindCommentsRequest request = new FindCommentsRequest(feedId, cursor, idAfter, limit);

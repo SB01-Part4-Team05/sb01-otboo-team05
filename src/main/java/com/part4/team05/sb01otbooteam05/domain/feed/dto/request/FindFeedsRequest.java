@@ -5,10 +5,12 @@ import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import org.hibernate.query.SortDirection;
 
 import java.util.UUID;
 
+@Builder
 public record FindFeedsRequest(
 
         String cursor,

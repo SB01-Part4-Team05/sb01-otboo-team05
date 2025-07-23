@@ -1,30 +1,19 @@
 package com.part4.team05.sb01otbooteam05.util;
 
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.*;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
-import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
 import com.part4.team05.sb01otbooteam05.domain.feed.entity.Feed;
-import com.part4.team05.sb01otbooteam05.domain.feed.mapper.FeedMapper;
-import com.part4.team05.sb01otbooteam05.domain.feed.repository.FeedRepository;
 import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
-import com.part4.team05.sb01otbooteam05.domain.ootd.repository.OotdRepository;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.GenderType;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.UserRole;
-import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
-import com.part4.team05.sb01otbooteam05.domain.user.service.AdminInitializer;
-import com.part4.team05.sb01otbooteam05.domain.user.service.KakaoApiService;
-import com.part4.team05.sb01otbooteam05.domain.weather.client.WeatherApiClient;
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.WindSpeedAsWord;
-import com.part4.team05.sb01otbooteam05.domain.weather.repository.WeatherRepository;
-import lombok.RequiredArgsConstructor;
-import org.mockito.Mock;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -37,15 +26,8 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Component
-@RequiredArgsConstructor
 @Profile("test")
 public class EntityProvider {
-    private final FeedMapper feedMapper;
-    private final FeedRepository feedRepository;
-    private final UserRepository userRepository;
-    private final WeatherRepository weatherRepository;
-    private final OotdRepository ootdRepository;
-    private final ClothesRepository clothesRepository;
 
     private final List<AttributeDefinition> attributeDefinitionList = List.of(
             new AttributeDefinition(UUID.randomUUID(), "색", Arrays.stream(ColorType.values()).map(color -> color.getLabel()).toList()),
@@ -74,9 +56,13 @@ public class EntityProvider {
                 .isTempPassword(false)
                 .passwordExpiresAt(null)
                 .build();
-        userRepository.save(testUser);
         return testUser;
     }
+
+    public CustomUserDetails createCustomUserDetailsById(UUID userId) {
+        return new CustomUserDetails(userId, userId.toString().substring(0, 5) + "@email.com", UserRole.USER.name());
+    }
+
 
     public Weather createTestWeather() {
         LocalDateTime now = LocalDateTime.now();
@@ -99,8 +85,6 @@ public class EntityProvider {
                 .windSpeed(randomDouble(0.0, 20.0))
                 .windSpeedAsWord(randomEnum(WindSpeedAsWord.class))
                 .build();
-
-        weatherRepository.save(testWeather);
         return testWeather;
     }
 
@@ -113,8 +97,6 @@ public class EntityProvider {
         for (Ootd ootd : ootds) {
             testFeed.addOotd(ootd);
         }
-        feedRepository.save(testFeed);
-        ootdRepository.saveAll(ootds);
         return testFeed;
     }
 
@@ -137,7 +119,6 @@ public class EntityProvider {
                         testClothes,
                         attDef)
         ).toList());*/
-        clothesRepository.save(testClothes);
         return testClothes;
     }
 
@@ -168,19 +149,6 @@ public class EntityProvider {
     private <T extends Enum<?>> T randomEnum(Class<T> enumClass) {
         T[] enumConstants = enumClass.getEnumConstants();
         return enumConstants[ThreadLocalRandom.current().nextInt(enumConstants.length)];
-    }
-
-
-    @TestConfiguration
-    static class TestConfig {
-        @Mock
-        private WeatherApiClient weatherApiClient;
-
-        @Mock
-        private KakaoApiService kakaoApiService;
-
-        @Mock
-        private AdminInitializer adminInitializer;
     }
 
 
