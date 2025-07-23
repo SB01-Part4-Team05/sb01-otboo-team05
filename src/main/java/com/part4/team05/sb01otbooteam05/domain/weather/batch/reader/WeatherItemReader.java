@@ -1,12 +1,12 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.batch.reader;
 
 import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
-import jakarta.annotation.PostConstruct;
 import java.util.Iterator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.stereotype.Component;
@@ -20,7 +20,7 @@ public class WeatherItemReader implements ItemReader<Pair<Integer, Integer>> {
   private final UserRepository userRepository;
   private Iterator<Pair<Integer, Integer>> iterator;
 
-  @PostConstruct
+  @BeforeStep
   public void init() {
     List<Object[]> locations = userRepository.findDistinctLocations();
     log.info("날씨 배치 대상 위치 수: {}", locations.size());

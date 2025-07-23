@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemReader;
@@ -23,8 +24,8 @@ public class OldWeatherItemReader implements ItemReader<UUID> {
   private String deleteTimeStr;
 
   private Iterator<UUID> iterator;
-
-  @PostConstruct
+@PostConstruct
+  @BeforeStep
   public void init() {
     LocalDateTime delete = LocalDateTime.parse(deleteTimeStr);
     List<UUID> weatherIds = jdbcTemplate.query(
