@@ -4,11 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.dto.ParsedForecastDto;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+@Tag("integration")
 @SpringBootTest(classes = WeatherApiClient.class)
 @ActiveProfiles("test")
 public class WeatherApiClientTest {
