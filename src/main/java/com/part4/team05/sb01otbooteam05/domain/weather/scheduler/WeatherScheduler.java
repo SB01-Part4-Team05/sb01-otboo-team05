@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -42,8 +43,10 @@ public class WeatherScheduler {
           .toJobParameters();
 
       jobLauncher.run(deleteOldWeatherJob, parameters);
+    } catch (JobParametersInvalidException e) {
+      log.error("잘못된 JobParameter: {}", e.getMessage());
     } catch (Exception e) {
-      log.error("날씨 정기 삭제 배치 실행 중 오류 발생", e);
+      log.error("날씨 정기 삭제 배치 실행 중 예외 발생", e);
     }
   }
 }
