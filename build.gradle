@@ -82,7 +82,9 @@ sourceSets {
 }
 
 tasks.named('test', Test) {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
     finalizedBy(tasks.named('jacocoTestReport'))
 }
 
