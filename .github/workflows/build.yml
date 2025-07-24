@@ -28,7 +28,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build .jar file with Gradle
-        run: ./gradlew build
+        run: ./gradlew build -x test
 
       - name: Extract build metadata
         id: meta

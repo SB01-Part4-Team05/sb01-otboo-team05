@@ -1,0 +1,23 @@
+#name: pushToECS
+#
+#on:
+#  workflow_run:
+#    workflows:
+#      - build .jar file
+#      - CD - Push Docker Image to ECR
+#    types:
+#      - completed
+#
+#jobs:
+#  pushToEcs:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Set image tag from previous workflow
+#        run: echo "IMAGE_TAG=${{ github.event.workflow_run.outputs.image-tag }}" >> $GITHUB_ENV
+#
+#      - name: Render ECS Task Definition
+#        uses: aws-actions/amazon-ecs-render-task-definition@v1
+#        with:
+#          task-definition: ootd_task.json
+#          container-name: ootd_container
+#          image: ${{ secrets.AWS_URL }}/ootdImage:${{ env.IMAGE_TAG }}
