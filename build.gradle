@@ -70,8 +70,8 @@ dependencies {
     testImplementation 'org.springframework.batch:spring-batch-test'
 
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'     //oauth
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE' //S3
-    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.470'
+//    implementation 'io.awspring.cloud:spring-cloud-aws-starter:3.0.3'
+    implementation 'software.amazon.awssdk:s3:2.21.29'
 }
 
 sourceSets {

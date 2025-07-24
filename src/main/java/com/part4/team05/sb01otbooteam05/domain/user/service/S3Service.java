@@ -1,13 +1,13 @@
 package com.part4.team05.sb01otbooteam05.domain.user.service;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -17,7 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class S3Service {
 
-  private final AmazonS3 amazonS3;
+  private final S3Client s3Client;
 
   @Value("${spring.cloud.aws.s3.bucket}")
   private String bucketName;
@@ -37,23 +37,25 @@ public class S3Service {
       // S3에 저장할 파일명 생성 (profile/userId~~)
       String fileName = "profile/" + userId.toString() + "_" + System.currentTimeMillis() + extension;
 
-      // 메타데이터 설정
-      ObjectMetadata metadata = new ObjectMetadata();
-      metadata.setContentType(file.getContentType());
-      metadata.setContentLength(file.getSize());
+      // PutObjectRequest 생성 (v2 방식)
+      PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+          .bucket(bucketName)
+          .key(fileName)
+          .contentType(file.getContentType())
+          .contentLength(file.getSize())
+          .build();
 
-      // S3에 파일 업로드
-      PutObjectRequest putObjectRequest = new PutObjectRequest(
-          bucketName,
-          fileName,
-          file.getInputStream(),
-          metadata
-      );
+      // S3에 파일 업로드 (v2 방식)
+      s3Client.putObject(putObjectRequest,
+          RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
-      amazonS3.putObject(putObjectRequest);
+      // 업로드된 파일의 URL 생성 (v2 방식)
+      GetUrlRequest getUrlRequest = GetUrlRequest.builder()
+          .bucket(bucketName)
+          .key(fileName)
+          .build();
 
-      // 업로드된 파일의 URL 반환
-      String fileUrl = amazonS3.getUrl(bucketName, fileName).toString();
+      String fileUrl = s3Client.utilities().getUrl(getUrlRequest).toExternalForm();
 
       log.info("S3 프로필 이미지 업로드 성공: userId={}, fileName={}, url={}",
           userId, fileName, fileUrl);
@@ -74,9 +76,28 @@ public class S3Service {
       // URL에서 파일명 추출
       String fileName = extractFileNameFromUrl(fileUrl);
 
-      if (fileName != null && amazonS3.doesObjectExist(bucketName, fileName)) {
-        amazonS3.deleteObject(bucketName, fileName);
-        log.info("S3 파일 삭제 성공: fileName={}", fileName);
+      if (fileName != null) {
+        // 파일 존재 여부 확인 (v2 방식)
+        try {
+          HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+              .bucket(bucketName)
+              .key(fileName)
+              .build();
+
+          s3Client.headObject(headObjectRequest);
+
+          // 파일 삭제 (v2 방식)
+          DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+              .bucket(bucketName)
+              .key(fileName)
+              .build();
+
+          s3Client.deleteObject(deleteObjectRequest);
+          log.info("S3 파일 삭제 성공: fileName={}", fileName);
+
+        } catch (NoSuchKeyException e) {
+          log.warn("삭제하려는 파일이 S3에 존재하지 않음: fileName={}", fileName);
+        }
       }
     } catch (Exception e) {
       log.error("S3 파일 삭제 실패: fileUrl={}", fileUrl, e);
