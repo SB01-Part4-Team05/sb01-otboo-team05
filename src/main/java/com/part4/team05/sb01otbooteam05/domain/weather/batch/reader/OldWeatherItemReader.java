@@ -1,45 +1,44 @@
 package com.part4.team05.sb01otbooteam05.domain.weather.batch.reader;
 
 import java.time.LocalDateTime;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
-import org.springframework.batch.core.annotation.BeforeStep;
-import org.springframework.beans.factory.annotation.Value;
+import javax.sql.DataSource;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.batch.item.database.JdbcPagingItemReader;
+import org.springframework.batch.item.database.Order;
+import org.springframework.batch.item.database.PagingQueryProvider;
+import org.springframework.batch.item.database.support.PostgresPagingQueryProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 @StepScope
-@RequiredArgsConstructor
-public class OldWeatherItemReader implements ItemReader<UUID> {
-
-  private final JdbcTemplate jdbcTemplate;
-
-  @Value("#{jobParameters['deleteTime']}")
-  private String deleteTimeStr;
-
-  private Iterator<UUID> iterator;
-
-  @BeforeStep
-  public void init() {
-    LocalDateTime delete = LocalDateTime.parse(deleteTimeStr);
-    List<UUID> weatherIds = jdbcTemplate.query(
-        "SELECT id FROM weathers WHERE forecasted_at <= ?",
-        (rs, rowNum) -> UUID.fromString(rs.getString("id")),
-        delete
-    );
-        this.iterator = weatherIds.iterator();
-  }
-
-  @Override
-  public UUID read() {
-    if(iterator != null && iterator.hasNext()) {
-      return iterator.next();
+public class OldWeatherItemReader extends JdbcPagingItemReader<UUID> {
+  public OldWeatherItemReader(@Value("#{jobParameters['deleteTime']}") String deleteTimeStr,
+      DataSource dataSource) {
+    if (deleteTimeStr == null || deleteTimeStr.isBlank()) {
+      throw new IllegalArgumentException("deleteTime 파라미터는 필수입니다.");
     }
-    return  null;
+
+    this.setDataSource(dataSource);
+    this.setPageSize(1000);
+    this.setRowMapper((rs, rowNum) -> UUID.fromString(rs.getString("id")));
+    this.setQueryProvider(createQueryProvider());
+
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("deleteTime", LocalDateTime.parse(deleteTimeStr));
+    this.setParameterValues(parameters);
   }
+
+  private PagingQueryProvider createQueryProvider() {
+    PostgresPagingQueryProvider queryProvider = new PostgresPagingQueryProvider();
+    queryProvider.setSelectClause("id");
+    queryProvider.setFromClause("weathers");
+    queryProvider.setWhereClause("forecasted_at <= :deleteTime");
+    queryProvider.setSortKeys(Map.of("id", Order.ASCENDING));
+    return queryProvider;
+  }
+
 }
