@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.user.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserCreateRequest;
@@ -24,4 +25,7 @@ public interface UserService {
 
   //비밀번호 변경
   void changePassword(UUID userId, String newPassword);
+
+  //특정 x,y 값(위치)를 가진 유저 Id 리스트 조회
+  List<UUID> findUserIdsByLocation(int x, int y);
 }

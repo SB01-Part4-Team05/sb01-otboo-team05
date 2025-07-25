@@ -5,5 +5,9 @@ public enum PrecipitationType {
   RAIN,
   RAIN_SNOW,
   SNOW,
-  SHOWER //소나기
+  SHOWER; //소나기
+
+  public boolean isRainOrSnow() {
+    return this == RAIN || this == RAIN_SNOW || this == SNOW || this == SHOWER;
+  }
 }
