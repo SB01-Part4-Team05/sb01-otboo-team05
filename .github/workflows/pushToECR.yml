@@ -7,9 +7,11 @@ name: CD - Push Docker Image to ECR
 #      - main
 
 on:
-  push:
-    branches:
-      - 'feat/ci_68_test'  # 테스트 브랜치에서만 실행합니다.
+  workflow_run:
+    workflows:
+      - build .jar file
+    types:
+      - completed
 
 permissions:
   id-token: write
