@@ -52,12 +52,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docker-context
-          path: docker-context
-
-      - name: List docker-context contents
-        run: |
-          echo "현재 디렉토리: $(pwd)"
-          ls -al ./docker-context || echo "docker-context 폴더가 없습니다!"
 
   deploy:
     needs: build
@@ -68,7 +62,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker-context
-          path: docker-context
 
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -90,7 +83,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ootd_image:latest docker-context
+          docker build -t ootd_image:latest .
           docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
           docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${{ needs.build.outputs.sha_short }}
 
