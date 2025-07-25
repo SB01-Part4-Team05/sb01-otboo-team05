@@ -82,6 +82,11 @@ jobs:
       - name: Login to ECR
         run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_URL }}
 
+      - name: Check files in current directory before docker build
+        run: |
+          echo "현재 작업 디렉토리: $(pwd)"
+          ls -al
+
       - name: Build Docker image
         run: |
           docker build -t ootd_image:latest .
