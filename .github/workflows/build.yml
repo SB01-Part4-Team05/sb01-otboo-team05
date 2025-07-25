@@ -65,6 +65,12 @@ jobs:
           name: docker-context
           path: docker-context
 
+      - name: List root directory after download
+        run: ls -al
+
+      - name: List docker-context directory (if exists)
+        run: ls -al docker-context || echo "docker-context 폴더 없음"
+
       - name: Checkout source code
         uses: actions/checkout@v4
 
