@@ -86,10 +86,11 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t ootd_image:latest docker-context
-          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/ootd_image:latest
-          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/ootd_image:sha-${{ needs.build.outputs.sha_short }}
+          docker tag ootd_image:latest ${{ secrets.AWS_URL }}:latest
+          docker tag ootd_image:latest ${{ secrets.AWS_URL }}:sha-${{ needs.build.outputs.sha_short }}
 
       - name: Push Docker image to ECR
         run: |
-          docker push ${{ secrets.AWS_URL }}/ootd_image:latest
-          docker push ${{ secrets.AWS_URL }}/ootd_image:sha-${{ needs.build.outputs.sha_short }}
+          docker push ${{ secrets.AWS_URL }}:latest
+          docker push ${{ secrets.AWS_URL }}:sha-${{ needs.build.outputs.sha_short }}
+      
