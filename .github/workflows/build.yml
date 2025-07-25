@@ -65,7 +65,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker-context
-          path: ./docker-context  # <== 수정된 부분
+          path: ./
 
       - name: Checkout source code
         uses: actions/checkout@v4
