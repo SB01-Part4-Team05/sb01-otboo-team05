@@ -44,10 +44,8 @@ jobs:
         run: |
           mkdir docker-context
           JAR_PATH=$(ls -1 build/libs/*.jar | head -n 1)
-          echo "📦 Found JAR: $JAR_PATH"
           cp "$JAR_PATH" docker-context/app.jar
           cp Dockerfile docker-context/
-          echo "📂 docker-context contents:"
           ls -al docker-context/
 
       - name: Upload docker context artifact
@@ -65,7 +63,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker-context
-          path: ./
+          path: ./docker-context
 
       - name: Checkout source code
         uses: actions/checkout@v4
