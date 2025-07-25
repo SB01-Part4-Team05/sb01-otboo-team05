@@ -11,7 +11,7 @@ name: build .jar file
 on:
   push:
     branches:
-      - 'feat/ci#68'  # 테스트 브랜치에서만 실행
+      - 'feat/ci_68_test'  # 테스트 브랜치에서만 실행
 
 jobs:
   build:
