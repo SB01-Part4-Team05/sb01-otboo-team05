@@ -93,6 +93,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           service: ootd_task-service-kqe6w5p5
-          cluster: ootd_service
+          cluster: ootd_server
           task-definition: ${{ steps.render-task.outputs.task-definition }}
           wait-for-service-stability: true
