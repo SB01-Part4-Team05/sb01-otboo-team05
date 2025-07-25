@@ -2,14 +2,17 @@ name: CD - Push Docker Image to ECR
 
 on:
   push:
-    branches: [ develop ]
+    branches:
+      - develop
+      - main
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    outputs:
-      image-tag: ${{ steps.set-tag.outputs.image_tag }}
 
     steps:
       - name: Checkout
@@ -18,9 +21,17 @@ jobs:
       - name: Set image tag
         id: set-tag
         run: |
-          echo "image_tag=sha-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          IMAGE_TAG=sha-${GITHUB_SHA::7}
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "$IMAGE_TAG" > image-tag.txt
 
-      - name: Set up AWS credentials
+      - name: Upload image tag artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-tag
+          path: image-tag.txt
+
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ap-northeast-2
@@ -29,7 +40,7 @@ jobs:
       - name: Login to ECR
         run: aws ecr get-login-password | podman login --username AWS --password-stdin ${{ secrets.AWS_URL }}
 
-      - name: Push Docker image
+      - name: Push Docker image to ECR
         uses: redhat-actions/push-to-registry@v2.8
         with:
           image: ootdImage
