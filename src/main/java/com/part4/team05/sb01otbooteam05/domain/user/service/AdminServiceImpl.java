@@ -61,7 +61,7 @@ public class AdminServiceImpl implements AdminService {
     Pageable pageable = PageRequest.of(0, limit + 1, sort); // +1로 다음 페이지 존재 여부 확인
 
     // 검색 조건 설정
-    Specification<User> spec = null;
+    Specification<User> spec = (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
 
     // 커서가 있으면 해당 ID 이후 데이터만 조회
     if (idAfter != null) {

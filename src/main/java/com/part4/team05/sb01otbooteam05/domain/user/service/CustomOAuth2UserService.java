@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CustomOAuth2UserService extends DefaultOAuth2UserService { //카카오 로그인
 
   private final UserRepository userRepository;
