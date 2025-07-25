@@ -7,8 +7,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 //import java.util.List;
+import java.util.List;
 import java.util.UUID;
 
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -208,6 +210,18 @@ public class UserServiceImpl implements UserService {
     user.clearTempPassword();
 
     userRepository.save(user);
+  }
+
+  // 특정 x,y(위치) 값을 가지는 유저들의 id 조회
+  @Override
+  @Transactional(readOnly = true)
+  public List<UUID> findUserIdsByLocation(int x, int y) {
+
+    List<User> userList = userRepository.findByLocationXAndLocationY(x, y);
+
+    return userList.stream()
+        .map(User::getId)
+        .collect(Collectors.toList());
   }
 
 }
