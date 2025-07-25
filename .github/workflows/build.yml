@@ -3,7 +3,7 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - 'feat/ci_68_test'  # 테스트 브랜치에만 실행
+      - 'feat/ci_68_test'  # 테스트 브랜치에서만 실행
 
 permissions:
   id-token: write
@@ -65,6 +65,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker-context
+          path: ./docker-context  # <== 수정된 부분
 
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -72,7 +73,7 @@ jobs:
       - name: Set image tag
         id: set-tag
         run: |
-          IMAGE_TAG=sha-${GITHUB_SHA::7}
+          IMAGE_TAG=sha-${{ needs.build.outputs.sha_short }}
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Configure AWS credentials
@@ -88,9 +89,9 @@ jobs:
         run: |
           docker build -t ootd_image:latest ./docker-context
           docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
-          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}
+          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${{ needs.build.outputs.sha_short }}
 
       - name: Push Docker image to ECR
         run: |
           docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
-          docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}
+          docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${{ needs.build.outputs.sha_short }}
