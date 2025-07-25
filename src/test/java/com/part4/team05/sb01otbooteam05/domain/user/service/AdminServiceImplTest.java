@@ -28,7 +28,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -180,8 +179,7 @@ class AdminServiceImplTest {
 
       UserRoleUpdateRequest request = new UserRoleUpdateRequest(UserRole.USER);
       when(userRepository.findById(NORMAL_ADMIN_ID)).thenReturn(Optional.of(normalAdmin));
-      // 활성 관리자가 1명만 있다고 모킹
-      when(userRepository.findAll()).thenReturn(Arrays.asList(normalAdmin));
+      when(userRepository.countActiveAdmins()).thenReturn(1L);
 
       assertThatThrownBy(() -> adminService.updateUserRole(NORMAL_ADMIN_ID, request))
           .isInstanceOf(SecurityException.class)
@@ -257,6 +255,26 @@ class AdminServiceImplTest {
       assertThatThrownBy(() -> adminService.updateUserLockStatus(SUPER_ADMIN_ID, request))
           .isInstanceOf(SecurityException.class)
           .hasMessage("슈퍼 어드민 계정은 잠글 수 없습니다.");
+
+      verify(userRepository, never()).save(any());
+      verify(refreshTokenRepository, never()).revokeAllByUserId(any());
+    }
+  }
+
+  @Test
+  @DisplayName("계정 잠금 실패 - 마지막 활성 관리자 잠금 시도")
+  void updateUserLockStatus_LastActiveAdminLock_ThrowsException() {
+    try (MockedStatic<SecurityContextHolder> mockedSecurityContextHolder = mockStatic(SecurityContextHolder.class)) {
+      setupSecurityContext();
+      mockedSecurityContextHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+
+      UserLockUpdateRequest request = new UserLockUpdateRequest(true);
+      when(userRepository.findById(NORMAL_ADMIN_ID)).thenReturn(Optional.of(normalAdmin));
+      when(userRepository.countActiveAdmins()).thenReturn(1L);
+
+      assertThatThrownBy(() -> adminService.updateUserLockStatus(NORMAL_ADMIN_ID, request))
+          .isInstanceOf(SecurityException.class)
+          .hasMessage("시스템에 최소 1명의 활성 관리자가 있어야 합니다.");
 
       verify(userRepository, never()).save(any());
       verify(refreshTokenRepository, never()).revokeAllByUserId(any());

@@ -29,4 +29,7 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
   // 특정 x,y(위치) 값을 가지는 유저의 id 조회
   List<User> findByLocationXAndLocationY(Integer locationX, Integer locationY);
+
+  @Query("SELECT COUNT(u) FROM User u WHERE u.role = 'ADMIN' AND u.locked = false")
+  long countActiveAdmins();
 }
