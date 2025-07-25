@@ -40,7 +40,7 @@ jobs:
       - name: Buildah Build
         uses: redhat-actions/buildah-build@v2.13
         with:
-          image: ootdImage
+          image: ootd_image
           tags: |
             latest
             pr-${{ steps.meta.outputs.pr_number }}
@@ -50,6 +50,6 @@ jobs:
             ./Dockerfile
           context: .
           content: |
-            build/libs/*.jar
+            build/libs/sb01otbooteam05-0.0.1-SNAPSHOT.jar
           layers: true
           tls-verify: true
