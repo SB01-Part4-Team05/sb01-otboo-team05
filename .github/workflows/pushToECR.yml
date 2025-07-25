@@ -9,7 +9,7 @@ name: CD - Push Docker Image to ECR
 on:
   workflow_run:
     workflows:
-      - build .jar file
+      - 'build .jar file'
     types:
       - completed
 
