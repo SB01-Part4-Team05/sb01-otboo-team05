@@ -27,4 +27,6 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
   Optional<User> findByProviderAndProviderId(String provider, String providerId);
 
+  // 특정 x,y(위치) 값을 가지는 유저의 id 조회
+  List<User> findByLocationXAndLocationY(Integer locationX, Integer locationY);
 }
