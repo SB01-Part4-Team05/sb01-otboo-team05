@@ -22,6 +22,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Download docker context artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-context
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -49,7 +54,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ootd_image:latest .
+          docker build -t ootd_image:latest ./docker-context
           docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
           docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}
 

@@ -66,3 +66,9 @@ jobs:
           context: ./docker-context
           layers: true
           tls-verify: true
+
+      - name: Upload docker context artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-context
+          path: docker-context
