@@ -72,3 +72,10 @@ jobs:
         with:
           name: docker-context
           path: docker-context
+
+      - name: Trigger CD workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: trigger-cd
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'

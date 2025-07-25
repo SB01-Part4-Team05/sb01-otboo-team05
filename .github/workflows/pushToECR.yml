@@ -7,11 +7,8 @@ name: CD - Push Docker Image to ECR
 #      - main
 
 on:
-  workflow_run:
-    workflows:
-      - 'build .jar file'
-    types:
-      - completed
+  repository_dispatch:
+    types: [ trigger-cd ]
 
 permissions:
   id-token: write
