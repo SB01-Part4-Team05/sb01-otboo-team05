@@ -23,7 +23,7 @@
 #        uses: aws-actions/configure-aws-credentials@v4
 #        with:
 #          aws-region: ap-northeast-2
-#          role-to-assume: arn:aws:iam::065301656004:role/ootd_user_role
+#          role-to-assume: arn:aws:iam::065301656004:role/ootd_user_role_ecs
 #
 #      - name: Download image tag artifact
 #        uses: actions/download-artifact@v4
@@ -41,7 +41,7 @@
 #        with:
 #          task-definition: ootd_task.json
 #          container-name: ootd_container
-#          image: ${{ secrets.AWS_URL }}/ootdImage:${{ env.IMAGE_TAG }}
+#          image: ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:${{ env.IMAGE_TAG }}
 #
 #      - name: Deploy to ECS
 #        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
