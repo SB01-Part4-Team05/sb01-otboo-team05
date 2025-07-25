@@ -11,7 +11,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: create #update
     properties:
       hibernate:
         jdbc:
@@ -22,6 +22,16 @@ spring:
       initialize-schema: never
     job:
       enabled: false
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket: team5-discodeit
   security:
     oauth2:
       client:

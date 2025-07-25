@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CustomOidcUserService extends OidcUserService { //구글 로그인
 
   private final UserRepository userRepository;
