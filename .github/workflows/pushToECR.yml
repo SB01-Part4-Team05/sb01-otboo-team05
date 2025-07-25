@@ -38,13 +38,15 @@ jobs:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
 
       - name: Login to ECR
-        run: aws ecr get-login-password | podman login --username AWS --password-stdin ${{ secrets.AWS_URL }}
+        run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_URL }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ootd_image:latest .
+          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
+          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}
 
       - name: Push Docker image to ECR
-        uses: redhat-actions/push-to-registry@v2.8
-        with:
-          image: ootdImage
-          tags: |
-            latest
-            sha-${{ github.sha }}
-          registry: ${{ secrets.AWS_URL }}
+        run: |
+          docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
+          docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}
