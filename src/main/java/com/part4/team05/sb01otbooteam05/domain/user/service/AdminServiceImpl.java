@@ -1,6 +1,7 @@
 package com.part4.team05.sb01otbooteam05.domain.user.service;
 
 import com.part4.team05.sb01otbooteam05.domain.auth.repository.RefreshTokenRepository;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserDto;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserLockUpdateRequest;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +33,31 @@ public class AdminServiceImpl implements AdminService {
 
   private final UserRepository userRepository;
   private final RefreshTokenRepository refreshTokenRepository;
+
+  // 슈퍼 어드민 판별 헬퍼 메서드 (User 엔티티 수정 없이)
+  private boolean isSuperAdmin(User user) {
+    return "LOCAL".equals(user.getProvider()) &&
+        user.getEmail() != null &&
+        user.getEmail().endsWith("@otboo.com") &&
+        user.getRole() == UserRole.ADMIN;
+  }
+
+  // 활성 관리자 수 계산 헬퍼 메서드
+  private long countActiveAdmins() {
+    return userRepository.findAll().stream()
+        .filter(user -> user.getRole() == UserRole.ADMIN && !user.isLocked())
+        .count();
+  }
+
+  // 현재 로그인한 관리자 ID 가져오기
+  private UUID getCurrentAdminId() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
+      CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+      return userDetails.getUserId();
+    }
+    throw new SecurityException("인증되지 않은 요청입니다.");
+  }
 
   /**
    * 사용자 목록 조회 (커서 기반 페이지네이션)
@@ -131,18 +159,40 @@ public class AdminServiceImpl implements AdminService {
   @Override
   @Transactional
   public UserDto updateUserRole(UUID userId, UserRoleUpdateRequest request) {
-    log.info("사용자 권한 변경: userId={}, newRole={}", userId, request.role());
+    UUID currentAdminId = getCurrentAdminId();
 
-    User user = userRepository.findById(userId)
+    log.info("사용자 권한 변경: userId={}, newRole={}, requesterId={}", userId, request.role(), currentAdminId);
+
+    User targetUser = userRepository.findById(userId)
         .orElseThrow(() -> UserNotFoundException.withId(userId));
 
-    // 권한 변경
-    user.updateRole(request.role());
-    User updatedUser = userRepository.save(user);
+    // 자기 자신 수정 방지
+    if (userId.equals(currentAdminId)) {
+      log.warn("자기 자신의 권한 변경 시도 차단: userId={}", userId);
+      throw new SecurityException("자기 자신의 권한은 변경할 수 없습니다.");
+    }
 
-    // 권한 변경 시 해당 사용자 강제 로그아웃
+    // 슈퍼 어드민 보호 (헬퍼 메서드 사용)
+    if (isSuperAdmin(targetUser)) {
+      log.warn("슈퍼 어드민 권한 변경 시도 차단: userId={}", userId);
+      throw new SecurityException("슈퍼 어드민의 권한은 변경할 수 없습니다.");
+    }
+
+    // 마지막 관리자 보호
+    if (targetUser.getRole() == UserRole.ADMIN && request.role() != UserRole.ADMIN) {
+      long adminCount = countActiveAdmins();
+      if (adminCount <= 1) {
+        log.warn("마지막 관리자 권한 제거 시도 차단: userId={}, adminCount={}", userId, adminCount);
+        throw new SecurityException("시스템에 최소 1명의 관리자가 있어야 합니다.");
+      }
+    }
+
+    // 기존 로직 그대로
+    targetUser.updateRole(request.role());
+    User updatedUser = userRepository.save(targetUser);
+
     refreshTokenRepository.revokeAllByUserId(userId);
-    log.info("권한 변경으로 인한 강제 로그아웃 처리: userId={}", userId);
+    log.info("권한 변경 완료 및 강제 로그아웃 처리: userId={}", userId);
 
     return UserDto.from(updatedUser);
   }
@@ -153,19 +203,41 @@ public class AdminServiceImpl implements AdminService {
   @Override
   @Transactional
   public UUID updateUserLockStatus(UUID userId, UserLockUpdateRequest request) {
-    log.info("사용자 계정 잠금 상태 변경: userId={}, locked={}", userId, request.locked());
+    UUID currentAdminId = getCurrentAdminId();
 
-    User user = userRepository.findById(userId)
+    log.info("사용자 잠금 상태 변경: userId={}, locked={}, requesterId={}", userId, request.locked(), currentAdminId);
+
+    User targetUser = userRepository.findById(userId)
         .orElseThrow(() -> UserNotFoundException.withId(userId));
 
-    // 잠금 상태 변경
-    user.updateLocked(request.locked());
-    userRepository.save(user);
+    //  자기 자신 잠금 방지
+    if (userId.equals(currentAdminId)) {
+      log.warn("자기 자신의 계정 잠금 시도 차단: userId={}", userId);
+      throw new SecurityException("자기 자신의 계정은 잠글 수 없습니다.");
+    }
 
-    // 계정 잠금 시 해당 사용자 강제 로그아웃
+    // 슈퍼 어드민 보호
+    if (isSuperAdmin(targetUser)) {
+      log.warn("슈퍼 어드민 잠금 시도 차단: userId={}", userId);
+      throw new SecurityException("슈퍼 어드민 계정은 잠글 수 없습니다.");
+    }
+
+    // 마지막 관리자 보호
+    if (request.locked() && targetUser.getRole() == UserRole.ADMIN) {
+      long activeAdminCount = countActiveAdmins();
+      if (activeAdminCount <= 1) {
+        log.warn("마지막 활성 관리자 잠금 시도 차단: userId={}, activeAdminCount={}", userId, activeAdminCount);
+        throw new SecurityException("시스템에 최소 1명의 활성 관리자가 있어야 합니다.");
+      }
+    }
+
+    // 기존 로직 그대로
+    targetUser.updateLocked(request.locked());
+    userRepository.save(targetUser);
+
     if (request.locked()) {
       refreshTokenRepository.revokeAllByUserId(userId);
-      log.info("계정 잠금으로 인한 강제 로그아웃 처리: userId={}", userId);
+      log.info("계정 잠금 완료 및 강제 로그아웃 처리: userId={}", userId);
     }
 
     return userId;
