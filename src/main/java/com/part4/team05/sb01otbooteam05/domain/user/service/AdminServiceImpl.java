@@ -34,7 +34,7 @@ public class AdminServiceImpl implements AdminService {
   private final UserRepository userRepository;
   private final RefreshTokenRepository refreshTokenRepository;
 
-  // 슈퍼 어드민 판별 헬퍼 메서드 (User 엔티티 수정 없이)
+  // 슈퍼 어드민 판별 헬퍼 메서드
   private boolean isSuperAdmin(User user) {
     return "LOCAL".equals(user.getProvider()) &&
         user.getEmail() != null &&
@@ -42,11 +42,8 @@ public class AdminServiceImpl implements AdminService {
         user.getRole() == UserRole.ADMIN;
   }
 
-  // 활성 관리자 수 계산 헬퍼 메서드
   private long countActiveAdmins() {
-    return userRepository.findAll().stream()
-        .filter(user -> user.getRole() == UserRole.ADMIN && !user.isLocked())
-        .count();
+    return userRepository.countActiveAdmins();
   }
 
   // 현재 로그인한 관리자 ID 가져오기
@@ -187,7 +184,6 @@ public class AdminServiceImpl implements AdminService {
       }
     }
 
-    // 기존 로직 그대로
     targetUser.updateRole(request.role());
     User updatedUser = userRepository.save(targetUser);
 
@@ -231,7 +227,6 @@ public class AdminServiceImpl implements AdminService {
       }
     }
 
-    // 기존 로직 그대로
     targetUser.updateLocked(request.locked());
     userRepository.save(targetUser);
 
