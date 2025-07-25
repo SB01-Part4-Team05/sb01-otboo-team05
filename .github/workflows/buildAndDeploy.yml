@@ -2,23 +2,17 @@ name: Build and Deploy
 
 on:
   pull_request:
-    types:
-      - closed
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
-    outputs:
-      sha_short: ${{ steps.meta.outputs.sha_short }}
-      build_date: ${{ steps.meta.outputs.build_date }}
 
     steps:
       - name: Checkout source code
@@ -51,32 +45,6 @@ jobs:
           cp Dockerfile docker-context/
           ls -al docker-context/
 
-      - name: Upload docker context artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-context
-          path: docker-context
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Download docker context artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-context
-          path: docker-context
-
-      - name: Set image tag
-        id: set-tag
-        run: |
-          IMAGE_TAG=sha-${{ needs.build.outputs.sha_short }}
-          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -90,20 +58,43 @@ jobs:
         run: |
           docker build -t ootd_image:latest docker-context
           docker tag ootd_image:latest ${{ secrets.AWS_URL }}:latest
-          docker tag ootd_image:latest ${{ secrets.AWS_URL }}:sha-${{ needs.build.outputs.sha_short }}
+          docker tag ootd_image:latest ${{ secrets.AWS_URL }}:sha-${{ steps.meta.outputs.sha_short }}
 
       - name: Push Docker image to ECR
         run: |
           docker push ${{ secrets.AWS_URL }}:latest
-          docker push ${{ secrets.AWS_URL }}:sha-${{ needs.build.outputs.sha_short }}
-          
-      - name: Save image tag to file
-        run: echo "sha-${{ needs.build.outputs.sha_short }}" > image-tag.txt
+          docker push ${{ secrets.AWS_URL }}:sha-${{ steps.meta.outputs.sha_short }}
 
-      - name: Upload image tag artifact
-        uses: actions/upload-artifact@v4
+      - name: Render ECS Task Definition
+        id: render-task
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          name: image-tag
-          path: image-tag.txt
+          task-definition: ootd_task.json
+          container-name: ootd-app
+          image: ${{ secrets.AWS_URL }}:sha-${{ steps.meta.outputs.sha_short }}
+          environment-variables: |
+            SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ootd
+            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USER }}
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+            KAKAO_REST_API_KEY=${{ secrets.KAKAO_REST_API_KEY }}
+            WEATHER_API_KEY=${{ secrets.WEATHER_API_KEY }}
+            WEATHER_API_URL=${{ secrets.WEATHER_API_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+            ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
+            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+            ADMIN_NAME=${{ secrets.ADMIN_NAME }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
+            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
 
-      
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          service: ootd_task-service-kqe6w5p5
+          cluster: ootd_server
+          task-definition: ${{ steps.render-task.outputs.task-definition }}
+          wait-for-service-stability: true
+
