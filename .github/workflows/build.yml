@@ -1,12 +1,17 @@
 name: build .jar file
 
+#on:
+#  pull_request:
+#    types:
+#      - closed
+#    branches:
+#      - main
+#      - develop
+
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
-      - main
-      - develop
+      - 'ci#68'  # 테스트 브랜치에서만 실행
 
 jobs:
   build:
