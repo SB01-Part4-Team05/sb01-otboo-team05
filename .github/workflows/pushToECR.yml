@@ -9,7 +9,7 @@ name: CD - Push Docker Image to ECR
 on:
   push:
     branches:
-      - 'feat/ci_68_test'  # 테스트 브랜치에서만 실행
+      - 'feat/ci_68_test'  # 테스트 브랜치에서만 실행합니다.
 
 permissions:
   id-token: write
