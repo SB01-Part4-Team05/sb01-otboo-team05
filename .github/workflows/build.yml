@@ -1,22 +1,21 @@
-name: build .jar file
-
-#on:
-#  pull_request:
-#    types:
-#      - closed
-#    branches:
-#      - main
-#      - develop
+name: Build and Deploy
 
 on:
   push:
     branches:
-      - 'feat/ci_68_test'  # 테스트 브랜치에서만 실행
+      - 'feat/ci_68_test'  # 테스트 브랜치에만 실행
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   build:
-#    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+
+    outputs:
+      sha_short: ${{ steps.meta.outputs.sha_short }}
+      build_date: ${{ steps.meta.outputs.build_date }}
 
     steps:
       - name: Checkout source code
@@ -39,7 +38,6 @@ jobs:
         id: meta
         run: |
           echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-          echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
           echo "build_date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
       - name: Prepare Docker context
@@ -52,30 +50,47 @@ jobs:
           echo "📂 docker-context contents:"
           ls -al docker-context/
 
-      - name: Buildah Build
-        uses: redhat-actions/buildah-build@v2.13
-        with:
-          image: ootd_image
-          tags: |
-            latest
-            pr-${{ steps.meta.outputs.pr_number }}
-            sha-${{ steps.meta.outputs.sha_short }}
-            date-${{ steps.meta.outputs.build_date }}
-          dockerfiles: |
-            ./docker-context/Dockerfile
-          context: ./docker-context
-          layers: true
-          tls-verify: true
-
       - name: Upload docker context artifact
         uses: actions/upload-artifact@v4
         with:
           name: docker-context
           path: docker-context
 
-      - name: Trigger CD workflow
-        uses: peter-evans/repository-dispatch@v2
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download docker context artifact
+        uses: actions/download-artifact@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: trigger-cd
-          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+          name: docker-context
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: set-tag
+        run: |
+          IMAGE_TAG=sha-${GITHUB_SHA::7}
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-2
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+
+      - name: Login to ECR
+        run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_URL }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ootd_image:latest ./docker-context
+          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
+          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
+          docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}

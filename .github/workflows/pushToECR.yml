@@ -1,61 +1,61 @@
-name: CD - Push Docker Image to ECR
-
+#name: CD - Push Docker Image to ECR
+#
+##on:
+##  push:
+##    branches:
+##      - develop
+##      - main
+#
 #on:
-#  push:
-#    branches:
-#      - develop
-#      - main
-
-on:
-  repository_dispatch:
-    types: [ trigger-cd ]
-
-permissions:
-  id-token: write
-  contents: read
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download docker context artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-context
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set image tag
-        id: set-tag
-        run: |
-          IMAGE_TAG=sha-${GITHUB_SHA::7}
-          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "$IMAGE_TAG" > image-tag.txt
-
-      - name: Upload image tag artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: image-tag
-          path: image-tag.txt
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ap-northeast-2
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
-
-      - name: Login to ECR
-        run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_URL }}
-
-      - name: Build Docker image
-        run: |
-          docker build -t ootd_image:latest ./docker-context
-          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
-          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}
-
-      - name: Push Docker image to ECR
-        run: |
-          docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
-          docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}
+#  repository_dispatch:
+#    types: [ trigger-cd ]
+#
+#permissions:
+#  id-token: write
+#  contents: read
+#
+#jobs:
+#  deploy:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Download docker context artifact
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: docker-context
+#
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Set image tag
+#        id: set-tag
+#        run: |
+#          IMAGE_TAG=sha-${GITHUB_SHA::7}
+#          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+#          echo "$IMAGE_TAG" > image-tag.txt
+#
+#      - name: Upload image tag artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: image-tag
+#          path: image-tag.txt
+#
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          aws-region: ap-northeast-2
+#          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+#
+#      - name: Login to ECR
+#        run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_URL }}
+#
+#      - name: Build Docker image
+#        run: |
+#          docker build -t ootd_image:latest ./docker-context
+#          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
+#          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}
+#
+#      - name: Push Docker image to ECR
+#        run: |
+#          docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
+#          docker push ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${GITHUB_SHA::7}
