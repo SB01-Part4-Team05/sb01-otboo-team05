@@ -68,7 +68,7 @@ public class WeatherNotificationService {
               message,
               NotificationLevel.WARNING
           );
-          log.info("알림 전송: userId={}, x={}, y={}), message={}",
+          log.info("알림 전송: userId={}, x={}, y={}, message={}",
               userId, location.x(), location.y(), message);
         }
       }
