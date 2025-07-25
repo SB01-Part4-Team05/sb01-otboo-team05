@@ -1,71 +1,71 @@
-name: pushToECS
-
-on:
-  workflow_run:
-    workflows:
-      - Build and Deploy
-    types:
-      - completed
-
-permissions:
-  id-token: write
-  contents: read
-
-jobs:
-  pushToEcs:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ap-northeast-2
-          role-to-assume: arn:aws:iam::065301656004:role/ootd_user_role_ecs
-
-      - name: Download image tag artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: image-tag
-
-      - name: Read tag
-        id: read-tag
-        run: |
-          IMAGE_TAG=$(cat image-tag/image-tag.txt)
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-      - name: Render ECS Task Definition
-        id: render-task
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ootd_task.json
-          container-name: ootd-app
-          image: ${{ secrets.AWS_URL }}:${{ env.IMAGE_TAG }}
-          environment-variables: |
-            SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ootd
-            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USER }}
-            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-            KAKAO_REST_API_KEY=${{ secrets.KAKAO_REST_API_KEY }}
-            WEATHER_API_KEY=${{ secrets.WEATHER_API_KEY }}
-            WEATHER_API_URL=${{ secrets.WEATHER_API_URL }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-            ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
-            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
-            ADMIN_NAME=${{ secrets.ADMIN_NAME }}
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
-            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
-
-      - name: Deploy to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          service: ootd_task-service-kqe6w5p5
-          cluster: ootd-service
-          task-definition: ${{ steps.render-task.outputs.task-definition }}
-          wait-for-service-stability: true
+#name: pushToECS
+#
+#on:
+#  workflow_run:
+#    workflows:
+#      - Build and Deploy
+#    types:
+#      - completed
+#
+#permissions:
+#  id-token: write
+#  contents: read
+#
+#jobs:
+#  pushToEcs:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          aws-region: ap-northeast-2
+#          role-to-assume: arn:aws:iam::065301656004:role/ootd_user_role_ecs
+#
+#      - name: Download image tag artifact
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: image-tag
+#
+#      - name: Read tag
+#        id: read-tag
+#        run: |
+#          IMAGE_TAG=$(cat image-tag/image-tag.txt)
+#          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+#          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+#
+#      - name: Render ECS Task Definition
+#        id: render-task
+#        uses: aws-actions/amazon-ecs-render-task-definition@v1
+#        with:
+#          task-definition: ootd_task.json
+#          container-name: ootd-app
+#          image: ${{ secrets.AWS_URL }}:${{ env.IMAGE_TAG }}
+#          environment-variables: |
+#            SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ootd
+#            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USER }}
+#            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+#            KAKAO_REST_API_KEY=${{ secrets.KAKAO_REST_API_KEY }}
+#            WEATHER_API_KEY=${{ secrets.WEATHER_API_KEY }}
+#            WEATHER_API_URL=${{ secrets.WEATHER_API_URL }}
+#            JWT_SECRET=${{ secrets.JWT_SECRET }}
+#            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+#            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+#            ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
+#            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+#            ADMIN_NAME=${{ secrets.ADMIN_NAME }}
+#            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+#            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+#            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
+#            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
+#
+#      - name: Deploy to ECS
+#        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#        with:
+#          service: ootd_task-service-kqe6w5p5
+#          cluster: ootd-service
+#          task-definition: ${{ steps.render-task.outputs.task-definition }}
+#          wait-for-service-stability: true
