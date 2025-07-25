@@ -68,12 +68,6 @@ jobs:
           name: docker-context
           path: docker-context
 
-      - name: List root directory after download
-        run: ls -al
-
-      - name: List docker-context directory (if exists)
-        run: ls -al docker-context || echo "docker-context 폴더 없음"
-
       - name: Set image tag
         id: set-tag
         run: |
@@ -89,16 +83,11 @@ jobs:
       - name: Login to ECR
         run: aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_URL }}
 
-      - name: Check files in current directory before docker build
-        run: |
-          echo "현재 작업 디렉토리: $(pwd)"
-          ls -al
-
       - name: Build Docker image
         run: |
           docker build -t ootd_image:latest docker-context
-          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
-          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${{ needs.build.outputs.sha_short }}
+          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/ootd_image:latest
+          docker tag ootd_image:latest ${{ secrets.AWS_URL }}/ootd_image:sha-${{ needs.build.outputs.sha_short }}
 
       - name: Push Docker image to ECR
         run: |
