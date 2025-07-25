@@ -85,7 +85,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ootd_image:latest ./docker-context
+          docker build -t ootd_image:latest docker-context
           docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:latest
           docker tag ootd_image:latest ${{ secrets.AWS_URL }}/team5/ootd/ootd_image:sha-${{ needs.build.outputs.sha_short }}
 
