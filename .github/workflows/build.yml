@@ -40,8 +40,8 @@ jobs:
       - name: Prepare Docker context
         run: |
           mkdir docker-context
-          cp build/libs/*.jar docker-context/app.jar
-          cp Dockerfile docker-context/
+          JAR_PATH=$(ls -1 build/libs/*.jar | head -n 1)
+          cp "$JAR_PATH" docker-context/app.jar
 
       - name: Buildah Build
         uses: redhat-actions/buildah-build@v2.13
