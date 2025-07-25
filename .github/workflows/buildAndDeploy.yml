@@ -2,11 +2,10 @@ name: Build and Deploy
 
 on:
   pull_request:
-    types:
-      - closed
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
 
 permissions:
   id-token: write
@@ -57,6 +56,16 @@ jobs:
           name: docker-context
           path: docker-context
 
+      - name: Save image tag to file
+        run: echo "sha-${{ steps.meta.outputs.sha_short }}" > image-tag.txt
+
+      - name: Upload image tag artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-tag
+          path: image-tag.txt
+
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -97,13 +106,5 @@ jobs:
           docker push ${{ secrets.AWS_URL }}:latest
           docker push ${{ secrets.AWS_URL }}:sha-${{ needs.build.outputs.sha_short }}
           
-      - name: Save image tag to file
-        run: echo "sha-${{ needs.build.outputs.sha_short }}" > image-tag.txt
-
-      - name: Upload image tag artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: image-tag
-          path: image-tag.txt
-
+      
       
