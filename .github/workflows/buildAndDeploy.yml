@@ -1,9 +1,12 @@
 name: Build and Deploy
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
-      - 'feat/ci_68_test'  # 테스트 브랜치에서만 실행
+      - main
+      - develop
 
 permissions:
   id-token: write
@@ -32,7 +35,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build .jar file with Gradle
-        run: ./gradlew build -x test
+        run: ./gradlew bootJar -x test
 
       - name: Extract build metadata
         id: meta
@@ -93,4 +96,14 @@ jobs:
         run: |
           docker push ${{ secrets.AWS_URL }}:latest
           docker push ${{ secrets.AWS_URL }}:sha-${{ needs.build.outputs.sha_short }}
+          
+      - name: Save image tag to file
+        run: echo "sha-${{ needs.build.outputs.sha_short }}" > image-tag.txt
+
+      - name: Upload image tag artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-tag
+          path: image-tag.txt
+
       
