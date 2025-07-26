@@ -75,10 +75,7 @@ jobs:
           environment-variables: |
             SPRING_DATASOURCE_URL=${{ secrets.RDS_URL }}
             SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USER }}
-#           ${{ secrets.SPRING_DATASOURCE_USER }}
-#           jdbc:postgresql://localhost:5432/ootd
             SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASS }}
-#           ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
             KAKAO_REST_API_KEY=${{ secrets.KAKAO_REST_API_KEY }}
             WEATHER_API_KEY=${{ secrets.WEATHER_API_KEY }}
             WEATHER_API_URL=${{ secrets.WEATHER_API_URL }}
