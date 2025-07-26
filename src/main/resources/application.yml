@@ -133,3 +133,6 @@ app:
     redirect:
       success-url: "${OAUTH2_SUCCESS_URL:http://localhost:8080/}"
       failure-url: "${OAUTH2_FAILURE_URL:http://localhost:8080/sign-in}"
+
+clothes:
+  bucket: "${CLOTHES_BUCKET}"
