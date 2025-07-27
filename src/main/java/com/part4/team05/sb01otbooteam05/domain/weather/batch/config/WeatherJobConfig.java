@@ -119,10 +119,8 @@ public class WeatherJobConfig {
       WeatherItemProcessor weatherItemProcessor,
       WeatherService weatherService
   ) {
-    LocalDate nowDate = LocalDate.now();
-    LocalTime time = BaseTimeUtils.standardTime(LocalTime.now()).withNano(0);
-    LocalDateTime forecastedAt = LocalDateTime.of(nowDate, time);
 
+    LocalDateTime forecastedAt = BaseTimeUtils.getLatestBaseDateTimeAsDateTime();
     Set<Pair<Integer, Integer>> existLocationSet = weatherService.findExistingWeatherLocations(forecastedAt);
 
     weatherItemProcessor.setExistLocationSet(existLocationSet);
