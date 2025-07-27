@@ -64,8 +64,8 @@ public interface FollowControllerDoc {
       )
   })
   ResponseEntity<FollowSummaryDto> getFollowSummary(
-      @Parameter(description = "userId") @RequestParam UUID userId,
-      @Parameter(description = "currentUserId") @RequestParam UUID currentUserId
+      @Parameter(description = "userId") @RequestParam @NotNull UUID userId,
+      @Parameter(description = "currentUserId") @RequestParam @NotNull UUID currentUserId
   );
 
   @Operation(

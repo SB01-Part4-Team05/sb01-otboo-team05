@@ -114,7 +114,7 @@ public interface FeedControllerDoc {
       security = @SecurityRequirement(name = "bearerAuth")
   )
   @ApiResponses({
-      @ApiResponse(responseCode = "204", description = "피드 좋아요 취소 성공"),
+      @ApiResponse(responseCode = "200", description = "피드 좋아요 취소 성공"),
       @ApiResponse(
           responseCode = "400",
           description = "피드 좋아요 취소 실패",
@@ -135,11 +135,11 @@ public interface FeedControllerDoc {
       @ApiResponse(
           responseCode = "200",
           description = "피드 댓글 조회 성공",
-          content = @Content(schema = @Schema(implementation = CommentDtoCursorResponse.class))
+          content = @Content(schema = @Schema(implementation = FeedDto.class))
       ),
       @ApiResponse(
           responseCode = "400",
-          description = "피드 댓글 등록 실패",
+          description = "피드 댓글 조회 실패",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class))
       )
   })

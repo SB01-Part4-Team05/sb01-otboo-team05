@@ -46,7 +46,7 @@ public interface AttributeControllerDoc {
 
   @Operation(
       summary = "의상 속성 정의 수정",
-      description = "의상 속성 정의 수제 API",
+      description = "의상 속성 정의 수정 API",
       security = @SecurityRequirement(name = "bearerAuth")
   )
   @ApiResponses({
@@ -75,7 +75,7 @@ public interface AttributeControllerDoc {
       @ApiResponse(responseCode = "204", description = "의상 속성 정의 삭제 성공"),
       @ApiResponse(
           responseCode = "400",
-          description = "의상 속성 정의 수정 실패",
+          description = "의상 속성 정의 삭제 실패",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class))
       )
   })
