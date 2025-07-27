@@ -40,7 +40,7 @@ public interface AuthControllerDoc {
   @Operation(
       summary = "로그아웃",
       description = "로그아웃합니다.",
-      security = @SecurityRequirement(name = "bearerAuth")  // ← 이 부분만 추가하면 됨!
+      security = @SecurityRequirement(name = "bearerAuth")
   )
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "로그아웃 성공"),
