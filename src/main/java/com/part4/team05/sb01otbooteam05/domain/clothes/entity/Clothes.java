@@ -26,8 +26,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Clothes {
 
-  @Id @GeneratedValue(strategy = GenerationType.AUTO)
-  UUID id;
+  @Id
+  UUID id = UUID.randomUUID();
 
   @Column
   String name;
