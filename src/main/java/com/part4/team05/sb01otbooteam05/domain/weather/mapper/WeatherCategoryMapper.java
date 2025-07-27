@@ -4,7 +4,9 @@ import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.WindSpeedAsWord;
 import com.part4.team05.sb01otbooteam05.domain.weather.exception.InvalidDataException;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class WeatherCategoryMapper {
   //변환 값은 기상청 단기예보 조회서비스 오픈 API 활용 가이드를 참고하였음
 
@@ -14,7 +16,10 @@ public class WeatherCategoryMapper {
       case "1" -> SkyStatusType.CLEAR;
       case "3" -> SkyStatusType.MOSTLY_CLOUDY;
       case "4" -> SkyStatusType.CLOUDY;
-      default -> throw new InvalidDataException("알수없는 코드값: " + skyCode);
+      default -> {
+        log.info("[SkyStatusType] 알 수 없는 코드값: {}", skyCode);
+        throw new InvalidDataException("알수없는 코드값: " + skyCode);
+      }
     };
   }
 
@@ -26,7 +31,10 @@ public class WeatherCategoryMapper {
       case "2" -> PrecipitationType.RAIN_SNOW;
       case "3" -> PrecipitationType.SNOW;
       case "4" -> PrecipitationType.SHOWER;
-      default -> throw new InvalidDataException("알수없는 코드값: " + ptyCode);
+      default -> {
+        log.info("[SkyStatusType] 알 수 없는 코드값: {}", ptyCode);
+        throw new InvalidDataException("알수없는 코드값: " + ptyCode);
+      }
     };
   }
 
@@ -52,6 +60,7 @@ public class WeatherCategoryMapper {
       return Double.parseDouble(pcpCode);
 
     } catch (NumberFormatException e) {
+      log.info("[SkyStatusType] 알 수 없는 코드값: {}", pcpCode);
       throw new InvalidDataException("알수없는 코드값: " + pcpCode);
     }
   }
@@ -61,6 +70,7 @@ public class WeatherCategoryMapper {
     try {
       return Double.parseDouble(popCode) / 100.0;
     } catch (NumberFormatException e) {
+      log.info("[SkyStatusType] 알 수 없는 코드값: {}", popCode);
       throw new InvalidDataException("알수없는 코드값: " + popCode);
     }
   }
@@ -78,6 +88,7 @@ public class WeatherCategoryMapper {
         return WindSpeedAsWord.STRONG;
       }
     } catch (NumberFormatException e) {
+      log.info("[SkyStatusType] 알 수 없는 코드값: {}", wsdCode);
       throw new InvalidDataException("알수없는 코드값: " + wsdCode);
     }
   }
