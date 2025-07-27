@@ -66,7 +66,8 @@ CREATE TABLE weathers
     temperature_min                    DOUBLE PRECISION NOT NULL,
     temperature_max                    DOUBLE PRECISION NOT NULL,
     wind_speed                         DOUBLE PRECISION NOT NULL,
-    wind_speed_as_word                 VARCHAR(20)      NOT NULL
+    wind_speed_as_word                 VARCHAR(20)      NOT NULL,
+    CONSTRAINT uq_weather_unique UNIQUE (location_x, location_y, forecasted_at, forecast_at)
 );
 
 CREATE TABLE clothes
