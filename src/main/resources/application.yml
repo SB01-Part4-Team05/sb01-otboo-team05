@@ -81,11 +81,10 @@ spring:
   file:
     upload-dir: uploads
 
-  web:
-    resources:
-      static-locations:
-        - classpath:/static/
-        - file:/home/ubuntu/app/images/
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
 # 로깅 레벨 설정
 logging:
@@ -133,3 +132,6 @@ app:
     redirect:
       success-url: "${OAUTH2_SUCCESS_URL:http://localhost:8080/}"
       failure-url: "${OAUTH2_FAILURE_URL:http://localhost:8080/sign-in}"
+
+clothes:
+  bucket: "${CLOTHES_BUCKET}"

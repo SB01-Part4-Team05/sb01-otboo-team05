@@ -73,9 +73,9 @@ jobs:
           container-name: ootd-app
           image: ${{ secrets.AWS_URL }}:sha-${{ steps.meta.outputs.sha_short }}
           environment-variables: |
-            SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ootd
-            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USER }}
-            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+            SPRING_DATASOURCE_URL=${{ secrets.RDS_URL }}
+            SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USER }}
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASS }}
             KAKAO_REST_API_KEY=${{ secrets.KAKAO_REST_API_KEY }}
             WEATHER_API_KEY=${{ secrets.WEATHER_API_KEY }}
             WEATHER_API_URL=${{ secrets.WEATHER_API_URL }}
