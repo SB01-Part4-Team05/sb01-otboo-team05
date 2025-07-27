@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Clothes {
 
-  @Id
+  @Id // UUID random
   UUID id = UUID.randomUUID();
 
   @Column
