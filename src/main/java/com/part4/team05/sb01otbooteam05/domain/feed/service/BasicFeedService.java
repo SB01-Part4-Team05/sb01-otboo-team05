@@ -1,6 +1,12 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.service;
 
-import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDtoCursorResponse;
@@ -16,18 +22,14 @@ import com.part4.team05.sb01otbooteam05.domain.feedComment.repository.FeedCommen
 import com.part4.team05.sb01otbooteam05.domain.feedLike.entity.FeedLike;
 import com.part4.team05.sb01otbooteam05.domain.feedLike.repository.FeedLikeRepository;
 import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
+import com.part4.team05.sb01otbooteam05.domain.ootd.repository.OotdRepository;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -43,6 +45,7 @@ public class BasicFeedService implements FeedService {
     private final FeedCommentRepository feedCommentRepository;
     private final FeedMapper feedMapper;
     private final SearchFeedRepository searchFeedRepository;
+    private final OotdRepository ootdRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -65,20 +68,22 @@ public class BasicFeedService implements FeedService {
 
 		/* 3. 피드에 들어갈 옷 종류 조회
 			일부가 조회 실패하더라도 예외 던지지 않고, 조회 성공한 옷들만 추가함. */
-        Stream<Optional<Clothes>> foundClothesStream = request.clothesIds()
-                .stream()
-                .map(clothesId -> clothesService.getClothesEntityById(clothesId))
-                .filter(clothes -> clothes.isPresent());
-
+        List<Ootd> foundOotds = request.clothesIds()
+            .stream()
+            .map(clothesService::getClothesEntityById)
+            .filter(Optional::isPresent)
         // 4. 옷 단건을 참조하는 Ootd 객체 생성과 동시에 피드 ootds 필드에 추가 (Feed <- Ootd -> Clothes)
-        foundClothesStream
-                .map(clothes -> new Ootd(newFeed, clothes.get())).toList();
+            .map(clothes -> ootdRepository.save(new Ootd(newFeed, clothes.get())))
+            .toList();
 
-        // 5. 피드 내 ootds 리스트에 ootd 객체가 하나라도 있으면 Feed 저장. 없다면 Feed 생성 실패.
+        // 5. 조회된 ootd 객체가 하나도 없다면 Feed 생성 실패.
         // todo 예외 종류가 적절한지 고민 필요
-        if (newFeed.getOotds().isEmpty()) {
+        if (foundOotds.isEmpty()) {
             throw new IllegalArgumentException();
         }
+
+        // 6. 저장
+        feedRepository.save(newFeed);
 
         log.info("피드 생성 성공: feedId={}", newFeed.getId());
         return feedMapper.toFeedDto(newFeed, 0L, 0, false);
