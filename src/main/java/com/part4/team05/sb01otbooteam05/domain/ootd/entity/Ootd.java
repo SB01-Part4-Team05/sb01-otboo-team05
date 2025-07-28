@@ -1,22 +1,15 @@
 package com.part4.team05.sb01otbooteam05.domain.ootd.entity;
 
-import java.util.UUID;
-
-import org.hibernate.annotations.UuidGenerator;
-
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.feed.entity.Feed;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.util.UUID;
 
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
 @Table(name = "ootds")
