@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.directMessage.controller;
 
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,10 +53,7 @@ public interface DirectMessageRestControllerDoc {
       @Parameter(description = "limit", example = "20")
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit,
 
-      @Parameter(description = "sortBy", example = "id")
-      @RequestParam(defaultValue = "id") String sortBy,
-
-      @Parameter(description = "direction", example = "DESC")
-      @RequestParam(defaultValue = "DESC") String direction
+      @Parameter(hidden = true)
+      CustomUserDetails me
   );
 }
