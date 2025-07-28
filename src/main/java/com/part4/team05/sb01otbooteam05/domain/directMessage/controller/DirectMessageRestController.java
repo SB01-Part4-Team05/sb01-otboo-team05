@@ -23,7 +23,7 @@ import java.util.UUID;
 @RequestMapping("/api/direct-messages")
 @RequiredArgsConstructor
 @Validated
-public class DirectMessageRestController {
+public class DirectMessageRestController implements DirectMessageRestControllerDoc{
 
     private final DirectMessageService directMessageService;
 

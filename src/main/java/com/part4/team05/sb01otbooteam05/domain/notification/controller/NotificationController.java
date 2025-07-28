@@ -23,7 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class NotificationController {
+public class NotificationController implements NotificationControllerDoc{
 
     private final NotificationService notificationService;
     private final UserService userService;

@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/clothes")
-public class ClothesController {
+public class ClothesController implements ClothesControllerDoc{
 
   private final ClothesService clothesService;
 
