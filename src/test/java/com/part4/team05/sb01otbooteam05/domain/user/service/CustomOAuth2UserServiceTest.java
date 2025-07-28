@@ -178,4 +178,83 @@ class CustomOAuth2UserServiceTest {
         .isInstanceOf(OAuth2AuthenticationException.class)
         .hasMessageContaining("Only Kakao login is supported");
   }
+
+  @Test
+  @DisplayName("카카오 OAuth2 닉네임 없음 - 기본 이름 생성")
+  void processOAuth2User_NoNickname_GenerateDefaultName() {
+    String providerId = "123456789";
+
+    OAuth2UserRequest userRequest = mock(OAuth2UserRequest.class);
+    OAuth2User oAuth2User = mock(OAuth2User.class);
+    ClientRegistration clientRegistration = mock(ClientRegistration.class);
+
+    Map<String, Object> profile = new HashMap<>();
+
+    Map<String, Object> kakaoAccount = new HashMap<>();
+    kakaoAccount.put("profile", profile);
+
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put("id", providerId);
+    attributes.put("kakao_account", kakaoAccount);
+
+    when(oAuth2User.getAttributes()).thenReturn(attributes);
+    when(userRequest.getClientRegistration()).thenReturn(clientRegistration);
+    when(clientRegistration.getRegistrationId()).thenReturn("kakao");
+    when(userRepository.findByProviderAndProviderId("KAKAO", providerId))
+        .thenReturn(Optional.empty());
+
+    User savedUser = User.builder()
+        .email("kakao1234@kakao.com")
+        .name("카카오사용자1234")
+        .role(UserRole.USER)
+        .provider("KAKAO")
+        .providerId(providerId)
+        .build();
+    when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+    OAuth2User result = customOAuth2UserService.processOAuth2User(userRequest, oAuth2User);
+
+    assertThat(result).isInstanceOf(CustomUserDetails.class);
+    verify(userRepository).save(any(User.class));
+  }
+
+  @Test
+  @DisplayName("가상 이메일 생성 - 특수문자 제거")
+  void generateKakaoVirtualEmail_SpecialCharacters() {
+    String providerId = "123456789";
+    String nickname = "테스트@#$유저";
+
+    OAuth2UserRequest userRequest = mock(OAuth2UserRequest.class);
+    OAuth2User oAuth2User = mock(OAuth2User.class);
+    ClientRegistration clientRegistration = mock(ClientRegistration.class);
+
+    Map<String, Object> profile = new HashMap<>();
+    profile.put("nickname", nickname);
+
+    Map<String, Object> kakaoAccount = new HashMap<>();
+    kakaoAccount.put("profile", profile);
+
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put("id", providerId);
+    attributes.put("kakao_account", kakaoAccount);
+
+    when(oAuth2User.getAttributes()).thenReturn(attributes);
+    when(userRequest.getClientRegistration()).thenReturn(clientRegistration);
+    when(clientRegistration.getRegistrationId()).thenReturn("kakao");
+    when(userRepository.findByProviderAndProviderId("KAKAO", providerId))
+        .thenReturn(Optional.empty());
+
+    User savedUser = User.builder()
+        .email("테스트유저@kakao.com")
+        .name(nickname)
+        .role(UserRole.USER)
+        .provider("KAKAO")
+        .providerId(providerId)
+        .build();
+    when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+    OAuth2User result = customOAuth2UserService.processOAuth2User(userRequest, oAuth2User);
+
+    assertThat(result).isInstanceOf(CustomUserDetails.class);
+  }
 }

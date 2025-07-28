@@ -8,9 +8,11 @@ import com.part4.team05.sb01otbooteam05.domain.auth.entity.RefreshToken;
 import com.part4.team05.sb01otbooteam05.domain.auth.exception.InvalidTokenException;
 import com.part4.team05.sb01otbooteam05.domain.auth.exception.UnauthorizedException;
 import com.part4.team05.sb01otbooteam05.domain.auth.repository.RefreshTokenRepository;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.UserRole;
+import com.part4.team05.sb01otbooteam05.domain.user.exception.UserNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
+import java.util.Map;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -132,5 +135,129 @@ class AuthServiceImplTest {
 
     verify(userRepository).save(testUser);
     verify(emailService).sendTempPassword(eq(TEST_EMAIL), anyString(), any(LocalDateTime.class));
+  }
+
+  @Test
+  @DisplayName("로그인 실패 - 계정 잠금")
+  void signIn_AccountLocked() {
+    testUser = User.builder()
+        .email(TEST_EMAIL)
+        .name("Test User")
+        .password("encodedPassword")
+        .role(UserRole.USER)
+        .locked(true)
+        .provider("LOCAL")
+        .build();
+
+    SignInRequest request = new SignInRequest(TEST_EMAIL, TEST_PASSWORD);
+    when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
+    when(passwordEncoder.matches(TEST_PASSWORD, "encodedPassword")).thenReturn(true);
+
+    assertThatThrownBy(() -> authService.signIn(request))
+        .isInstanceOf(UnauthorizedException.class);
+  }
+
+  @Test
+  @DisplayName("로그인 실패 - 사용자 없음")
+  void signIn_UserNotFound() {
+    SignInRequest request = new SignInRequest(TEST_EMAIL, TEST_PASSWORD);
+    when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> authService.signIn(request))
+        .isInstanceOf(UnauthorizedException.class);
+  }
+
+  @Test
+  @DisplayName("로그인 성공 - 기존 세션 강제 로그아웃")
+  void signIn_ForceLogoutExistingSession() {
+    SignInRequest request = new SignInRequest(TEST_EMAIL, TEST_PASSWORD);
+    when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
+    when(passwordEncoder.matches(TEST_PASSWORD, "encodedPassword")).thenReturn(true);
+    when(refreshTokenRepository.existsByUserIdAndRevokedFalse(TEST_USER_ID)).thenReturn(true);
+    when(jwtTokenProvider.createAccessToken(testUser)).thenReturn("accessToken");
+    when(jwtTokenProvider.createRefreshToken()).thenReturn("refreshToken");
+    when(jwtProperties.getRefreshTokenExpiration()).thenReturn(86400000L);
+
+    SignInResponse response = authService.signIn(request);
+
+    assertThat(response.getAccessToken()).isEqualTo("accessToken");
+    verify(refreshTokenRepository).revokeAllByUserId(TEST_USER_ID);
+  }
+
+  @Test
+  @DisplayName("임시 비밀번호 만료로 로그인 실패")
+  void signIn_TempPasswordExpired() {
+    // 임시 비밀번호 사용자 생성
+    User tempPasswordUser = User.builder()
+        .email(TEST_EMAIL)
+        .name("Test User")
+        .password("tempPassword")
+        .role(UserRole.USER)
+        .locked(false)
+        .provider("LOCAL")
+        .build();
+    ReflectionTestUtils.setField(tempPasswordUser, "id", TEST_USER_ID);
+
+    tempPasswordUser.setTempPassword("tempPassword", LocalDateTime.now().minusHours(3));
+
+    SignInRequest request = new SignInRequest(TEST_EMAIL, TEST_PASSWORD);
+    when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(tempPasswordUser));
+    when(passwordEncoder.matches(TEST_PASSWORD, "tempPassword")).thenReturn(true);
+
+    assertThatThrownBy(() -> authService.signIn(request))
+        .isInstanceOf(UnauthorizedException.class);
+  }
+
+  @Test
+  @DisplayName("로그아웃 성공")
+  void signOut_Success() {
+    authService.signOut(TEST_USER_ID);
+
+    verify(refreshTokenRepository).revokeAllByUserId(TEST_USER_ID);
+  }
+
+  @Test
+  @DisplayName("액세스 토큰만 조회 성공")
+  void getAccessTokenOnly_Success() {
+    RefreshToken refreshToken = RefreshToken.builder()
+        .user(testUser)
+        .token("refreshToken")
+        .expiresAt(LocalDateTime.now().plusDays(7))
+        .revoked(false)
+        .build();
+
+    TokenRefreshRequest request = new TokenRefreshRequest("refreshToken");
+    when(refreshTokenRepository.findByTokenWithUser("refreshToken")).thenReturn(Optional.of(refreshToken));
+    when(jwtTokenProvider.createAccessToken(testUser)).thenReturn("newAccessToken");
+
+    String result = authService.getAccessTokenOnly(request);
+
+    assertThat(result).isEqualTo("newAccessToken");
+    verify(jwtTokenProvider, never()).createRefreshToken();
+  }
+
+  @Test
+  @DisplayName("소셜 로그인 사용자 토큰 발급 성공")
+  void signInOAuthUser_Success() {
+    CustomUserDetails userDetails = new CustomUserDetails(TEST_USER_ID, TEST_EMAIL, "USER", Map.of());
+    when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(testUser));
+    when(refreshTokenRepository.existsByUserIdAndRevokedFalse(TEST_USER_ID)).thenReturn(false);
+    when(jwtTokenProvider.createAccessToken(testUser)).thenReturn("accessToken");
+    when(jwtTokenProvider.createRefreshToken()).thenReturn("refreshToken");
+    when(jwtProperties.getRefreshTokenExpiration()).thenReturn(86400000L);
+
+    SignInResponse response = authService.signInOAuthUser(userDetails);
+
+    assertThat(response.getAccessToken()).isEqualTo("accessToken");
+    assertThat(response.getRefreshToken()).isEqualTo("refreshToken");
+  }
+
+  @Test
+  @DisplayName("비밀번호 초기화 실패 - 사용자 없음")
+  void resetPassword_UserNotFound() {
+    when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> authService.resetPassword(TEST_EMAIL))
+        .isInstanceOf(UserNotFoundException.class);
   }
 }

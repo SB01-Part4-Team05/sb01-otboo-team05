@@ -110,4 +110,76 @@ class S3ServiceTest {
     verify(s3Client).headObject(any(HeadObjectRequest.class));
     verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
   }
+
+  @Test
+  @DisplayName("파일명 확장자 없음")
+  void uploadProfileImage_NoExtension() throws Exception {
+    MultipartFile file = mock(MultipartFile.class);
+    when(file.getOriginalFilename()).thenReturn("profile");
+    when(file.getContentType()).thenReturn("image/jpeg");
+    when(file.getSize()).thenReturn(1024L);
+    when(file.getInputStream()).thenReturn(new ByteArrayInputStream("test".getBytes()));
+
+    String expectedUrl = "https://" + TEST_BUCKET_NAME + ".s3.amazonaws.com/profile/test.jpg";
+
+    when(s3Client.utilities()).thenReturn(s3Utilities);
+    when(s3Utilities.getUrl(any(GetUrlRequest.class))).thenReturn(new java.net.URL(expectedUrl));
+
+    String result = s3Service.uploadProfileImage(TEST_USER_ID, file);
+
+    assertThat(result).isEqualTo(expectedUrl);
+  }
+
+  @Test
+  @DisplayName("파일명이 null")
+  void uploadProfileImage_NullFilename() throws Exception {
+    MultipartFile file = mock(MultipartFile.class);
+    when(file.getOriginalFilename()).thenReturn(null);
+    when(file.getContentType()).thenReturn("image/jpeg");
+    when(file.getSize()).thenReturn(1024L);
+    when(file.getInputStream()).thenReturn(new ByteArrayInputStream("test".getBytes()));
+
+    String expectedUrl = "https://" + TEST_BUCKET_NAME + ".s3.amazonaws.com/profile/test.jpg";
+
+    when(s3Client.utilities()).thenReturn(s3Utilities);
+    when(s3Utilities.getUrl(any(GetUrlRequest.class))).thenReturn(new java.net.URL(expectedUrl));
+
+    String result = s3Service.uploadProfileImage(TEST_USER_ID, file);
+
+    assertThat(result).isEqualTo(expectedUrl);
+  }
+
+  @Test
+  @DisplayName("URL에서 파일명 추출 실패")
+  void deleteFile_InvalidUrl() {
+    String invalidUrl = "https://invalid-bucket.s3.amazonaws.com/profile/test.jpg";
+
+    assertThatCode(() -> s3Service.deleteFile(invalidUrl))
+        .doesNotThrowAnyException();
+
+    verify(s3Client, never()).headObject(any(HeadObjectRequest.class));
+    verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
+  }
+
+  @Test
+  @DisplayName("URL이 null")
+  void deleteFile_NullUrl() {
+    assertThatCode(() -> s3Service.deleteFile(null))
+        .doesNotThrowAnyException();
+
+    verify(s3Client, never()).headObject(any(HeadObjectRequest.class));
+    verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
+  }
+
+  @Test
+  @DisplayName("파일 삭제 중 예외 발생")
+  void deleteFile_Exception() {
+    String fileUrl = "https://" + TEST_BUCKET_NAME + ".s3.amazonaws.com/profile/test.jpg";
+
+    when(s3Client.headObject(any(HeadObjectRequest.class)))
+        .thenThrow(new RuntimeException("S3 오류"));
+
+    assertThatCode(() -> s3Service.deleteFile(fileUrl))
+        .doesNotThrowAnyException();
+  }
 }

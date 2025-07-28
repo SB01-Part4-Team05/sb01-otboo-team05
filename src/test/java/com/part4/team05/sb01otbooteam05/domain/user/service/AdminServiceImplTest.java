@@ -313,4 +313,108 @@ class AdminServiceImplTest {
           .hasMessage("인증되지 않은 요청입니다.");
     }
   }
+
+  @Test
+  @DisplayName("사용자 목록 조회 - 이메일 검색")
+  void getUsers_WithEmailFilter() {
+    Page<User> userPage = new PageImpl<>(List.of(testUser));
+    when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(userPage);
+    when(userRepository.count(any(Specification.class))).thenReturn(1L);
+
+    UserDtoCursorResponse response = adminService.getUsers(
+        null, null, null, null, null, "test", null, null);
+
+    assertThat(response.getData()).hasSize(1);
+    verify(userRepository).findAll(any(Specification.class), any(Pageable.class));
+  }
+
+  @Test
+  @DisplayName("사용자 목록 조회 - 권한 필터")
+  void getUsers_WithRoleFilter() {
+    Page<User> userPage = new PageImpl<>(List.of(testUser));
+    when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(userPage);
+    when(userRepository.count(any(Specification.class))).thenReturn(1L);
+
+    UserDtoCursorResponse response = adminService.getUsers(
+        null, null, null, null, null, null, UserRole.USER, null);
+
+    assertThat(response.getData()).hasSize(1);
+    verify(userRepository).findAll(any(Specification.class), any(Pageable.class));
+  }
+
+  @Test
+  @DisplayName("사용자 목록 조회 - 잠금 상태 필터")
+  void getUsers_WithLockedFilter() {
+    Page<User> userPage = new PageImpl<>(List.of(testUser));
+    when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(userPage);
+    when(userRepository.count(any(Specification.class))).thenReturn(1L);
+
+    UserDtoCursorResponse response = adminService.getUsers(
+        null, null, null, null, null, null, null, false);
+
+    assertThat(response.getData()).hasSize(1);
+    verify(userRepository).findAll(any(Specification.class), any(Pageable.class));
+  }
+
+  @Test
+  @DisplayName("사용자 목록 조회 - 커서 기반 페이지네이션")
+  void getUsers_WithCursor() {
+    UUID cursorId = UUID.randomUUID();
+    Page<User> userPage = new PageImpl<>(List.of(testUser));
+    when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(userPage);
+    when(userRepository.count(any(Specification.class))).thenReturn(1L);
+
+    UserDtoCursorResponse response = adminService.getUsers(
+        "cursor", cursorId, 10, "createdAt", "ASCENDING", null, null, null);
+
+    assertThat(response.getData()).hasSize(1);
+    assertThat(response.getSortBy()).isEqualTo("createdAt");
+    assertThat(response.getSortDirection()).isEqualTo("ASCENDING");
+  }
+
+  @Test
+  @DisplayName("사용자 목록 조회 - 다음 페이지 존재")
+  void getUsers_HasNextPage() {
+    List<User> users = List.of(testUser, testUser);
+    Page<User> userPage = new PageImpl<>(users);
+    when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(userPage);
+    when(userRepository.count(any(Specification.class))).thenReturn(2L);
+
+    UserDtoCursorResponse response = adminService.getUsers(
+        null, null, 1, null, null, null, null, null);
+
+    assertThat(response.isHasNext()).isTrue();
+    assertThat(response.getNextCursor()).isNotNull();
+  }
+
+  @Test
+  @DisplayName("사용자 목록 조회 - 기본 파라미터 동작 확인")
+  void getUsers_DefaultParameters_WorksCorrectly() {
+    Page<User> userPage = new PageImpl<>(List.of(testUser));
+    when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(userPage);
+    when(userRepository.count(any(Specification.class))).thenReturn(1L);
+
+    UserDtoCursorResponse response = adminService.getUsers(null, null, null, null, null, null, null, null);
+
+    assertThat(response.getData()).hasSize(1);
+    assertThat(response.getTotalCount()).isEqualTo(1L);
+    assertThat(response.getSortBy()).isNotNull();
+    assertThat(response.getSortDirection()).isNotNull();
+    verify(userRepository).findAll(any(Specification.class), any(Pageable.class));
+  }
+
+  @Test
+  @DisplayName("사용자 목록 조회 - ASCENDING 정렬")
+  void getUsers_AscendingSort() {
+    Page<User> userPage = new PageImpl<>(List.of(testUser));
+    when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(userPage);
+    when(userRepository.count(any(Specification.class))).thenReturn(1L);
+
+    UserDtoCursorResponse response = adminService.getUsers(
+        null, null, null, "name", "ASCENDING", null, null, null);
+
+    assertThat(response.getData()).hasSize(1);
+    assertThat(response.getSortBy()).isEqualTo("name");
+    assertThat(response.getSortDirection()).isEqualTo("ASCENDING");
+  }
 }
