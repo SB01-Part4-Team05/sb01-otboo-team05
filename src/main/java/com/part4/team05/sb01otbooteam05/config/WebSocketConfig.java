@@ -12,8 +12,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/sub"); // 클라이언트가 구독할 prefix
+        registry.enableSimpleBroker("/sub", "queue"); // 클라이언트가 구독할 prefix
         registry.setApplicationDestinationPrefixes("/pub"); // 클라이언트가 메시지 보낼 prefix
+        registry.setUserDestinationPrefix("/user");
     }
 
     @Override
