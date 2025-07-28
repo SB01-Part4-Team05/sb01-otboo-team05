@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,9 +48,16 @@ public class WeatherService {
 
   // 날씨 데이터 구성 시작
   public List<Weather> generateWeather(int x, int y) {
-    // x, y으로 기상청 api 호출 후 정제 전 날씨 데이터들 dto로 받아옴
-    ParsedForecastDto parsedForecastDto = weatherApiClient.fetchForecast(x, y);
-    return parsedForecastDtoToWeathers(parsedForecastDto, x, y);
+    log.info("📡 generateWeather 호출됨: x={}, y={}", x, y);
+    try{
+      // x, y으로 기상청 api 호출 후 정제 전 날씨 데이터들 dto로 받아옴
+      ParsedForecastDto parsedForecastDto = weatherApiClient.fetchForecast(x, y);
+      return parsedForecastDtoToWeathers(parsedForecastDto, x, y);
+    } catch (Exception e) {
+      log.error("generateWeather 실패: x={}, y={}, error={}", x, y, e.getMessage(), e);
+      throw e;
+    }
+
   }
 
   // 기상청 API 응답값 정제 후 엔티티 구성
@@ -76,17 +84,47 @@ public class WeatherService {
         .collect(Collectors.toList());
   }
 
-  // x, y, forecastedAt 값으로 날씨 데이터 유무 확인
-  public boolean existWeather(int x, int y, LocalDateTime forecastedAt) {
-    return weatherRepository.existsByLocationXAndLocationYAndForecastedAt(x, y, forecastedAt);
+  // 날씨 단건 조회 시 날씨 데이터 생성
+  @Transactional
+  public WeatherAPILocation getWeatherAPILocationAndGenerateWeather(double longitude,
+      double latitude) {
+    WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
+    int x = weatherAPILocation.x();
+    int y = weatherAPILocation.y();
+    LocalDate nowDate = LocalDate.now();
+    LocalTime time = BaseTimeUtils.standardTime(LocalTime.now()).withNano(0);
+    LocalDateTime forecastedAt = LocalDateTime.of(nowDate, time);
+    boolean exists = existWeather(x, y, forecastedAt);
+
+    if (!exists) {
+      // 날씨 서비스 generateWeather 호출
+      List<Weather> weatherList = generateWeather(x, y);
+      // 날씨 엔티티 저장
+      if (weatherList != null && !weatherList.isEmpty()) {
+        weatherRepository.saveAll(weatherList);
+      }
+    } else {
+      log.info("날씨 데이터 존재: x={}, y={}", x, y);
+    }
+    return weatherAPILocation;
   }
 
-  @Transactional(readOnly = true)
-  public Weather getWeatherEntityByIdOrThrow(UUID weatherId) {
-    return weatherRepository.findById(weatherId)
-        .orElseThrow(() -> WeatherNotFoundException.withId(weatherId));
+  // 위도 경도 값으로 WeatherAPILocation 생성
+  public WeatherAPILocation getWeatherAPILocation(double longitude, double latitude) {
+    List<String> locationNames = kakaoApiService.getLocationNames(latitude, longitude);
+    LccGridConverter.XY gridXY = LccGridConverter.toGrid(latitude, longitude);
+
+    log.info("WeatherAPILocation 생성 : longitude = {}, latitude = {}, x = {}, y = {}", longitude, latitude, gridXY.x, gridXY.y);
+    return new WeatherAPILocation(
+        latitude,
+        longitude,
+        gridXY.x,
+        gridXY.y,
+        locationNames
+    );
   }
 
+  // 위치에 따른 날씨 리스트 조회
   @Transactional(readOnly = true)
   public List<WeatherDto> getWeathers(double longitude, double latitude) {
 
@@ -124,44 +162,26 @@ public class WeatherService {
         .collect(Collectors.toList());
   }
 
-  // 날씨 단건 조회 시 날씨 데이터 생성
-  @Transactional
-  public WeatherAPILocation getWeatherAPILocationAndGenerateWeather(double longitude,
-      double latitude) {
-    WeatherAPILocation weatherAPILocation = getWeatherAPILocation(longitude, latitude);
-    int x = weatherAPILocation.x();
-    int y = weatherAPILocation.y();
-    LocalDate nowDate = LocalDate.now();
-    LocalTime time = BaseTimeUtils.standardTime(LocalTime.now()).withNano(0);
-    LocalDateTime forecastedAt = LocalDateTime.of(nowDate, time);
-    boolean exists = existWeather(x, y, forecastedAt);
-
-    if (!exists) {
-      // 날씨 서비스 generateWeather 호출 시 트랜잭션 오류 방지 위해 직접 호출
-      ParsedForecastDto parsedForecastDto = weatherApiClient.fetchForecast(x, y);
-      List<Weather> weatherList = parsedForecastDtoToWeathers(parsedForecastDto, x, y);
-      if (weatherList != null && !weatherList.isEmpty()) {
-        weatherRepository.saveAll(weatherList);
-      }
-    } else {
-      log.info("날씨 데이터 존재: x={}, y={}", x, y);
-    }
-    return weatherAPILocation;
+  // 날씨 id 조회
+  @Transactional(readOnly = true)
+  public Weather getWeatherEntityByIdOrThrow(UUID weatherId) {
+    return weatherRepository.findById(weatherId)
+        .orElseThrow(() -> WeatherNotFoundException.withId(weatherId));
   }
 
-  // 위도 경도 값으로 WeatherAPILocation 생성
-  public WeatherAPILocation getWeatherAPILocation(double longitude, double latitude) {
-    List<String> locationNames = kakaoApiService.getLocationNames(latitude, longitude);
-    LccGridConverter.XY gridXY = LccGridConverter.toGrid(latitude, longitude);
+  // x, y, forecastedAt 값으로 날씨 데이터 유무 확인
+  @Transactional(readOnly = true)
+  public boolean existWeather(int x, int y, LocalDateTime forecastedAt) {
+    return weatherRepository.existsByLocationXAndLocationYAndForecastedAt(x, y, forecastedAt);
+  }
 
-    log.info("WeatherAPILocation 생성 : longitude = {}, latitude = {}, x = {}, y = {}", longitude, latitude, gridXY.x, gridXY.y);
-    return new WeatherAPILocation(
-        latitude,
-        longitude,
-        gridXY.x,
-        gridXY.y,
-        locationNames
-    );
+  // forecastedAt 값에 해당해서 존재하는 날씨 위치(x,y) Set 으로 조회
+  @Transactional(readOnly = true)
+  public Set<Pair<Integer, Integer>> findExistingWeatherLocations(LocalDateTime forecastedAt) {
+    List<Object[]> results = weatherRepository.findLocationsByForecastedAt(forecastedAt);
+    return results.stream()
+        .map(arr -> Pair.of((Integer) arr[0], (Integer) arr[1]))
+        .collect(Collectors.toSet());
   }
 
   // 전날 데이터 확인
@@ -284,6 +304,7 @@ public class WeatherService {
       Double minTemp, Double maxTemp
   ) {
     return Weather.builder()
+        .id(UUID.randomUUID())
         .locationX(x)
         .locationY(y)
         .forecastedAt(forecastedAt)
