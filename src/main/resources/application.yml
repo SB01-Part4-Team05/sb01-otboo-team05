@@ -29,7 +29,7 @@ spring:
       region:
         static: ap-northeast-2
       s3:
-        bucket: team5-discodeit
+        bucket: team5-otboo
   security:
     oauth2:
       client:
@@ -117,5 +117,4 @@ admin:
   password: ${ADMIN_PASSWORD}
   name: ${ADMIN_NAME}
 
-clothes:
-  bucket: "${CLOTHES_BUCKET}"
+
