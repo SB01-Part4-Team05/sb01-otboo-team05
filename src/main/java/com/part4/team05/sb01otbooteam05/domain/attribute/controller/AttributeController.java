@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/clothes/attribute-defs")
-public class AttributeController {
+public class AttributeController implements AttributeControllerDoc{
   private final AttributeService attributeService;
 
   @PreAuthorize("hasRole('ADMIN')")

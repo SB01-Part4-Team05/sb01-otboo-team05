@@ -41,6 +41,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.assertj.MockMvcTester.MockMvcRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.multipart.MultipartFile;
 
 @WebMvcTest(controllers = ClothesController.class)
 class ClothesControllerTest {
@@ -90,13 +91,19 @@ class ClothesControllerTest {
     ClothesDto clothesDto = new ClothesDto();
     clothesDto.setName(request.name());
 
-    given(clothesService.create(request)).willReturn(clothesDto);
+    given(clothesService.create(request, null)).willReturn(clothesDto);
     given(attributeService.createAndReturnList(Collections.emptyList(),new Clothes()))
         .willReturn(Collections.emptyList());
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/clothes")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(request))
+    MockMultipartFile requestPart = new MockMultipartFile(
+        "request",
+        "",
+        "application/json",
+        objectMapper.writeValueAsBytes(request)
+    );
+
+    MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/clothes")
+        .file( requestPart)
         .with(csrf()))
         .andExpect(status().isCreated())
         .andReturn();

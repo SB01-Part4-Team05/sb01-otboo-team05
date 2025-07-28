@@ -1,13 +1,13 @@
-name: Java CI with Gradle
+name: Run test
 
 on:
   pull_request:
     branches: [develop]
 
 env:
-  SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/ootd
-  SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USER }}
-  SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+  SPRING_DATASOURCE_URL: ${{ secrets.RDS_URL }}
+  SPRING_DATASOURCE_USERNAME: ${{ secrets.RDS_USER }}
+  SPRING_DATASOURCE_PASSWORD: ${{ secrets.RDS_PASS }}
   KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
   WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
   WEATHER_API_URL: ${{ secrets.WEATHER_API_URL }}
@@ -17,6 +17,11 @@ env:
   ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
   ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
   ADMIN_NAME: ${{ secrets.ADMIN_NAME }}
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+  AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+  CLOTHES_BUCKET: ${{ secrets.AWS_S3_CLOTHES_BUCKET}
 
 jobs:
   test:

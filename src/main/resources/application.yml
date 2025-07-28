@@ -2,7 +2,7 @@ spring:
   application:
     name: sb01-otboo-team05
   profiles:
-    active: default
+    active: dev  #추후에 ALB 도입 고려 후 prod 올릴 예정
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -10,8 +10,6 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-    hibernate:
-      ddl-auto: update
     properties:
       hibernate:
         jdbc:
@@ -22,6 +20,48 @@ spring:
       initialize-schema: never
     job:
       enabled: false
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket: team5-discodeit
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: "${GOOGLE_CLIENT_ID}"
+            client-secret: "${GOOGLE_CLIENT_SECRET}"
+            scope:
+              - openid
+              - profile
+              - email
+            authorization-grant-type: authorization_code
+            client-name: Google
+          kakao:
+            client-id: "${KAKAO_REST_API_KEY}" # 같은 키 값을 사용해서
+            scope:
+              - profile_nickname
+              - profile_image
+            authorization-grant-type: authorization_code
+            client-name: Kakao
+            client-authentication-method: client_secret_post
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
   mail:
     host: smtp.gmail.com
@@ -37,27 +77,24 @@ spring:
   file:
     upload-dir: uploads
 
-  web:
-    resources:
-      static-locations:
-        - classpath:/static/
-        - file:/home/ubuntu/app/images/
-
-# 로깅 레벨 설정
-logging:
-  level:
-    root: info
-    org.hibernate.SQL: debug
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
 # 액츄에이터
 management:
   endpoints:
     web:
       exposure:
-        include: info, health, metrics, loggers
+        include: info, health, metrics, loggers, prometheus
   info:
     env:
       enabled: true
+  metrics:
+    enable:
+      all: true
+
 # 기상청 API 설정
 weather:
   api:
@@ -79,3 +116,6 @@ admin:
   email: ${ADMIN_EMAIL}
   password: ${ADMIN_PASSWORD}
   name: ${ADMIN_NAME}
+
+clothes:
+  bucket: "${CLOTHES_BUCKET}"

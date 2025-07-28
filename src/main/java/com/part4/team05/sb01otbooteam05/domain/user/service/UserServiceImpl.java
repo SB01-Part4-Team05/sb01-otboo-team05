@@ -1,13 +1,16 @@
 package com.part4.team05.sb01otbooteam05.domain.user.service;
 
 import com.part4.team05.sb01otbooteam05.domain.user.exception.EmailAlreadyExistsException;
+import com.part4.team05.sb01otbooteam05.domain.user.service.S3Service; // S3Service 추가
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 //import java.util.List;
+import java.util.List;
 import java.util.UUID;
 
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,7 +24,6 @@ import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.ProfileDto;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.ProfileUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.GenderType;
-//import com.part4.team05.sb01otbooteam05.domain.user.util.LccGridConverter;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,12 +36,11 @@ public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
-//  private final KakaoApiService kakaoApiService;
+  private final S3Service s3Service; // S3Service 의존성 추가
 
   // 파일 업로드 경로 (프로필 이미지)
   @Value("${file.upload-dir:uploads/profile}")
   private String uploadDir;
-
 
   /**
    * 회원가입
@@ -123,26 +124,6 @@ public class UserServiceImpl implements UserService {
     if (request.location() != null) {
       ProfileUpdateRequest.LocationRequest loc = request.location();
 
-      // ===== 기존 계산 로직 주석처리 (제거하면 됨 일단 혹시 몰라서 냅둠) =====
-  /*
-  // 위도,경도를 가지고 x, y 계산
-  LccGridConverter.XY gridXY = LccGridConverter.toGrid(loc.latitude(), loc.longitude());
-  log.info("위경도({},{}) → 변환 결과 x={}, y={}",
-      loc.latitude(), loc.longitude(), gridXY.x, gridXY.y);
-
-  // 카카오 API를 통해 지역명 조회
-  List<String> locationNames = kakaoApiService.getLocationNames(loc.latitude(), loc.longitude());
-  log.info("조회된 지역명 목록: {}", locationNames);
-
-  // 계산된 값들로 업데이트
-  user.updateLocation(
-      loc.latitude(),
-      loc.longitude(),
-      gridXY.x,
-      gridXY.y,
-      locationNames
-  );
-  */
 
       // 날씨 서비스에서 계산된 값 사용
       log.info("프론트엔드에서 전달받은 위치 정보 저장: latitude={}, longitude={}, x={}, y={}, locationNames={}",
@@ -163,9 +144,16 @@ public class UserServiceImpl implements UserService {
       user.updateTemperatureSensitivity(request.temperatureSensitivity());
     }
 
-    // 프로필 이미지 업데이트
+    // 프로필 이미지 업데이트 - S3 사용
     if (image != null && !image.isEmpty()) {
-      String imageUrl = saveProfileImage(userId, image);
+      // 기존 프로필 이미지가 있다면 S3에서 삭제
+      String currentImageUrl = user.getProfileImageUrl();
+      if (currentImageUrl != null && currentImageUrl.contains("amazonaws.com")) {
+        s3Service.deleteFile(currentImageUrl);
+      }
+
+      // 새 이미지를 S3에 업로드
+      String imageUrl = s3Service.uploadProfileImage(userId, image);
       user.updateProfileImageUrl(imageUrl);
     }
 
@@ -222,6 +210,18 @@ public class UserServiceImpl implements UserService {
     user.clearTempPassword();
 
     userRepository.save(user);
+  }
+
+  // 특정 x,y(위치) 값을 가지는 유저들의 id 조회
+  @Override
+  @Transactional(readOnly = true)
+  public List<UUID> findUserIdsByLocation(int x, int y) {
+
+    List<User> userList = userRepository.findByLocationXAndLocationY(x, y);
+
+    return userList.stream()
+        .map(User::getId)
+        .collect(Collectors.toList());
   }
 
 }

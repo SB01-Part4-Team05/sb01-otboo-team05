@@ -32,7 +32,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/feeds")
-public class FeedController {
+public class FeedController implements FeedControllerDoc {
 
     private final FeedService feedService;
     private final FeedCommentService feedCommentService;

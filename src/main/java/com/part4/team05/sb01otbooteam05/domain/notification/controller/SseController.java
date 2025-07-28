@@ -16,7 +16,7 @@ import java.util.UUID;
 @RequestMapping("/api/sse")
 @RequiredArgsConstructor
 @Slf4j
-public class SseController {
+public class SseController implements SseControllerDoc{
 
     private final NotificationService notificationService;
     private final JwtTokenProvider jwtTokenProvider;

@@ -4,6 +4,7 @@ import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvide
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -70,10 +71,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   // 요청에서 JWT 토큰 추출
   private String getJwtFromRequest(HttpServletRequest request) {
+    //헤더에서 먼저 확인 (일반 로그인용)
     String bearerToken = request.getHeader("Authorization");
     if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
       return bearerToken.substring(7);
     }
+
+    //헤더에 없으면 쿠키에서 확인 (소셜 로그인용)
+    if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if ("access_token".equals(cookie.getName())) {
+          return cookie.getValue();
+        }
+      }
+    }
+
     return null;
   }
 }

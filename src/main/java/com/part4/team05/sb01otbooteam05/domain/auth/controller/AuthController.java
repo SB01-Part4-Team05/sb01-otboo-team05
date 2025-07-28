@@ -26,7 +26,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
-public class AuthController {
+public class AuthController implements AuthControllerDoc{
 
   private final AuthService authService;
 
@@ -61,6 +61,12 @@ public class AuthController {
     refreshTokenCookie.setMaxAge(0);
     refreshTokenCookie.setPath("/");
     response.addCookie(refreshTokenCookie);
+
+    // access_token 쿠키도 삭제
+    Cookie accessTokenCookie = new Cookie("access_token", null);
+    accessTokenCookie.setMaxAge(0);
+    accessTokenCookie.setPath("/");
+    response.addCookie(accessTokenCookie);
 
     return ResponseEntity.noContent().build();
   }

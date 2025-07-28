@@ -28,17 +28,23 @@ public class BaseTimeUtils {
 
     LocalTime latestBaseTime = standardTime(nowTime);
 
-    if (latestBaseTime != null) {
-      return Pair.of(nowDate, formatTime(latestBaseTime));
+    if (latestBaseTime.equals(LocalTime.of(23, 0)) && nowTime.isBefore(LocalTime.of(2, 0))) {
+      return Pair.of(nowDate.minusDays(1), formatTime(latestBaseTime));
     }
-    return Pair.of(nowDate.minusDays(1), "2300");
+
+    return Pair.of(nowDate, formatTime(latestBaseTime));
+  }
+
+  public static LocalDateTime getLatestBaseDateTimeAsDateTime() {
+    Pair<LocalDate, String> pair = getLatestBaseDateTime();
+    return toDateTime(pair.getLeft().format(DateTimeFormatter.ofPattern("yyyyMMdd")), pair.getRight());
   }
 
   public static LocalTime standardTime(LocalTime localTime) {
     return STANDARD_TIMES.stream()
         .filter(time -> !localTime.isBefore(time))
         .reduce((first, second) -> second)
-        .orElse(null);
+        .orElse(LocalTime.of(23, 0));
   }
 
   private static String formatTime(LocalTime time) {

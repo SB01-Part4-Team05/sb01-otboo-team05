@@ -37,6 +37,7 @@ public class ClothesService {
   private final ClothesMapper clothesMapper;
   private final ClothesRepository clothesRepository;
   private final AttributeService attributeService;
+  private final ClothesS3Service clothesS3Service;
 
 
   public ClothesCursorResponse get(UUID ownerId, UUID cursor, int size) {
@@ -69,7 +70,7 @@ public class ClothesService {
   }
 
   @Transactional
-  public ClothesDto create(ClothesCreateRequest request){
+  public ClothesDto create(ClothesCreateRequest request, MultipartFile image){
     Clothes clothes = Clothes.builder()
         .ownerId(request.ownerId())
         .type(ClothesType.valueOf(request.type()))
@@ -79,6 +80,11 @@ public class ClothesService {
     List<AttributeValue> list = attributeService.createAndReturnList(request.attributes(),clothes);
     clothes.setAttributeValues(list);
 
+    if(image!= null && !image.isEmpty()){
+      String url = clothesS3Service.upload(clothes.getId(),image);
+      clothes.setImageUrl(url);
+    }
+
     clothesRepository.save(clothes);
 
     return clothesMapper.toDto(clothes);
@@ -87,6 +93,7 @@ public class ClothesService {
   @Transactional
   public void delete(UUID id){
     Clothes clothes = clothesRepository.findById(id).orElseThrow(NoSuchElementException::new);
+    if(clothes.getImageUrl() != null) clothesS3Service.delete(clothes.getImageUrl());
     attributeService.delete(clothes.getAttributeValues());
 
     clothesRepository.delete(clothes);
@@ -104,7 +111,7 @@ public class ClothesService {
     }
 
     if(image != null && !image.isEmpty()){
-      String url = storeImage(image);
+      String url = clothesS3Service.upload(clothesId,image);
       clothes.setImageUrl(url);
     }
 
@@ -118,24 +125,6 @@ public class ClothesService {
     }
 
     return clothesMapper.toDto(clothes);
-  }
-
-  private String storeImage(MultipartFile file){
-    try{
-      String fileName = UUID.randomUUID() + ".jpg";
-      Path path = Paths.get("/home/ubuntu/app/images", fileName);
-      Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-
-      return ServletUriComponentsBuilder.fromCurrentContextPath()
-          .path("/images/")
-          .path(fileName)
-          .toUriString();
-
-    }catch (IOException e){
-      e.printStackTrace();
-    }
-
-    throw new RuntimeException("이미지 파일 저장에 실패하였습니다.");
   }
 
   public List<Clothes> findAllByOwnerId(UUID ownerId){

@@ -2,12 +2,12 @@ package com.part4.team05.sb01otbooteam05.domain.weather.batch.processor;
 
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
-import com.part4.team05.sb01otbooteam05.domain.weather.utils.BaseTimeUtils;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -18,28 +18,33 @@ import org.springframework.stereotype.Component;
 @StepScope
 @RequiredArgsConstructor
 @Slf4j
+@Setter
 public class WeatherItemProcessor implements ItemProcessor<Pair<Integer, Integer>, List<Weather>> {
 
   private final WeatherService weatherService;
+  private Set<Pair<Integer, Integer>> existLocationSet = Collections.emptySet();
 
   @Override
-  public List<Weather> process(Pair<Integer, Integer> location) {
-    int x = location.getLeft();
-    int y = location.getRight();
+  public List<Weather> process(@NonNull Pair<Integer, Integer> location) {
+    try {
+      log.info("🟢 process 진입");
 
-    LocalDate nowDate = LocalDate.now();
-    LocalTime time = BaseTimeUtils.standardTime(LocalTime.now()).withNano(0);
-    LocalDateTime forecastedAt = LocalDateTime.of(nowDate, time);
+      int x = location.getLeft();
+      int y = location.getRight();
 
-    if(weatherService.existWeather(x, y, forecastedAt)) {
-      log.info("이미 날씨 데이터 존재: x={}, y={}, forecastedAt = {}", x, y, forecastedAt);
-      return null;
+      Pair<Integer, Integer> key = Pair.of(x, y);
+      log.info("🟡 좌표 확인: x={}, y={}", x, y);
+      log.info("🟠 존재 여부: {}", existLocationSet.contains(key));
+
+      if (existLocationSet.contains(key)) {
+        return Collections.emptyList();
+      }
+
+      log.info("🔵 날씨 생성 시도: x={}, y={}", x, y);
+      return weatherService.generateWeather(x, y);
+    } catch (Exception e) {
+      log.error("❌ process() 내부에서 예외 발생", e);
+      return Collections.emptyList();
     }
-
-    log.info("날씨 데이터 생성 시작: x={}, y={}", x, y);
-    List<Weather> weatherList = weatherService.generateWeather(x, y);
-    log.info("날씨 데이터 생성 완료: x={}, y={}, 건수={}", x, y, weatherList.size());
-    return weatherList;
   }
-
 }

@@ -13,7 +13,12 @@ public interface WeatherRepository extends JpaRepository<Weather, UUID> {
 
   boolean existsByLocationXAndLocationYAndForecastedAt(Integer locationX, Integer locationY, LocalDateTime forecastedAt);
 
-  boolean existsByLocationXAndLocationY(Integer locationX, Integer locationY);
+  @Query(value = """
+    SELECT DISTINCT location_x, location_y
+    FROM weathers
+    WHERE forecasted_at = :forecastedAt
+    """, nativeQuery = true)
+  List<Object[]> findLocationsByForecastedAt(LocalDateTime forecastedAt);
 
   @Query(value = """
     SELECT DISTINCT ON (w.forecast_at) *
@@ -29,4 +34,5 @@ public interface WeatherRepository extends JpaRepository<Weather, UUID> {
       @Param("forecastAts") Collection<LocalDateTime> forecastAts
   );
 
+  List<Weather> findByForecastAtAndLocationXAndLocationY(LocalDateTime forecastAt, Integer locationX, Integer locationY);
 }

@@ -22,7 +22,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/follows")
-public class FollowController {
+public class FollowController implements FollowControllerDoc {
 
     private final FollowService followService;
 
