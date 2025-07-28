@@ -136,3 +136,5 @@ public interface ClothesControllerDoc {
       @RequestPart(required = false, value = "image") MultipartFile image
   );
 }
+
+

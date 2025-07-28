@@ -28,3 +28,4 @@ public interface ClothesRepository extends JpaRepository<Clothes, UUID> {
       @Param("type") ClothesType type,
       Pageable pageable);
 }
+

@@ -15,3 +15,4 @@ public class ClothesCursorResponse {
   String sortBy;
   String sortDirection;
 }
+

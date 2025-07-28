@@ -65,3 +65,4 @@ public class ClothesController implements ClothesControllerDoc{
     return ResponseEntity.ok().body(clothesService.update(clothesId,request,image));
   }
 }
+
