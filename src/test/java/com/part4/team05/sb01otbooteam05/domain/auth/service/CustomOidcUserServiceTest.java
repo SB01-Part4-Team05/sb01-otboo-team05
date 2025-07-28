@@ -127,7 +127,7 @@ class CustomOidcUserServiceTest {
     OidcUserRequest userRequest = mock(OidcUserRequest.class);
     OidcUser oidcUser = mock(OidcUser.class);
 
-    when(oidcUser.getSubject()).thenReturn(providerId); // 이 부분이 중요!
+    when(oidcUser.getSubject()).thenReturn(providerId);
     when(oidcUser.getEmail()).thenReturn(testEmail);
     when(oidcUser.getFullName()).thenReturn(testName);
     when(userRepository.findByProviderAndProviderId("GOOGLE", providerId))
@@ -152,5 +152,149 @@ class CustomOidcUserServiceTest {
     assertThatThrownBy(() -> customOidcUserService.processOidcUser(userRequest, oidcUser))
         .isInstanceOf(OAuth2AuthenticationException.class)
         .hasMessageContaining("Email information is required");
+  }
+
+  @Test
+  @DisplayName("구글 기존 로컬 계정과 이메일 충돌")
+  void processOidcUser_EmailConflictWithLocalAccount() {
+    String testEmail = "test@gmail.com";
+    String providerId = "google-123";
+
+    User existingLocalUser = User.builder()
+        .email(testEmail)
+        .provider("LOCAL")
+        .build();
+
+    OidcUserRequest userRequest = mock(OidcUserRequest.class);
+    OidcUser oidcUser = mock(OidcUser.class);
+
+    when(oidcUser.getSubject()).thenReturn(providerId);
+    when(oidcUser.getEmail()).thenReturn(testEmail);
+    when(oidcUser.getFullName()).thenReturn("Test User");
+    when(userRepository.findByProviderAndProviderId("GOOGLE", providerId))
+        .thenReturn(Optional.empty());
+    when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(existingLocalUser));
+
+    assertThatThrownBy(() -> customOidcUserService.processOidcUser(userRequest, oidcUser))
+        .isInstanceOf(OAuth2AuthenticationException.class)
+        .hasMessageContaining("Email already registered with local account");
+  }
+
+  @Test
+  @DisplayName("구글 다른 소셜 서비스와 이메일 충돌")
+  void processOidcUser_EmailConflictWithOtherProvider() {
+    String testEmail = "test@gmail.com";
+    String providerId = "google-123";
+
+    User existingKakaoUser = User.builder()
+        .email(testEmail)
+        .provider("KAKAO")
+        .build();
+
+    OidcUserRequest userRequest = mock(OidcUserRequest.class);
+    OidcUser oidcUser = mock(OidcUser.class);
+
+    when(oidcUser.getSubject()).thenReturn(providerId);
+    when(oidcUser.getEmail()).thenReturn(testEmail);
+    when(oidcUser.getFullName()).thenReturn("Test User");
+    when(userRepository.findByProviderAndProviderId("GOOGLE", providerId))
+        .thenReturn(Optional.empty());
+    when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(existingKakaoUser));
+
+    assertThatThrownBy(() -> customOidcUserService.processOidcUser(userRequest, oidcUser))
+        .isInstanceOf(OAuth2AuthenticationException.class)
+        .hasMessageContaining("Email already registered with kakao");
+  }
+
+  @Test
+  @DisplayName("구글 이름 정보 없음 - 이메일로 이름 생성")
+  void processOidcUser_NoName_UseEmailAsName() {
+    String testEmail = "test@gmail.com";
+    String providerId = "google-123";
+    UUID testUserId = UUID.randomUUID();
+
+    User testUser = User.builder()
+        .email(testEmail)
+        .name("test")
+        .role(UserRole.USER)
+        .provider("GOOGLE")
+        .providerId(providerId)
+        .build();
+    ReflectionTestUtils.setField(testUser, "id", testUserId);
+
+    OidcUserRequest userRequest = mock(OidcUserRequest.class);
+    OidcUser oidcUser = mock(OidcUser.class);
+
+    when(oidcUser.getSubject()).thenReturn(providerId);
+    when(oidcUser.getEmail()).thenReturn(testEmail);
+    when(oidcUser.getFullName()).thenReturn(null);
+    when(userRepository.findByProviderAndProviderId("GOOGLE", providerId))
+        .thenReturn(Optional.empty());
+    when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+    when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+    var result = customOidcUserService.processOidcUser(userRequest, oidcUser);
+
+    assertThat(result).isInstanceOf(CustomUserDetails.class);
+    verify(userRepository).save(any(User.class));
+  }
+
+  @Test
+  @DisplayName("구글 다른 프로바이더로 등록된 계정과 충돌 - provider가 null인 경우")
+  void processOidcUser_EmailConflictWithNullProvider() {
+    String testEmail = "test@gmail.com";
+    String providerId = "google-123";
+
+    User existingUserWithNullProvider = User.builder()
+        .email(testEmail)
+        .provider(null)
+        .build();
+
+    OidcUserRequest userRequest = mock(OidcUserRequest.class);
+    OidcUser oidcUser = mock(OidcUser.class);
+
+    when(oidcUser.getSubject()).thenReturn(providerId);
+    when(oidcUser.getEmail()).thenReturn(testEmail);
+    when(oidcUser.getFullName()).thenReturn("Test User");
+    when(userRepository.findByProviderAndProviderId("GOOGLE", providerId))
+        .thenReturn(Optional.empty());
+    when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(existingUserWithNullProvider));
+
+    assertThatThrownBy(() -> customOidcUserService.processOidcUser(userRequest, oidcUser))
+        .isInstanceOf(OAuth2AuthenticationException.class)
+        .hasMessageContaining("Email already registered with local account");
+  }
+
+  @Test
+  @DisplayName("구글 이름이 빈 문자열인 경우")
+  void processOidcUser_EmptyName_UseEmailAsName() {
+    String testEmail = "test@gmail.com";
+    String providerId = "google-123";
+    UUID testUserId = UUID.randomUUID();
+
+    User testUser = User.builder()
+        .email(testEmail)
+        .name("test")
+        .role(UserRole.USER)
+        .provider("GOOGLE")
+        .providerId(providerId)
+        .build();
+    ReflectionTestUtils.setField(testUser, "id", testUserId);
+
+    OidcUserRequest userRequest = mock(OidcUserRequest.class);
+    OidcUser oidcUser = mock(OidcUser.class);
+
+    when(oidcUser.getSubject()).thenReturn(providerId);
+    when(oidcUser.getEmail()).thenReturn(testEmail);
+    when(oidcUser.getFullName()).thenReturn("   ");
+    when(userRepository.findByProviderAndProviderId("GOOGLE", providerId))
+        .thenReturn(Optional.empty());
+    when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+    when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+    var result = customOidcUserService.processOidcUser(userRequest, oidcUser);
+
+    assertThat(result).isInstanceOf(CustomUserDetails.class);
+    verify(userRepository).save(any(User.class));
   }
 }

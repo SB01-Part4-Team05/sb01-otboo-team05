@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/recommendations")
-public class RecommendController {
+public class RecommendController implements RecommendControllerDoc{
 
   private final RecommendService recommendService;
 
