@@ -105,14 +105,6 @@ class FollowServiceImplTest {
                     );
         }
 
-        @Test @DisplayName("실패: 팔로워가 없음")
-        void followerNotFound() {
-            given(userRepository.existsById(followerId)).willReturn(false);
-            assertThatThrownBy(() -> service.createFollow(new FollowCreateRequest(followeeId, followerId)))
-                    .isInstanceOf(FollowException.class)
-                    .extracting("errorCode").isEqualTo(ErrorCode.USER_NOT_FOUND);
-        }
-
         @Test @DisplayName("실패: 자기 자신 팔로우 금지")
         void selfFollowNotAllowed() {
             given(userRepository.existsById(followerId)).willReturn(true);
@@ -276,6 +268,17 @@ class FollowServiceImplTest {
                     .isInstanceOf(FollowException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.USER_NOT_FOUND);
+        }
+
+        @Test @DisplayName("실패: 팔로이(followee)가 없음")
+        void followeeNotFound() {
+            given(userRepository.existsById(followerId)).willReturn(true);
+            given(userRepository.existsById(followeeId)).willReturn(false);
+            assertThatThrownBy(() ->
+                    service.createFollow(new FollowCreateRequest(followeeId, followerId))
+            )
+                    .isInstanceOf(FollowException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.USER_NOT_FOUND);
         }
 
         @Test @DisplayName("성공: 알림 전송 중 예외 발생해도 정상 반환")
