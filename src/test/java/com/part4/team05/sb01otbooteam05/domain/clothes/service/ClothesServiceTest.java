@@ -26,6 +26,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,26 +46,54 @@ class ClothesServiceTest {
     AttributeService attributeService;
 
     @Mock
-    JwtTokenProvider jwtTokenProvider;
+    ClothesS3Service clothesS3Service; // 추가
 
     @Test
     void get() {
         UUID ownerId = UUID.randomUUID();
         UUID cursor = UUID.randomUUID();
-        given(clothesRepository.findByOwnerIdPageNation(ownerId, cursor,
-                Pageable.ofSize(10))).willReturn(List.of(mock(Clothes.class)));
+        String typeEqual = "TOP";
+
+        given(clothesRepository.findByOwnerIdPageNation(
+            eq(ownerId),
+            eq(cursor),
+            eq(ClothesType.TOP),
+            any(Pageable.class)
+        )).willReturn(List.of(mock(Clothes.class)));
+
         given(clothesMapper.toDtoList(any(List.class))).willReturn(List.of(mock(ClothesDto.class)));
 
-        ClothesCursorResponse response = clothesService.get(ownerId, cursor, 10);
+        // 수정된 메서드 시그니처 사용
+        ClothesCursorResponse response = clothesService.get(ownerId, cursor, 10, typeEqual);
 
-        assertEquals(1, response.getClothesDtos().size());
+        // 변경된 필드명 사용
+        assertEquals(1, response.getData().size());
+    }
+
+    @Test
+    void get_without_type_filter() {
+        UUID ownerId = UUID.randomUUID();
+        UUID cursor = UUID.randomUUID();
+
+        given(clothesRepository.findByOwnerIdPageNation(
+            eq(ownerId),
+            eq(cursor),
+            isNull(), // type이 null
+            any(Pageable.class)
+        )).willReturn(List.of(mock(Clothes.class)));
+
+        given(clothesMapper.toDtoList(any(List.class))).willReturn(List.of(mock(ClothesDto.class)));
+
+        ClothesCursorResponse response = clothesService.get(ownerId, cursor, 10, null);
+
+        assertEquals(1, response.getData().size());
     }
 
     @Test
     void getClothesEntityByIdOrThrow() {
         UUID clothesId = UUID.randomUUID();
         Clothes clothe = Clothes.builder().id(clothesId)
-                .name("Clothes1").build();
+            .name("Clothes1").build();
 
         given(clothesRepository.findById(clothesId)).willReturn(Optional.ofNullable(clothe));
 
@@ -84,12 +114,12 @@ class ClothesServiceTest {
         UUID ownerId = UUID.randomUUID();
         UUID clothesId = UUID.randomUUID();
         ClothesCreateRequest request = new ClothesCreateRequest(ownerId, "clothes1",
-                "TOP", Collections.emptyList());
+            "TOP", Collections.emptyList());
         Clothes clothes = Clothes.builder()
-                .id(clothesId)
-                .ownerId(ownerId)
-                .name(request.name())
-                .type(ClothesType.valueOf(request.type())).build();
+            .id(clothesId)
+            .ownerId(ownerId)
+            .name(request.name())
+            .type(ClothesType.valueOf(request.type())).build();
 
         ClothesDto dto = new ClothesDto();
         dto.setId(clothesId);
@@ -99,9 +129,9 @@ class ClothesServiceTest {
         given(clothesRepository.save(any(Clothes.class))).willReturn(clothes);
         given(clothesMapper.toDto(any(Clothes.class))).willReturn(dto);
         given(attributeService.createAndReturnList(any(List.class), any(Clothes.class)))
-                .willReturn(Collections.emptyList());
+            .willReturn(Collections.emptyList());
 
-        ClothesDto clothesDto = clothesService.create(request,null);
+        ClothesDto clothesDto = clothesService.create(request, null);
 
         assertEquals(clothesId, clothesDto.getId());
         assertEquals(request.name(), clothesDto.getName());
@@ -110,10 +140,12 @@ class ClothesServiceTest {
     @Test
     void delete() {
         UUID clothesId = UUID.randomUUID();
+        Clothes mockClothes = mock(Clothes.class);
+        given(mockClothes.getImageUrl()).willReturn(null); // 이미지 URL이 없는 경우
+        given(mockClothes.getAttributeValues()).willReturn(Collections.emptyList());
 
         doNothing().when(clothesRepository).delete(any(Clothes.class));
-        given(clothesRepository.findById(clothesId)).willReturn(
-                Optional.ofNullable(mock(Clothes.class)));
+        given(clothesRepository.findById(clothesId)).willReturn(Optional.of(mockClothes));
         doNothing().when(attributeService).delete(any(List.class));
 
         clothesService.delete(clothesId);
@@ -126,12 +158,12 @@ class ClothesServiceTest {
         UUID clothesId = UUID.randomUUID();
 
         ClothesUpdateRequest request = new ClothesUpdateRequest(
-                "clothes2", "BOTTOM", Collections.emptyList());
+            "clothes2", "BOTTOM", Collections.emptyList());
 
         Clothes clothes = Clothes.builder()
-                .id(clothesId)
-                .name("clothes1")
-                .type(ClothesType.valueOf("TOP")).build();
+            .id(clothesId)
+            .name("clothes1")
+            .type(ClothesType.valueOf("TOP")).build();
 
         ClothesDto dto = new ClothesDto();
         dto.setId(clothesId);
@@ -152,7 +184,7 @@ class ClothesServiceTest {
         UUID ownerID = UUID.randomUUID();
 
         given(clothesRepository.findByOwnerId(ownerID))
-                .willReturn(List.of(mock(Clothes.class)));
+            .willReturn(List.of(mock(Clothes.class)));
 
         List<Clothes> clothes = clothesService.findAllByOwnerId(ownerID);
 

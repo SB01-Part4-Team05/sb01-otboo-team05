@@ -1,21 +1,5 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.service;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
@@ -28,9 +12,19 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.exception.ClothesNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
-
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClothesService {
@@ -40,19 +34,27 @@ public class ClothesService {
   private final ClothesS3Service clothesS3Service;
 
 
-  public ClothesCursorResponse get(UUID ownerId, UUID cursor, int size) {
-    Pageable pageable = PageRequest.of(0, size);
-    List<Clothes> clothes = clothesRepository.findByOwnerIdPageNation(ownerId, cursor, pageable);
+  public ClothesCursorResponse get(UUID ownerId, UUID cursor, int limit, String typeEqual) {
+    Pageable pageable = PageRequest.of(0, limit);
+
+    ClothesType type = null;
+    if (typeEqual != null && !typeEqual.isEmpty()) {
+      type = ClothesType.valueOf(typeEqual);
+    }
+
+    List<Clothes> clothes = clothesRepository.findByOwnerIdPageNation(ownerId, cursor, type, pageable);
+
+    log.info("조회된 옷 개수: {}, ownerId: {}, type: {}", clothes.size(), ownerId, type);
 
     List<ClothesDto> result = clothesMapper.toDtoList(clothes);
     UUID nextCursor = clothes.isEmpty() ? null : clothes.get(clothes.size() - 1).getId();
 
     ClothesCursorResponse response = new ClothesCursorResponse();
-    response.setClothesDtos(result);
+    response.setData(result);
     response.setNextCursor(nextCursor != null ? nextCursor.toString() : null);
     response.setNextIdAfter(nextCursor != null ? nextCursor.toString() : null);
-    response.setNextCount(result.size());
-    response.setHasNext(result.size() == size);
+    response.setTotalCount(result.size());
+    response.setHasNext(result.size() == limit);
     response.setSortBy("id");
     response.setSortDirection("DESCENDING");
 
@@ -62,7 +64,7 @@ public class ClothesService {
 
   @Transactional(readOnly = true)
   public Clothes getClothesEntityByIdOrThrow(UUID clothesId) {
-	  return clothesRepository.findById(clothesId).orElseThrow(()-> new ClothesNotFoundException());
+    return clothesRepository.findById(clothesId).orElseThrow(()-> new ClothesNotFoundException());
   }
   @Transactional(readOnly = true)
   public Optional<Clothes> getClothesEntityById(UUID clothesId) {
@@ -77,15 +79,16 @@ public class ClothesService {
         .name(request.name())
         .build();
 
-    List<AttributeValue> list = attributeService.createAndReturnList(request.attributes(),clothes);
+    List<AttributeValue> list = attributeService.createAndReturnList(request.attributes(), clothes);
     clothes.setAttributeValues(list);
 
-    if(image!= null && !image.isEmpty()){
-      String url = clothesS3Service.upload(clothes.getId(),image);
-      clothes.setImageUrl(url);
-    }
-
     clothesRepository.save(clothes);
+
+    if(image != null && !image.isEmpty()){
+      String url = clothesS3Service.upload(clothes.getId(), image);
+      clothes.setImageUrl(url);
+      clothesRepository.save(clothes);
+    }
 
     return clothesMapper.toDto(clothes);
   }

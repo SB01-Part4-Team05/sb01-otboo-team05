@@ -22,10 +22,14 @@ public class ClothesS3Service {
 
   private final S3Client s3Client;
 
-  @Value("${clothes.bucket}")
+  @Value("${spring.cloud.aws.s3.bucket}")
   private String bucketName;
 
+  private static final String CLOTHES_FOLDER = "clothes/";
+
   public String upload(UUID clothesId, MultipartFile file) {
+    log.info("S3 업로드 시도: bucket={}, clothesId={}", bucketName, clothesId);
+
     try {
       String originalFilename = file.getOriginalFilename();
       String extension = "";
@@ -33,7 +37,10 @@ public class ClothesS3Service {
         extension = originalFilename.substring(originalFilename.lastIndexOf("."));
       }
 
-      String fileName = clothesId.toString() + "_" + System.currentTimeMillis() + extension;
+      // clothes/ 폴더 안에 저장
+      String fileName = CLOTHES_FOLDER + clothesId.toString() + "_" + System.currentTimeMillis() + extension;
+
+      log.info("S3 파일명: {}", fileName);
 
       PutObjectRequest putObjectRequest = PutObjectRequest.builder()
           .bucket(bucketName)
@@ -50,9 +57,13 @@ public class ClothesS3Service {
           .key(fileName)
           .build();
 
-      return s3Client.utilities().getUrl(getUrlRequest).toExternalForm();
+      String url = s3Client.utilities().getUrl(getUrlRequest).toExternalForm();
+      log.info("S3 업로드 성공: {}", url);
+
+      return url;
 
     } catch (IOException e) {
+      log.error("S3 업로드 실패: bucket={}, clothesId={}, error={}", bucketName, clothesId, e.getMessage());
       throw new RuntimeException("이미지 업로드에 실패했습니다", e);
     }
   }
@@ -60,6 +71,7 @@ public class ClothesS3Service {
   public void delete(String fileUrl) {
     try {
       String fileName = extractFileNameFromUrl(fileUrl);
+      log.info("S3 파일 삭제 시도: bucket={}, fileName={}", bucketName, fileName);
 
       if (fileName != null) {
         try {
@@ -76,16 +88,16 @@ public class ClothesS3Service {
               .build();
 
           s3Client.deleteObject(deleteObjectRequest);
+          log.info("S3 파일 삭제 성공: {}", fileName);
 
         } catch (NoSuchKeyException e) {
           log.warn("삭제하려는 파일이 S3에 존재하지 않음: fileName={}", fileName);
         }
       }
     } catch (Exception e) {
-      log.error("S3 파일 삭제 실패: fileUrl={}", fileUrl, e);
+      log.error("S3 파일 삭제 실패: fileUrl={}, error={}", fileUrl, e.getMessage());
     }
   }
-
 
   private String extractFileNameFromUrl(String fileUrl) {
     if (fileUrl == null || !fileUrl.contains(bucketName)) {
@@ -93,9 +105,15 @@ public class ClothesS3Service {
     }
 
     try {
+      String bucketPath = bucketName + "/";
+      int bucketIndex = fileUrl.indexOf(bucketPath);
+      if (bucketIndex != -1) {
+        return fileUrl.substring(bucketIndex + bucketPath.length());
+      }
+
       String[] parts = fileUrl.split("/");
-      if (parts.length >= 1) {
-        return parts[parts.length - 1];
+      if (parts.length >= 2) {
+        return parts[parts.length - 2] + "/" + parts[parts.length - 1];
       }
     } catch (Exception e) {
       log.warn("URL에서 파일명 추출 실패: {}", fileUrl, e);
