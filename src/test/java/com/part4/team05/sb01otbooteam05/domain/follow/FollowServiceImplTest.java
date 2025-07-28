@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.follow.service.impl;
+package com.part4.team05.sb01otbooteam05.domain.follow;
 
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowDto;
@@ -8,6 +8,7 @@ import com.part4.team05.sb01otbooteam05.domain.follow.entity.Follow;
 import com.part4.team05.sb01otbooteam05.domain.follow.exception.FollowException;
 import com.part4.team05.sb01otbooteam05.domain.follow.mapper.FollowMapper;
 import com.part4.team05.sb01otbooteam05.domain.follow.repository.FollowRepository;
+import com.part4.team05.sb01otbooteam05.domain.follow.service.impl.FollowServiceImpl;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserSummary;
@@ -30,7 +31,6 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 // 불필요한 스터빙 경고를 띄우지 않도록 lenient 모드로 설정
@@ -41,7 +41,8 @@ class FollowServiceImplTest {
     @Mock             UserRepository      userRepository;
     @Mock             FollowMapper        followMapper;
     @Mock             NotificationService notificationService;
-    @InjectMocks      FollowServiceImpl   service;
+    @InjectMocks
+    FollowServiceImpl service;
 
     UUID followerId = UUID.randomUUID();
     UUID followeeId = UUID.randomUUID();

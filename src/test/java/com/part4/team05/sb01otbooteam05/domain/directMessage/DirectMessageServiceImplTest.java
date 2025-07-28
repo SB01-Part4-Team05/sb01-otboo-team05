@@ -1,10 +1,11 @@
-package com.part4.team05.sb01otbooteam05.domain.directMessage.service.impl;
+package com.part4.team05.sb01otbooteam05.domain.directMessage;
 
 import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageDto;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.entity.DirectMessage;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.repository.DirectMessageRepository;
+import com.part4.team05.sb01otbooteam05.domain.directMessage.service.impl.DirectMessageServiceImpl;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
@@ -39,7 +40,8 @@ class DirectMessageServiceImplTest {
     @Mock DirectMessageRepository directMessageRepository;
     @Mock UserRepository userRepository;
     @Mock NotificationService notificationService;
-    @InjectMocks DirectMessageServiceImpl service;
+    @InjectMocks
+    DirectMessageServiceImpl service;
 
     UUID senderId   = UUID.randomUUID();
     UUID receiverId = UUID.randomUUID();

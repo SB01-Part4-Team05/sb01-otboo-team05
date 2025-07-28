@@ -1,4 +1,4 @@
-package com.part4.team05.sb01otbooteam05.domain.notification.serivce.impl;
+package com.part4.team05.sb01otbooteam05.domain.notification;
 
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDto;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
