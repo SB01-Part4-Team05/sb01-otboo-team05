@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 
 import java.util.List;
 import java.util.UUID;
@@ -64,31 +66,41 @@ public class DirectMessageServiceImpl implements DirectMessageService {
 
     @Override
     @Transactional(readOnly = true)
-    public DirectMessageDtoCursorResponse getMessages(UUID userId1, UUID userId2, UUID idAfter, int limit, String sortBy,
-                                                      String direction) {
+    public DirectMessageDtoCursorResponse getMessages(
+            UUID currentUserId,
+            UUID opponentId,
+            UUID idAfter,
+            int limit
+    ) {
+        // limit 검증
         if (limit <= 0 || limit > 100) {
             throw new OtbooException(ErrorCode.INVALID_PAGINATION_LIMIT);
         }
 
-        PageRequest pageRequest = PageRequest.of(0, limit);
-        List<DirectMessage> messages = directMessageRepository.findMessages(userId1, userId2, idAfter, pageRequest);
+        // 항상 id DESC 정렬
+        PageRequest page = PageRequest.of(0, limit, Sort.by(Direction.DESC, "id"));
+
+        List<DirectMessage> messages =
+                directMessageRepository.findMessages(currentUserId, opponentId, idAfter, page);
 
         List<DirectMessageDto> dtoList = messages.stream()
                 .map(this::toDto)
                 .toList();
 
-        UUID nextIdAfter = dtoList.isEmpty() ? null : dtoList.get(dtoList.size() - 1).id();
+        UUID nextId = dtoList.isEmpty() ? null : dtoList.get(dtoList.size() - 1).id();
+        String nextCursor = nextId != null ? nextId.toString() : null;
 
-        long totalCount = directMessageRepository.countByUserPair(userId1, userId2);
+        long total = directMessageRepository.countByUserPair(currentUserId, opponentId);
+        boolean hasNext = dtoList.size() == limit;
 
         return new DirectMessageDtoCursorResponse(
                 dtoList,
-                nextIdAfter != null ? nextIdAfter.toString() : null,
-                nextIdAfter,
-                messages.size() == limit,
-                totalCount,
-                sortBy,
-                direction
+                nextCursor,
+                nextId,
+                hasNext,
+                total,
+                "id",
+                "DESC"
         );
     }
 
