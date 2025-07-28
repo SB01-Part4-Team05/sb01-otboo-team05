@@ -98,10 +98,17 @@ jacocoTestReport {
         html.required = true
     }
 
-    classDirectories.setFrom(
-            fileTree(dir: layout.buildDirectory.dir("classes/java/main").get().asFile) {
-                include 'com/part4/team05/**/service/**'
-                exclude '**/controller/**', '**/dto/**', '**/entity/**', '**/config/**', '**/exception/**'
-            }
-    )
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, include: [
+                            'com/part4/team05/**/service/**'
+                    ], exclude: [
+                            '**/controller/**',
+                            '**/dto/**',
+                            '**/entity/**',
+                            '**/config/**',
+                            '**/exception/**'
+                    ])
+                })
+        )
 }
