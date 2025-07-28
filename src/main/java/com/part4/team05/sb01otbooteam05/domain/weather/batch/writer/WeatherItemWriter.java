@@ -35,7 +35,7 @@ public class WeatherItemWriter implements ItemWriter<List<Weather>> {
 
   @Override
   public void write(Chunk<? extends List<Weather>> items) {
-    log.info("Processor 실행 스레드: {}", Thread.currentThread().getName());
+    log.info("Writer 실행 스레드: {}", Thread.currentThread().getName());
 
     log.info("Writer received {} items", items.size());
     List<Object[]> objects = new ArrayList<>();
