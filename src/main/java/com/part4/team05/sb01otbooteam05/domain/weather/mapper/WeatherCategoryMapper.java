@@ -32,7 +32,7 @@ public class WeatherCategoryMapper {
       case "3" -> PrecipitationType.SNOW;
       case "4" -> PrecipitationType.SHOWER;
       default -> {
-        log.info("[SkyStatusType] 알 수 없는 코드값: {}", ptyCode);
+        log.info("[PrecipitationType] 알 수 없는 코드값: {}", ptyCode);
         throw new InvalidDataException("알수없는 코드값: " + ptyCode);
       }
     };
@@ -60,7 +60,7 @@ public class WeatherCategoryMapper {
       return Double.parseDouble(pcpCode);
 
     } catch (NumberFormatException e) {
-      log.info("[SkyStatusType] 알 수 없는 코드값: {}", pcpCode);
+      log.info("[PrecipitationAmount] 알 수 없는 코드값: {}", pcpCode);
       throw new InvalidDataException("알수없는 코드값: " + pcpCode);
     }
   }
@@ -70,7 +70,7 @@ public class WeatherCategoryMapper {
     try {
       return Double.parseDouble(popCode) / 100.0;
     } catch (NumberFormatException e) {
-      log.info("[SkyStatusType] 알 수 없는 코드값: {}", popCode);
+      log.info("[PrecipitationProbability] 알 수 없는 코드값: {}", popCode);
       throw new InvalidDataException("알수없는 코드값: " + popCode);
     }
   }
@@ -88,7 +88,7 @@ public class WeatherCategoryMapper {
         return WindSpeedAsWord.STRONG;
       }
     } catch (NumberFormatException e) {
-      log.info("[SkyStatusType] 알 수 없는 코드값: {}", wsdCode);
+      log.info("[WindSpeedAsWord] 알 수 없는 코드값: {}", wsdCode);
       throw new InvalidDataException("알수없는 코드값: " + wsdCode);
     }
   }

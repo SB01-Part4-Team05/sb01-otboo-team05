@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 public class WeatherItemProcessor implements ItemProcessor<Pair<Integer, Integer>, List<Weather>> {
 
   private final WeatherService weatherService;
-  private Set<Pair<Integer, Integer>> existLocationSet;
+  private Set<Pair<Integer, Integer>> existLocationSet = Collections.emptySet();
 
   @Override
   public List<Weather> process(@NonNull Pair<Integer, Integer> location) {
