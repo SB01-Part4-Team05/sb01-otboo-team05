@@ -89,15 +89,14 @@ jobs:
           docker push ${{ secrets.AWS_FLASK_REPO_URL }}:recommend-flask-latest
           docker push ${{ secrets.AWS_FLASK_REPO_URL }}:recommend-flask-sha-${{ steps.meta.outputs.sha_short }}
 
-      # --- Render Task Definition with Both Images ---
-      - name: Render ECS Task Definition (Java + Flask)
-        id: render-task
+      # Render ootd-app task definition
+      - name: Render ECS Task Definition for ootd-app
+        id: render-ootd
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ootd_task.json
-          container-image-name-updates: |
-            ootd-app=${{ secrets.AWS_URL }}:ootd-sha-${{ steps.meta.outputs.sha_short }}
-            recommend-flask=${{ secrets.AWS_FLASK_REPO_URL }}:recommend-flask-sha-${{ steps.meta.outputs.sha_short }}
+          container-name: ootd-app
+          image: ${{ secrets.AWS_URL }}:ootd-sha-${{ steps.meta.outputs.sha_short }}
           environment-variables: |
             SPRING_DATASOURCE_URL=${{ secrets.RDS_URL }}
             SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USER }}
@@ -116,11 +115,20 @@ jobs:
             AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
             AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
 
+      # Render recommend-flask task definition
+      - name: Render ECS Task Definition for recommend-flask
+        id: render-flask
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-ootd.outputs.task-definition }}
+          container-name: recommend-flask
+          image: ${{ secrets.AWS_FLASK_REPO_URL }}:recommend-flask-sha-${{ steps.meta.outputs.sha_short }}
+
       # --- Deploy to ECS ---
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           service: ootd_task-service-kqe6w5p5
           cluster: ootd_server
-          task-definition: ${{ steps.render-task.outputs.task-definition }}
+          task-definition: ${{ steps.render-flask.outputs.task-definition }}
           wait-for-service-stability: true
