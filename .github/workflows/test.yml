@@ -22,6 +22,8 @@ env:
   AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
   AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
   CLOTHES_BUCKET: ${{ secrets.AWS_S3_CLOTHES_BUCKET}}
+  ACTUATOR_USER: ${{ secrets.ACTUATOR_USER }}
+  ACTUATOR_PASSWORD: ${{ secrets.ACTUATOR_PASSWORD }}
 
 jobs:
   test:
