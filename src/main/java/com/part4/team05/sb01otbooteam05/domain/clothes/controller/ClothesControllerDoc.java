@@ -1,9 +1,9 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.controller;
 
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
 import com.part4.team05.sb01otbooteam05.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,13 +12,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.UUID;
 
 @Tag(name = "의상 관리", description = "의상 관련 API")
 public interface ClothesControllerDoc {
@@ -47,7 +46,9 @@ public interface ClothesControllerDoc {
   ResponseEntity<ClothesCursorResponse> getClothes(
       @Parameter(description = "ownerId", required = true) @RequestParam UUID ownerId,
       @Parameter(description = "cursor") @RequestParam(required = false) UUID cursor,
-      @Parameter(description = "limit", example = "10") @RequestParam(defaultValue = "10") int size
+      @Parameter(description = "idAfter") @RequestParam(required = false) String idAfter,
+      @Parameter(description = "limit", example = "10") @RequestParam(defaultValue = "10") int limit, // size → limit
+      @Parameter(description = "clothes type filter") @RequestParam(required = false) String typeEqual
   );
 
   @Operation(
@@ -135,3 +136,5 @@ public interface ClothesControllerDoc {
       @RequestPart(required = false, value = "image") MultipartFile image
   );
 }
+
+

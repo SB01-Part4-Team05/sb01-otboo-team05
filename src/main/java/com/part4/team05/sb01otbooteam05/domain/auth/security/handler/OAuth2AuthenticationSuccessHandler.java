@@ -37,8 +37,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
       SignInResponse authResponse = authService.signInOAuthUser(userDetails);
       log.info("토큰 발급 완료");
 
-      addRefreshTokenCookie(response, authResponse.getRefreshToken());
-      addAccessTokenCookie(response, authResponse.getAccessToken());
+      boolean isSecure = isSecureRequest(request);
+      addRefreshTokenCookie(response, authResponse.getRefreshToken(), isSecure);
+      addAccessTokenCookie(response, authResponse.getAccessToken(), isSecure);
 
       String targetUrl = appOAuth2Properties.getRedirect().getSuccessUrl();
 
@@ -52,23 +53,32 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     }
   }
 
-  private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+  private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken, boolean isSecure) {
     Cookie cookie = new Cookie("refresh_token", refreshToken);
     cookie.setHttpOnly(true);
-    cookie.setSecure(false);
+    cookie.setSecure(isSecure);
     cookie.setPath("/");
     cookie.setMaxAge(7 * 24 * 60 * 60); // 7일
     response.addCookie(cookie);
+
+    log.info("RefreshToken 쿠키 설정 완료 (Secure: {})", isSecure);
   }
 
-  private void addAccessTokenCookie(HttpServletResponse response, String accessToken) {
+  private void addAccessTokenCookie(HttpServletResponse response, String accessToken, boolean isSecure) {
     Cookie cookie = new Cookie("access_token", accessToken);
     cookie.setHttpOnly(false);
-    cookie.setSecure(false);   // HTTP 환경
+    cookie.setSecure(isSecure);
     cookie.setPath("/");
     cookie.setMaxAge(30 * 60); // 30분
     response.addCookie(cookie);
 
-    log.info("AccessToken 쿠키 설정 완료");
+    log.info("AccessToken 쿠키 설정 완료 (Secure: {})", isSecure);
+  }
+
+  private boolean isSecureRequest(HttpServletRequest request) {
+    // HTTPS 직접 연결 또는 로드밸런서를 통한 HTTPS 요청 감지
+    return request.isSecure() ||
+        "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto")) ||
+        "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Scheme"));
   }
 }

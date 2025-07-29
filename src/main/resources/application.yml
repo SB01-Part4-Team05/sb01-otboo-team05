@@ -2,7 +2,7 @@ spring:
   application:
     name: sb01-otboo-team05
   profiles:
-    active: dev  #추후에 ALB 도입 고려 후 prod 올릴 예정
+    active: prod  #개발시 dev로 변경필요
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -29,7 +29,7 @@ spring:
       region:
         static: ap-northeast-2
       s3:
-        bucket: team5-discodeit
+        bucket: team5-otboo
   security:
     oauth2:
       client:
@@ -116,6 +116,3 @@ admin:
   email: ${ADMIN_EMAIL}
   password: ${ADMIN_PASSWORD}
   name: ${ADMIN_NAME}
-
-clothes:
-  bucket: "${CLOTHES_BUCKET}"

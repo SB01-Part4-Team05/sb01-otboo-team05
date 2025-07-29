@@ -1,20 +1,15 @@
 package com.part4.team05.sb01otbooteam05.domain.clothes.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
-import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
-import com.part4.team05.sb01otbooteam05.domain.attribute.repository.AttributeRepository;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
@@ -23,14 +18,12 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesUpdateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
-import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
 import java.util.Collections;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -38,10 +31,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.test.web.servlet.assertj.MockMvcTester.MockMvcRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.web.multipart.MultipartFile;
 
 @WebMvcTest(controllers = ClothesController.class)
 class ClothesControllerTest {
@@ -71,13 +61,53 @@ class ClothesControllerTest {
   void getClothes() throws Exception {
     UUID ownerId = UUID.randomUUID();
 
-    given(clothesService.get(ownerId,null,10)).willReturn(mock(ClothesCursorResponse.class));
+    given(clothesService.get(eq(ownerId), isNull(), eq(10), isNull()))
+        .willReturn(mock(ClothesCursorResponse.class));
 
     mockMvc.perform(MockMvcRequestBuilders
-        .get("/api/clothes")
-        .param("ownerId", ownerId.toString())
-        .with(csrf())
-        .contentType(MediaType.APPLICATION_JSON))
+            .get("/api/clothes")
+            .param("ownerId", ownerId.toString())
+            .param("limit", "10")
+            .with(csrf())
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @WithMockUser
+  void getClothesWithTypeFilter() throws Exception {
+    UUID ownerId = UUID.randomUUID();
+    String typeEqual = "TOP";
+
+    given(clothesService.get(eq(ownerId), isNull(), eq(10), eq(typeEqual)))
+        .willReturn(mock(ClothesCursorResponse.class));
+
+    mockMvc.perform(MockMvcRequestBuilders
+            .get("/api/clothes")
+            .param("ownerId", ownerId.toString())
+            .param("limit", "10")
+            .param("typeEqual", typeEqual)
+            .with(csrf())
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @WithMockUser
+  void getClothesWithCursor() throws Exception {
+    UUID ownerId = UUID.randomUUID();
+    UUID cursor = UUID.randomUUID();
+
+    given(clothesService.get(eq(ownerId), eq(cursor), eq(10), isNull()))
+        .willReturn(mock(ClothesCursorResponse.class));
+
+    mockMvc.perform(MockMvcRequestBuilders
+            .get("/api/clothes")
+            .param("ownerId", ownerId.toString())
+            .param("cursor", cursor.toString())
+            .param("limit", "10")
+            .with(csrf())
+            .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
   }
 
@@ -86,7 +116,7 @@ class ClothesControllerTest {
   void saveClothes() throws Exception {
     UUID ownerId = UUID.randomUUID();
     ClothesCreateRequest request = new ClothesCreateRequest(ownerId,"clothesname1"
-    ,"TOP", Collections.emptyList());
+        ,"TOP", Collections.emptyList());
 
     ClothesDto clothesDto = new ClothesDto();
     clothesDto.setName(request.name());
@@ -103,8 +133,8 @@ class ClothesControllerTest {
     );
 
     MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/clothes")
-        .file( requestPart)
-        .with(csrf()))
+            .file(requestPart)
+            .with(csrf()))
         .andExpect(status().isCreated())
         .andReturn();
 
@@ -124,8 +154,8 @@ class ClothesControllerTest {
     doNothing().when(clothesService).delete(clothesId);
 
     mockMvc.perform(MockMvcRequestBuilders.delete("/api/clothes/"+clothesId)
-        .with(csrf())
-        .contentType(MediaType.APPLICATION_JSON))
+            .with(csrf())
+            .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isNoContent());
   }
 
@@ -158,8 +188,6 @@ class ClothesControllerTest {
         .andExpect(status().isOk())
         .andReturn();
 
-
-
     ClothesDto response = objectMapper.readValue(result.getResponse().getContentAsString()
         ,ClothesDto.class);
 
@@ -167,3 +195,4 @@ class ClothesControllerTest {
     assertEquals(clothesId,response.getId());
   }
 }
+
