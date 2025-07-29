@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "healthy"}), 200
+
 @app.route('/rank', methods=['POST'])
 def rank():
     try:
@@ -45,3 +46,6 @@ def rank():
     except Exception as e:
         logger.exception("AI 추천 중 오류 발생")
         return jsonify([[]]), 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
