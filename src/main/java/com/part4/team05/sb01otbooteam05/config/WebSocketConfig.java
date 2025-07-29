@@ -26,7 +26,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private String[] getAllowedOrigins() {
         return new String[] {
-                "http://localhost:3000"
+                "https://otbooteamfive.store"
         };
     }
 }
