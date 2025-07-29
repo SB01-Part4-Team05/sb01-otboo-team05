@@ -24,14 +24,17 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecommendService {
@@ -116,7 +119,13 @@ public class RecommendService {
         }
       }
     } catch (Exception e) {
-      System.err.println("AI 서버 통신 실패:");
+      if (e instanceof JsonProcessingException) {
+                log.warn("AI 서비스 응답 파싱 실패: {}", e.getMessage());
+      } else if (e instanceof ResourceAccessException) {
+        log.warn("AI 서비스 연결 실패: {}", e.getMessage());
+      } else {
+        log.error("AI 서비스 호출 중 예상치 못한 오류 발생", e);
+      }
     }
 
     return finalResult != null ? finalResult : Collections.emptyList();
