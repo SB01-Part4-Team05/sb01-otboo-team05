@@ -98,6 +98,7 @@ public class AttributeService {
     response.setHasNext(defs.size() == limit);
     response.setSortBy("id");
     response.setSortDirection("DESCENDING");
+    response.setTotalCount(definitionRepository.count());
 
 
     return response;
