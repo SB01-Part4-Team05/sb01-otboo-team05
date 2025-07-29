@@ -48,7 +48,8 @@ dependencies {
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
     implementation 'io.micrometer:micrometer-registry-prometheus' // 프로메테우스 의존성
-    implementation 'org.springframework.boot:spring-boot-starter-batch' //스프링 배치
+    implementation 'org.springframework.boot:spring-boot-starter-batch' //스프링 배치 스타터
+    implementation 'org.springframework.batch:spring-batch-integration' //스프링 배치 integration
     implementation 'org.springframework.boot:spring-boot-starter-mail' //임시 비밀번호 발송시 이메일 사용을 위한 의존성
     implementation "io.jsonwebtoken:jjwt-api:0.12.5" //강의노트 참고 토큰 관련 의존성
     runtimeOnly "io.jsonwebtoken:jjwt-impl:0.12.5"
@@ -88,11 +89,26 @@ tasks.named('test', Test) {
     finalizedBy(tasks.named('jacocoTestReport'))
 }
 
-tasks.named('jacocoTestReport', JacocoReport) {
-    dependsOn(tasks.named('test'))
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-}
 
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required = true
+        html.required = true
+    }
+
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, include: [
+                            'com/part4/team05/**/service/**'
+                    ], exclude: [
+                            '**/controller/**',
+                            '**/dto/**',
+                            '**/entity/**',
+                            '**/config/**',
+                            '**/exception/**'
+                    ])
+                })
+        )
+}

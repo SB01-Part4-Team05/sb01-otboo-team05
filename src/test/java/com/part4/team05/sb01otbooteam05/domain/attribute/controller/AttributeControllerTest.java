@@ -138,7 +138,7 @@ class AttributeControllerTest {
 
     ClothesAttributeDefDtoCursorResponse mockResponse = mock(ClothesAttributeDefDtoCursorResponse.class);
 
-    given(attributeService.getDef(null, 10))
+    given(attributeService.getDef(null, 10,null,null,null,null))
     .willReturn(mockResponse);
 
 
@@ -146,7 +146,7 @@ class AttributeControllerTest {
         .get("/api/clothes/attribute-defs")
         .with(csrf())
         .contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(attributeService.getDef(null,10))))
+        .content(objectMapper.writeValueAsString(attributeService.getDef(null,10,null,null,null,null))))
         .andExpect(status().isOk());
 
   }

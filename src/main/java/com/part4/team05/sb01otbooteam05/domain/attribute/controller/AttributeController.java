@@ -7,6 +7,7 @@ import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDef
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefUpdateRequest;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.query.SortDirection;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/clothes/attribute-defs")
-public class AttributeController {
+public class AttributeController implements AttributeControllerDoc{
   private final AttributeService attributeService;
 
   @PreAuthorize("hasRole('ADMIN')")
@@ -48,8 +49,13 @@ public class AttributeController {
   @GetMapping
   public ResponseEntity<ClothesAttributeDefDtoCursorResponse> getAttributes(
       @RequestParam(required = false) UUID cursor,
-      @RequestParam(defaultValue = "10") int size) {
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(required = false) UUID idAfter,
+      @RequestParam(required = false) String sortedBy,
+      @RequestParam(required = false, defaultValue = "DESCENDING") String sortDirection,
+      @RequestParam(required = false) String keywordLike
+      ) {
 
-    return ResponseEntity.ok(attributeService.getDef(cursor,size));
+    return ResponseEntity.ok(attributeService.getDef(cursor,size,idAfter,sortedBy,sortDirection,keywordLike));
   }
 }

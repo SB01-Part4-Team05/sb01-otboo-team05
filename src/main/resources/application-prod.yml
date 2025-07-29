@@ -1,0 +1,40 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update  # 운영 환경에서는 update 사용
+    show-sql: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: "${PROD_DOMAIN:https://otbooteamfive.store}/login/oauth2/code/google"
+          kakao:
+            redirect-uri: "${PROD_DOMAIN:https://otbooteamfive.store}/login/oauth2/code/kakao"
+
+# 로깅 레벨 설정
+logging:
+  level:
+    root: warn
+    org.hibernate.SQL: warn
+    com.part4.team05.sb01otbooteam05: info
+
+# 액츄에이터 보안
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      show-details: never
+
+app:
+  oauth2:
+    redirect:
+      success-url: "${OAUTH2_SUCCESS_URL:${PROD_DOMAIN:https://otbooteamfive.store}/#/}"
+      failure-url: "${OAUTH2_FAILURE_URL:${PROD_DOMAIN:https://otbooteamfive.store}/#/sign-in}"
+
+websocket:
+  allowed-origins: "https://otbooteamfive.store"

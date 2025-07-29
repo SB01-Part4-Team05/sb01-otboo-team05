@@ -20,7 +20,7 @@ public class WeatherScheduler {
   private final Job weatherJob;
   private final Job deleteOldWeatherJob;
 
-  @Scheduled(cron = "0 5 2,5,8,11,14,17,20,23 * * *")
+  @Scheduled(cron = "0 5,25 2,5,8,11,14,17,20,23 * * *")
   public void runWeatherJob() {
     try {
       JobParameters parameters = new JobParametersBuilder()

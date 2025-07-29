@@ -7,12 +7,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ClothesCursorResponse {
-  List<ClothesDto> clothesDtos;
+  List<ClothesDto> data; // clothesDtos -> data로 변경
   String nextCursor;
   String nextIdAfter;
   boolean hasNext;
-  Integer nextCount;
+  Integer totalCount;
   String sortBy;
   String sortDirection;
-
 }
+

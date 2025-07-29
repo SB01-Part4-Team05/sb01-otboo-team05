@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/clothes")
-public class ClothesController {
+public class ClothesController implements ClothesControllerDoc{
 
   private final ClothesService clothesService;
 
@@ -35,11 +35,16 @@ public class ClothesController {
   public ResponseEntity<ClothesCursorResponse> getClothes(
       @RequestParam UUID ownerId,
       @RequestParam(required = false) UUID cursor,
-      @RequestParam(defaultValue = "10") int size) {
+      @RequestParam(required = false) String idAfter,
+      @RequestParam(defaultValue = "10") int limit,
+      @RequestParam(required = false) String typeEqual) {
 
-    ClothesCursorResponse response = clothesService.get(ownerId, cursor, size);
+    UUID actualCursor = cursor != null ? cursor : (idAfter != null ? UUID.fromString(idAfter) : null);
+
+    ClothesCursorResponse response = clothesService.get(ownerId, actualCursor, limit, typeEqual);
     return ResponseEntity.ok(response);
   }
+
 
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<ClothesDto> saveClothes(@RequestPart("request") ClothesCreateRequest request,
@@ -60,3 +65,4 @@ public class ClothesController {
     return ResponseEntity.ok().body(clothesService.update(clothesId,request,image));
   }
 }
+
