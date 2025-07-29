@@ -50,7 +50,9 @@ jobs:
       - name: Prepare Flask Docker context
         run: |
           mkdir -p docker-context/recommend-flask
-          cp -r recommend-flask/* docker-context/recommend-flask/
+          cp -r src/main/java/com/part4/team05/sb01otbooteam05/domain/recommend/service/ai/* docker-context/recommend-flask/
+          ls -al docker-context/recommend-flask/
+      
 
       # --- AWS Login ---
       - name: Configure AWS credentials
