@@ -21,7 +21,7 @@ env:
   GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
   AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
   AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
-  CLOTHES_BUCKET: ${{ secrets.AWS_S3_CLOTHES_BUCKET}
+  CLOTHES_BUCKET: ${{ secrets.AWS_S3_CLOTHES_BUCKET}}
 
 jobs:
   test:
@@ -60,3 +60,8 @@ jobs:
       - name: test with Gradle Wrapper
         run: ./gradlew test
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/reports/jacoco/test/jacocoTestReport.xml
