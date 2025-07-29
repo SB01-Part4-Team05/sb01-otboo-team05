@@ -114,6 +114,8 @@ jobs:
             GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
             AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
             AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
+            ACTUATOR_USER=${{ secrets.ACTUATOR_USER }}
+            ACTUATOR_PASSWORD=${{ secrets.ACTUATOR_PASSWORD }}
 
       # Render recommend-flask task definition
       - name: Render ECS Task Definition for recommend-flask
