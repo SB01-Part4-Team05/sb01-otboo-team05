@@ -40,7 +40,7 @@ public class RecommendService {
   private final WeatherService weatherService;
 
   private final Random random = new Random();
-  private final Map<ThicknessType,Integer> criteria = new HashMap<>(); // 옷 두께 가중치
+  private final Map<ThicknessType,Integer> criteria = new HashMap<>();
   private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
 
   public List<List<ClothesDto>> getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
@@ -82,11 +82,15 @@ public class RecommendService {
     }
 
     List<List<ClothesDto>> finalResult = result.stream()
-        .map(clothesMapper::toDtoList)
+        .map(clothes -> {
+          List<ClothesDto> dtoList = clothesMapper.toDtoList(clothes);
+          return dtoList != null ? dtoList : Collections.<ClothesDto>emptyList();
+        })
+        .filter(list -> !list.isEmpty())
         .collect(Collectors.toList());
 
     try {
-      String url = "http://localhost:8000/rank";
+      String url = "http://recommend-flask:5000/rank";
 
       RestTemplate restTemplate = new RestTemplate();
       ObjectMapper objectMapper = new ObjectMapper();
@@ -98,16 +102,24 @@ public class RecommendService {
       ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
 
       if (response.getStatusCode() == HttpStatus.OK) {
-        return objectMapper.readValue(response.getBody(),
-            objectMapper.getTypeFactory().constructCollectionType(List.class,
-                objectMapper.getTypeFactory().constructCollectionType(List.class, ClothesDto.class)));
+        String responseBody = response.getBody();
+        if (responseBody != null && !responseBody.isBlank()) {
+          List<List<ClothesDto>> aiResult = objectMapper.readValue(responseBody,
+              objectMapper.getTypeFactory().constructCollectionType(List.class,
+                  objectMapper.getTypeFactory().constructCollectionType(List.class, ClothesDto.class)));
+
+          if (aiResult != null) {
+            return aiResult.stream()
+                .map(list -> list != null ? list : Collections.<ClothesDto>emptyList())
+                .collect(Collectors.toList());
+          }
+        }
       }
     } catch (Exception e) {
-      // 필요 시 로그 추가
-      e.printStackTrace();
+      System.err.println("AI 서버 통신 실패:");
     }
 
-    return finalResult;
+    return finalResult != null ? finalResult : Collections.emptyList();
   }
 
   private Map<StyleType, Map<ClothesType, List<Clothes>>> getMap(UUID ownerId) {
