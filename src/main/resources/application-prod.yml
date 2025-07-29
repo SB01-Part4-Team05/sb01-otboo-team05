@@ -35,3 +35,6 @@ app:
     redirect:
       success-url: "${OAUTH2_SUCCESS_URL:${PROD_DOMAIN:https://otbooteamfive.store}/#/}"
       failure-url: "${OAUTH2_FAILURE_URL:${PROD_DOMAIN:https://otbooteamfive.store}/#/sign-in}"
+
+websocket:
+  allowed-origins: "https://otbooteamfive.store"

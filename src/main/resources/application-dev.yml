@@ -25,3 +25,6 @@ app:
     redirect:
       success-url: "${OAUTH2_SUCCESS_URL:http://localhost:8080/}"
       failure-url: "${OAUTH2_FAILURE_URL:http://localhost:8080/sign-in}"
+
+websocket:
+  allowed-origins: "http://localhost:3000,http://127.0.0.1:3000"
