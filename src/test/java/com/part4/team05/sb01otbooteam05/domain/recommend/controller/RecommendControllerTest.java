@@ -8,11 +8,14 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationiDto;
 import com.part4.team05.sb01otbooteam05.domain.recommend.service.RecommendService;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,17 +59,21 @@ class RecommendControllerTest {
     UUID weatherId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
+
     CustomUserDetails userDetails = mock(CustomUserDetails.class);
     given(userDetails.getUserId()).willReturn(userId);
-
     Authentication authentication = new UsernamePasswordAuthenticationToken(
         userDetails, null, List.of(() -> "ROLE_USER"));
 
-    List<List<ClothesDto>> result = List.of(List.of(mock(ClothesDto.class)));
-    given(recommendService.getRecommend(any(UUID.class), any(UUID.class)))
-        .willReturn(result);
+    ClothesDto clothesDto = new ClothesDto();
+    clothesDto.setType("TOP");
+    List<List<ClothesDto>> mockClothes = List.of(List.of(clothesDto));
 
-    MvcResult response = mockMvc.perform(MockMvcRequestBuilders.get("/api/recommendations")
+    RecommendationiDto dto = new RecommendationiDto(weatherId, userId, mockClothes);
+
+    given(recommendService.getRecommend(any(), any())).willReturn(dto);
+
+    MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/recommendations")
             .with(authentication(authentication))
             .with(csrf())
             .param("weatherId", weatherId.toString())
@@ -74,8 +81,23 @@ class RecommendControllerTest {
         .andExpect(status().isOk())
         .andReturn();
 
-    List<List<ClothesDto>> lists = objectMapper.readValue(response.getResponse().getContentAsString(), List.class);
-    assertEquals(1, lists.size());
+    String responseJson = result.getResponse().getContentAsString();
+    System.out.println("RESPONSE JSON: " + responseJson);
+
+    JsonNode root = objectMapper.readTree(responseJson);
+    JsonNode clothesNode = root.get("clothes");
+
+    assertNotNull(clothesNode, "'clothes' 필드가 응답에 없습니다.");
+    assertTrue(clothesNode.isArray());
+    assertEquals(1, clothesNode.size());
+
+    List<List<ClothesDto>> parsedClothes = objectMapper.readValue(
+        clothesNode.toString(),
+        new TypeReference<List<List<ClothesDto>>>() {}
+    );
+
+    assertEquals(1, parsedClothes.size());
+    assertEquals(1, parsedClothes.get(0).size());
   }
 
 }
