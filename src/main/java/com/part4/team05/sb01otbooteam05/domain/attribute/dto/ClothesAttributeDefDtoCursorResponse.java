@@ -16,6 +16,6 @@ public class ClothesAttributeDefDtoCursorResponse {
   Integer nextCount;
   String sortBy;
   String sortDirection;
-
+  long totalCount;
 
 }
