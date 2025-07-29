@@ -30,14 +30,20 @@ public class RecommendController implements RecommendControllerDoc{
     UUID userId;
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
-      CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-      userId = userDetails.getUserId();
-    } else {
-      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.emptyList());
+    try{
+      if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        userId = userDetails.getUserId();
+      } else {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.emptyList());
+      }
+
+      return ResponseEntity.ok(recommendService.getRecommend(userId,weatherId));
+    }
+    catch (Exception e){
+      return ResponseEntity.ok(Collections.emptyList());
     }
 
-    return ResponseEntity.ok(recommendService.getRecommend(userId,weatherId));
   }
 
 }
