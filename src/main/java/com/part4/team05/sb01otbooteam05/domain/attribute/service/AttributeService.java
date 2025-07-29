@@ -15,6 +15,7 @@ import java.awt.print.Pageable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,7 @@ public class AttributeService {
       attributeRepository.save(att);
 
       return att;
-    }).toList();
+    }).collect(Collectors.toList());
   }
 
   @Transactional
@@ -98,6 +99,7 @@ public class AttributeService {
     response.setHasNext(defs.size() == limit);
     response.setSortBy("id");
     response.setSortDirection("DESCENDING");
+    response.setTotalCount(definitionRepository.count());
 
 
     return response;
