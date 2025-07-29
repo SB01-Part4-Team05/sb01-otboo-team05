@@ -100,7 +100,11 @@ public interface AttributeControllerDoc {
       )
   })
   ResponseEntity<ClothesAttributeDefDtoCursorResponse> getAttributes(
-      @Parameter(description = "cursor") @RequestParam(required = false) UUID cursor,
-      @Parameter(description = "size", example = "10") @RequestParam(defaultValue = "10") int size
+      @RequestParam(required = false) UUID cursor,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(required = false) UUID idAfter,
+      @RequestParam(required = false) String sortedBy,
+      @RequestParam(required = false, defaultValue = "DESCENDING") String sortDirection,
+      @RequestParam(required = false) String keywordLike
   );
 }

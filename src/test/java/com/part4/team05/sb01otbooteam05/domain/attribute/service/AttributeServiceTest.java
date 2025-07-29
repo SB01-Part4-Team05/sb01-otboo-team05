@@ -154,13 +154,11 @@ class AttributeServiceTest {
   @Test
   void getDef() {
     UUID cursor = UUID.randomUUID();
-    given(attributeDefinitionRepository.findByCursor(cursor,Pageable.ofSize(10)))
-        .willReturn(List.of(mock(AttributeDefinition.class)));
 
     given(definitionMapper.toDtoList(any(List.class))).willReturn(List.of(mock(
         ClothesAttributeDefDto.class)));
 
-    ClothesAttributeDefDtoCursorResponse response = attributeService.getDef(cursor,10);
+    ClothesAttributeDefDtoCursorResponse response = attributeService.getDef(cursor,10,null,null,null,null);
 
     assertEquals(1,response.getClothesAttributeDefDtos().size());
   }
