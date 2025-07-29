@@ -12,6 +12,7 @@ import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
 import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -187,24 +188,42 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testRemoveEmitter_partialAndLast_viaReflection() throws Exception {
+    @DisplayName("SseEmitter가 complete된 후 send하면 예외 발생하고 제거되는지 확인")
+    void testEmitterRemovalWhenSendAfterCompletion() throws Exception {
+        // given
         UUID userId = UUID.randomUUID();
-        SseEmitter e1 = service.connect(userId, null);
-        SseEmitter e2 = service.connect(userId, null);
 
-        Field f = NotificationServiceImpl.class.getDeclaredField("emittersMap");
-        f.setAccessible(true);
+        // emitter1: 이미 완료된 emitter (IOException 발생 시 제거 대상)
+        SseEmitter emitter1 = mock(SseEmitter.class);
+        doThrow(new IOException("ResponseBodyEmitter has already completed"))
+                .when(emitter1).send(any(SseEmitter.SseEventBuilder.class));
+        doNothing().when(emitter1).completeWithError(any());
+
+        // emitter2: 정상 동작
+        SseEmitter emitter2 = mock(SseEmitter.class);
+
+        // emittersMap 직접 삽입
+        Field field = NotificationServiceImpl.class.getDeclaredField("emittersMap");
+        field.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Map<UUID, List<SseEmitter>> map = (Map<UUID, List<SseEmitter>>) f.get(service);
-        assertThat(map.get(userId)).hasSize(2);
+        Map<UUID, List<SseEmitter>> emittersMap = (Map<UUID, List<SseEmitter>>) field.get(service);
+        emittersMap.put(userId, new CopyOnWriteArrayList<>(List.of(emitter1, emitter2)));
 
-        Method rm = NotificationServiceImpl.class.getDeclaredMethod("removeEmitter", UUID.class, SseEmitter.class);
-        rm.setAccessible(true);
-        rm.invoke(service, userId, e1);
-        assertThat(map.get(userId)).containsExactly(e2);
-        rm.invoke(service, userId, e2);
-        assertThat(map).doesNotContainKey(userId);
+        NotificationDto dto = new NotificationDto(
+                UUID.randomUUID(), LocalDateTime.now(), userId,
+                "제목", "내용", NotificationLevel.INFO
+        );
+
+        // when
+        service.sendNotification(dto);
+
+        // then
+        List<SseEmitter> remaining = emittersMap.get(userId);
+        assertThat(remaining).containsExactly(emitter2); // emitter1 제거 확인
+        verify(emitter1).completeWithError(any(IOException.class)); // 예외 처리 확인
+        verify(emitter2).send(any(SseEmitter.SseEventBuilder.class)); // 정상 작동 확인
     }
+
 
     @Test
     void testCreateAndSendNotification_invokesSendNotification() {
