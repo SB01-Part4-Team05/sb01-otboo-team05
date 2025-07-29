@@ -41,7 +41,7 @@
         },
         {
             "name": "recommend-flask",
-            "image": "065301656004.dkr.ecr.ap-northeast-2.amazonaws.com/team5/recommend-flask:recommend-flask-sha-a76ff60",
+            "image": "065301656004.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ootd/flask:recommend-flask-sha-a76ff60",
             "cpu": 0,
             "portMappings": [
                 {
