@@ -12,9 +12,6 @@ spring:
             redirect-uri: "${PROD_DOMAIN:https://otbooteamfive.store}/login/oauth2/code/google"
           kakao:
             redirect-uri: "${PROD_DOMAIN:https://otbooteamfive.store}/login/oauth2/code/kakao"
-    user:
-      name: ${ACTUATOR_USER}
-      password: ${ACTUATOR_PASSWORD}
 
 # 로깅 레벨 설정
 logging:
