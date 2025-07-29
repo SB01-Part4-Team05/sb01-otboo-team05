@@ -9,9 +9,9 @@ spring:
       client:
         registration:
           google:
-            redirect-uri: "${PROD_DOMAIN:https://otbooteamfive.store}/login/oauth2/code/google"
+            redirect-uri: "${PROD_DOMAIN:https://otbooteamfive.store}/#/login/oauth2/code/google"
           kakao:
-            redirect-uri: "${PROD_DOMAIN:https://otbooteamfive.store}/login/oauth2/code/kakao"
+            redirect-uri: "${PROD_DOMAIN:https://otbooteamfive.store}/#/login/oauth2/code/kakao"
 
 # 로깅 레벨 설정
 logging:
@@ -33,5 +33,5 @@ management:
 app:
   oauth2:
     redirect:
-      success-url: "${OAUTH2_SUCCESS_URL:${PROD_DOMAIN:https://otbooteamfive.store}/}"
-      failure-url: "${OAUTH2_FAILURE_URL:${PROD_DOMAIN:https://otbooteamfive.store}/sign-in}"
+      success-url: "${OAUTH2_SUCCESS_URL:${PROD_DOMAIN:https://otbooteamfive.store}/#/}"
+      failure-url: "${OAUTH2_FAILURE_URL:${PROD_DOMAIN:https://otbooteamfive.store}/#/sign-in}"
