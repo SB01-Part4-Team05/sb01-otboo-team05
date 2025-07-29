@@ -2,7 +2,7 @@ spring:
   application:
     name: sb01-otboo-team05
   profiles:
-    active: dev  #추후에 ALB 도입 고려 후 prod 올릴 예정
+    active: prod  #추후에 ALB 도입 고려 후 prod 올릴 예정
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
