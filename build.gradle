@@ -89,11 +89,26 @@ tasks.named('test', Test) {
     finalizedBy(tasks.named('jacocoTestReport'))
 }
 
-tasks.named('jacocoTestReport', JacocoReport) {
-    dependsOn(tasks.named('test'))
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-}
 
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required = true
+        html.required = true
+    }
+
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, include: [
+                            'com/part4/team05/**/service/**'
+                    ], exclude: [
+                            '**/controller/**',
+                            '**/dto/**',
+                            '**/entity/**',
+                            '**/config/**',
+                            '**/exception/**'
+                    ])
+                })
+        )
+}
