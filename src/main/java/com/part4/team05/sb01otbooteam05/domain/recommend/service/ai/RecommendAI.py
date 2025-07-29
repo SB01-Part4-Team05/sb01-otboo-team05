@@ -1,10 +1,7 @@
-import logging
 from flask import Flask, request, jsonify
 from sentence_transformers import SentenceTransformer, util
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
