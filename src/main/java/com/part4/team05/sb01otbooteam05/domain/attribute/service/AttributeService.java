@@ -17,7 +17,9 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.query.SortDirection;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,25 +87,37 @@ public class AttributeService {
     definitionRepository.deleteById(definitionId);
   }
 
-  public ClothesAttributeDefDtoCursorResponse getDef(UUID cursor,int limit){
-    PageRequest pageable = PageRequest.of(0, limit);
-    List<AttributeDefinition> defs = definitionRepository.findByCursor(cursor,pageable);
+  public ClothesAttributeDefDtoCursorResponse getDef(
+      UUID cursor,
+      int limit,
+      UUID idAfter,
+      String sortedBy,
+      String sortDirection,
+      String keywordLike
+  ) {
+
+    String sortField = (sortedBy != null && !sortedBy.isBlank()) ? sortedBy : "id";
+    SortDirection direction = "DESCENDING".equalsIgnoreCase(sortDirection) ? SortDirection.ASCENDING : SortDirection.DESCENDING;
+
+    PageRequest pageable = PageRequest.of(0, limit, Sort.by(String.valueOf(direction), sortField));
+
+    List<AttributeDefinition> defs = definitionRepository.findByConditions(cursor, idAfter, keywordLike, pageable);
 
     ClothesAttributeDefDtoCursorResponse response = new ClothesAttributeDefDtoCursorResponse();
-
     response.setClothesAttributeDefDtos(definitionMapper.toDtoList(defs));
+
     UUID nextCursor = defs.isEmpty() ? null : defs.get(defs.size() - 1).getId();
     response.setNextCursor(nextCursor != null ? nextCursor.toString() : null);
     response.setNextIdAfter(nextCursor != null ? nextCursor.toString() : null);
     response.setNextCount(defs.size());
     response.setHasNext(defs.size() == limit);
-    response.setSortBy("id");
-    response.setSortDirection("DESCENDING");
-    response.setTotalCount(definitionRepository.count());
-
+    response.setSortBy(sortField);
+    response.setSortDirection(direction.name());
+    response.setTotalCount(definitionRepository.count()); // 전체 개수는 필터링 반영하려면 따로 처리해야 함
 
     return response;
   }
+
 
   public AttributeDefinition findByDefName(String name){
     return definitionRepository.findByName(name).orElseThrow(()

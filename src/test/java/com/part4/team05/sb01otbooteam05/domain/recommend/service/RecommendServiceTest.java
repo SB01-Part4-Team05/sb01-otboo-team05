@@ -10,6 +10,7 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationiDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
 import java.util.List;
 import java.util.UUID;
@@ -52,11 +53,11 @@ class RecommendServiceTest {
         .thenReturn(List.of(top, bottom, acc, outer));
 
     try {
-      List<List<ClothesDto>> result = recommendService.getRecommend(ownerId, weatherId);
+      RecommendationiDto result = recommendService.getRecommend(ownerId, weatherId);
 
       assertNotNull(result);
-      assertFalse(result.isEmpty());
-      assertEquals("TOP", result.get(0).get(0).getType());
+      assertFalse(result.clothes().isEmpty());
+      assertEquals("TOP", result.clothes().get(0).get(0).getType());
     } catch (Exception e) {
       System.out.println( e.getMessage());
     }

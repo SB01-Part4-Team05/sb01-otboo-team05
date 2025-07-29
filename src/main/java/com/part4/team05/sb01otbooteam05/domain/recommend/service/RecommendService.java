@@ -9,6 +9,7 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationiDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
 import jakarta.annotation.PostConstruct;
@@ -46,7 +47,7 @@ public class RecommendService {
   private final Map<ThicknessType,Integer> criteria = new HashMap<>();
   private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
 
-  public List<List<ClothesDto>> getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
+  public RecommendationiDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
     Map<StyleType, Map<ClothesType, List<Clothes>>> map = getMap(ownerId);
     List<List<Clothes>> result = new ArrayList<>();
     int weatherValue = getWeatherValue(weatherId);
@@ -112,9 +113,10 @@ public class RecommendService {
                   objectMapper.getTypeFactory().constructCollectionType(List.class, ClothesDto.class)));
 
           if (aiResult != null) {
-            return aiResult.stream()
+            List<List<ClothesDto>> aiList = aiResult.stream()
                 .map(list -> list != null ? list : Collections.<ClothesDto>emptyList())
-                .collect(Collectors.toList());
+                .toList();
+            return new RecommendationiDto(weatherId,ownerId,aiList);
           }
         }
       }
@@ -128,7 +130,7 @@ public class RecommendService {
       }
     }
 
-    return finalResult != null ? finalResult : Collections.emptyList();
+    return new RecommendationiDto(weatherId,ownerId,finalResult);
   }
 
   private Map<StyleType, Map<ClothesType, List<Clothes>>> getMap(UUID ownerId) {
