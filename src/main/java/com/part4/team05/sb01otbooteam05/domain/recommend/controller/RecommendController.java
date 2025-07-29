@@ -42,7 +42,7 @@ public class RecommendController implements RecommendControllerDoc{
       return ResponseEntity.ok(recommendService.getRecommend(userId,weatherId));
     }
     catch (Exception e){
-      return ResponseEntity.ok(null);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
   }
