@@ -27,6 +27,11 @@ spring:
       enabled: true
       path: /h2-console
 
+  security:
+    user:
+      name: ${ACTUATOR_USER}
+      password: ${ACTUATOR_PASSWORD}
+
 logging:
   level:
     root: info
