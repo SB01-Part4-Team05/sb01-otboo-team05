@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
+import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
+import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesAttributeDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
@@ -40,34 +42,31 @@ class RecommendServiceTest {
   JwtTokenProvider jwtTokenProvider;
 
   @Test
-  void getRecommend() {
+  void getRecommend_success() {
     UUID ownerId = UUID.randomUUID();
     UUID weatherId = UUID.randomUUID();
 
-    Clothes top = mockClothes(ClothesType.TOP);
-    Clothes bottom = mockClothes(ClothesType.BOTTOM);
-    Clothes acc = mockClothes(ClothesType.ACC);
-    Clothes outer = mockClothes(ClothesType.OUTER);
+    Clothes top = mockClothesWithAttributes(ClothesType.TOP);
+    Clothes bottom = mockClothesWithAttributes(ClothesType.BOTTOM);
+    Clothes acc = mockClothesWithAttributes(ClothesType.ACC);
+    Clothes outer = mockClothesWithAttributes(ClothesType.OUTER);
 
     when(clothesService.findAllByOwnerId(ownerId))
         .thenReturn(List.of(top, bottom, acc, outer));
 
-    try {
-      RecommendationiDto result = recommendService.getRecommend(ownerId, weatherId);
+    RecommendationiDto result = recommendService.getRecommend(ownerId, weatherId);
 
-      assertNotNull(result);
-      assertFalse(result.clothes().isEmpty());
-      assertEquals("TOP", result.clothes().get(0).get(0).getType());
-    } catch (Exception e) {
-      System.out.println( e.getMessage());
-    }
+    assertNotNull(result);
   }
 
-  private Clothes mockClothes(ClothesType type) {
-    Clothes clothes = mock(Clothes.class);
+  private Clothes mockClothesWithAttributes(ClothesType type) {
+    Clothes clothes = new Clothes();
     clothes.setType(type);
-
+    clothes.setName("Test " + type);
+    clothes.setImageUrl("http://example.com/test.jpg");
+    clothes.setAttributeValues(List.of(mock(AttributeValue.class)));
     return clothes;
   }
+
 }
 

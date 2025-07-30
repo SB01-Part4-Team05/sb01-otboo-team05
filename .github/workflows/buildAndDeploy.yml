@@ -7,6 +7,7 @@ on:
   push:
     branches: [main, develop]
 
+
 permissions:
   id-token: write
   contents: read
@@ -19,7 +20,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # --- Java build ---
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -39,7 +39,6 @@ jobs:
           echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
           echo "build_date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
-      # --- Prepare Docker contexts ---
       - name: Prepare Java Docker context
         run: |
           mkdir -p docker-context/ootd-app
@@ -47,14 +46,6 @@ jobs:
           cp "$JAR_PATH" docker-context/ootd-app/app.jar
           cp Dockerfile docker-context/ootd-app/
 
-      - name: Prepare Flask Docker context
-        run: |
-          mkdir -p docker-context/recommend-flask
-          cp -r src/main/java/com/part4/team05/sb01otbooteam05/domain/recommend/service/ai/* docker-context/recommend-flask/
-          ls -al docker-context/recommend-flask/
-      
-
-      # --- AWS Login ---
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -65,7 +56,6 @@ jobs:
         run: |
           aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_URL }}
 
-      # --- Build & Push Java Docker image ---
       - name: Build Java Docker image
         run: |
           docker build -t ootd_image:latest docker-context/ootd-app
@@ -77,19 +67,6 @@ jobs:
           docker push ${{ secrets.AWS_URL }}:ootd-latest
           docker push ${{ secrets.AWS_URL }}:ootd-sha-${{ steps.meta.outputs.sha_short }}
 
-      # --- Build & Push Flask Docker image ---
-      - name: Build Flask Docker image
-        run: |
-          docker build -t recommend_flask_image:latest docker-context/recommend-flask
-          docker tag recommend_flask_image:latest ${{ secrets.AWS_FLASK_REPO_URL }}:recommend-flask-latest
-          docker tag recommend_flask_image:latest ${{ secrets.AWS_FLASK_REPO_URL }}:recommend-flask-sha-${{ steps.meta.outputs.sha_short }}
-
-      - name: Push Flask Docker image to ECR
-        run: |
-          docker push ${{ secrets.AWS_FLASK_REPO_URL }}:recommend-flask-latest
-          docker push ${{ secrets.AWS_FLASK_REPO_URL }}:recommend-flask-sha-${{ steps.meta.outputs.sha_short }}
-
-      # Render ootd-app task definition
       - name: Render ECS Task Definition for ootd-app
         id: render-ootd
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -117,20 +94,10 @@ jobs:
             ACTUATOR_USER=${{ secrets.ACTUATOR_USER }}
             ACTUATOR_PASSWORD=${{ secrets.ACTUATOR_PASSWORD }}
 
-      # Render recommend-flask task definition
-      - name: Render ECS Task Definition for recommend-flask
-        id: render-flask
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ${{ steps.render-ootd.outputs.task-definition }}
-          container-name: recommend-flask
-          image: ${{ secrets.AWS_FLASK_REPO_URL }}:recommend-flask-sha-${{ steps.meta.outputs.sha_short }}
-
-      # --- Deploy to ECS ---
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           service: ootd_task-service-kqe6w5p5
           cluster: ootd_server
-          task-definition: ${{ steps.render-flask.outputs.task-definition }}
+          task-definition: ${{ steps.render-ootd.outputs.task-definition }}
           wait-for-service-stability: true

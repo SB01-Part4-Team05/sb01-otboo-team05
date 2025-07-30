@@ -52,7 +52,7 @@ public class AttributeController implements AttributeControllerDoc{
       @RequestParam(defaultValue = "10") int size,
       @RequestParam(required = false) UUID idAfter,
       @RequestParam(required = false) String sortedBy,
-      @RequestParam(required = false, defaultValue = "DESCENDING") String sortDirection,
+      @RequestParam(required = false, defaultValue = "desc") String sortDirection,
       @RequestParam(required = false) String keywordLike
       ) {
 
