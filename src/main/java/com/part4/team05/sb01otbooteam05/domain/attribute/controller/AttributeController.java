@@ -51,9 +51,9 @@ public class AttributeController implements AttributeControllerDoc{
       @RequestParam(required = false) UUID cursor,
       @RequestParam(defaultValue = "10") int size,
       @RequestParam(required = false) UUID idAfter,
-      @RequestParam(required = false) String sortedBy,
-      @RequestParam(required = false, defaultValue = "DESCENDING") String sortDirection,
-      @RequestParam(required = false) String keywordLike
+      @RequestParam(required = false, defaultValue = "id") String sortedBy,
+      @RequestParam(required = false, defaultValue = "desc") String sortDirection,
+      @RequestParam(required = false,defaultValue = "") String keywordLike
       ) {
 
     return ResponseEntity.ok(attributeService.getDef(cursor,size,idAfter,sortedBy,sortDirection,keywordLike));

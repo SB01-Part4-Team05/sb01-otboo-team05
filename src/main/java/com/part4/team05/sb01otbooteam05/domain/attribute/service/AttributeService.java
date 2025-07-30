@@ -95,11 +95,24 @@ public class AttributeService {
       String sortDirection,
       String keywordLike
   ) {
-
     String sortField = (sortedBy != null && !sortedBy.isBlank()) ? sortedBy : "id";
-    SortDirection direction = "DESCENDING".equalsIgnoreCase(sortDirection) ? SortDirection.ASCENDING : SortDirection.DESCENDING;
 
-    PageRequest pageable = PageRequest.of(0, limit, Sort.by(String.valueOf(direction), sortField));
+    Sort.Direction direction;
+    if (sortDirection == null) {
+      direction = Sort.Direction.DESC;
+    } else {
+      String dir = sortDirection.toUpperCase();
+      if (dir.equals("ASCENDING")) dir = "ASC";
+      else if (dir.equals("DESCENDING")) dir = "DESC";
+
+      try {
+        direction = Sort.Direction.fromString(dir);
+      } catch (IllegalArgumentException e) {
+        direction = Sort.Direction.DESC;
+      }
+    }
+
+    PageRequest pageable = PageRequest.of(0, limit, Sort.by(direction, sortField));
 
     List<AttributeDefinition> defs = definitionRepository.findByConditions(cursor, idAfter, keywordLike, pageable);
 
@@ -113,12 +126,10 @@ public class AttributeService {
     response.setHasNext(defs.size() == limit);
     response.setSortBy(sortField);
     response.setSortDirection(direction.name());
-    response.setTotalCount(definitionRepository.count()); // 전체 개수는 필터링 반영하려면 따로 처리해야 함
+    response.setTotalCount(definitionRepository.count());
 
     return response;
   }
-
-
   public AttributeDefinition findByDefName(String name){
     return definitionRepository.findByName(name).orElseThrow(()
         -> new NoSuchDefException("해당하는 선택 항목이 없습니다."));

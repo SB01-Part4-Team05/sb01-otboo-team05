@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.util.List;
 import java.util.UUID;
@@ -42,4 +43,11 @@ public class AttributeDefinition {
   public void setName(String name) {
     this.name = name;
   }
+
+  @PrePersist
+  public void ensureId() {
+    if (this.id == null) {
+      this.id = UUID.randomUUID();
+    }
+   }
 }
