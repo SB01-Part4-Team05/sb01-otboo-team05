@@ -4,14 +4,17 @@ import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageCr
 import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageDto;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.entity.DirectMessage;
+import com.part4.team05.sb01otbooteam05.domain.directMessage.mapper.DirectMessageMapper;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.repository.DirectMessageRepository;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.service.impl.DirectMessageServiceImpl;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
+import com.part4.team05.sb01otbooteam05.domain.user.dto.UserSummary;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
 import com.part4.team05.sb01otbooteam05.exception.OtbooException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,12 +43,38 @@ class DirectMessageServiceImplTest {
     @Mock DirectMessageRepository directMessageRepository;
     @Mock UserRepository userRepository;
     @Mock NotificationService notificationService;
+    @Mock
+    DirectMessageMapper directMessageMapper;
+
     @InjectMocks
     DirectMessageServiceImpl service;
 
     UUID senderId   = UUID.randomUUID();
-    UUID receiverId = UUID.randomUUID();
     String content  = "Hello, world!";
+
+    @BeforeEach
+    void setUpMapper() {
+        // DirectMessage → DirectMessageDto 매핑을 가로채서, 엔티티 필드를 그대로 복사해 DTO로 리턴
+        given(directMessageMapper.toDto(any(DirectMessage.class)))
+                .willAnswer(invocation -> {
+                    DirectMessage m = invocation.getArgument(0);
+                    return new DirectMessageDto(
+                            m.getId(),
+                            m.getCreatedAt(),
+                            new UserSummary(
+                                    m.getSender().getId(),
+                                    m.getSender().getName(),
+                                    m.getSender().getProfileImageUrl()
+                            ),
+                            new UserSummary(
+                                    m.getReceiver().getId(),
+                                    m.getReceiver().getName(),
+                                    m.getReceiver().getProfileImageUrl()
+                            ),
+                            m.getContent()
+                    );
+                });
+    }
 
     @Nested
     class SendMessageTests {
@@ -185,13 +214,17 @@ class DirectMessageServiceImplTest {
             doReturn(LocalDateTime.of(2025,1,2,3,4)).when(m1).getCreatedAt();
 
             PageRequest pr = PageRequest.of(0, limit, Sort.by(Direction.DESC, "id"));
-            given(directMessageRepository.findMessages(senderId, receiverId, null, pr))
+
+            given(directMessageRepository.findByUserIdAndIdLessThan(senderId, null, pr))
                     .willReturn(List.of(m1));
-            given(directMessageRepository.countByUserPair(senderId, receiverId))
+            given(directMessageRepository.countByUserId(senderId))
                     .willReturn(7L);
 
             DirectMessageDtoCursorResponse resp = service.getMessages(
-                    senderId, receiverId, null, limit
+                    senderId,    // userId
+                    null,        // cursor
+                    null,        // idAfter
+                    limit
             );
 
             assertThat(resp.data()).hasSize(1);
@@ -215,13 +248,13 @@ class DirectMessageServiceImplTest {
             doReturn(LocalDateTime.now()).when(b).getCreatedAt();
 
             PageRequest pr = PageRequest.of(0, limit, Sort.by(Direction.DESC, "id"));
-            given(directMessageRepository.findMessages(senderId, receiverId, null, pr))
+            given(directMessageRepository.findByUserIdAndIdLessThan(senderId, null, pr))
                     .willReturn(List.of(a, b));
-            given(directMessageRepository.countByUserPair(senderId, receiverId))
+            given(directMessageRepository.countByUserId(senderId))
                     .willReturn(10L);
 
             DirectMessageDtoCursorResponse resp = service.getMessages(
-                    senderId, receiverId, null, limit
+                    senderId, null, null, limit
             );
 
             assertThat(resp.data()).hasSize(2);
@@ -235,7 +268,7 @@ class DirectMessageServiceImplTest {
         @Test
         void invalidLimit_zero() {
             assertThatThrownBy(() ->
-                    service.getMessages(senderId, receiverId, null, 0)
+                    service.getMessages(senderId, null, null, 0)
             )
                     .isInstanceOf(OtbooException.class)
                     .extracting("errorCode")
@@ -245,7 +278,7 @@ class DirectMessageServiceImplTest {
         @Test
         void invalidLimit_tooLarge() {
             assertThatThrownBy(() ->
-                    service.getMessages(senderId, receiverId, null, 101)
+                    service.getMessages(senderId, null, null, 101)
             )
                     .isInstanceOf(OtbooException.class)
                     .extracting("errorCode")
@@ -256,13 +289,13 @@ class DirectMessageServiceImplTest {
         void emptyListReturnsNoCursor() {
             int limit = 10;
             PageRequest pr = PageRequest.of(0, limit, Sort.by(Direction.DESC, "id"));
-            given(directMessageRepository.findMessages(senderId, receiverId, null, pr))
+            given(directMessageRepository.findByUserIdAndIdLessThan(senderId, null, pr))
                     .willReturn(List.of());
-            given(directMessageRepository.countByUserPair(senderId, receiverId))
+            given(directMessageRepository.countByUserId(senderId))
                     .willReturn(0L);
 
             DirectMessageDtoCursorResponse resp = service.getMessages(
-                    senderId, receiverId, null, limit
+                    senderId, null, null, limit
             );
 
             assertThat(resp.data()).isEmpty();

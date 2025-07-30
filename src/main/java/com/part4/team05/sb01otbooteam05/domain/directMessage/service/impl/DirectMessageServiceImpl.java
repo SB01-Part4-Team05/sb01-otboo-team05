@@ -4,11 +4,11 @@ import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageCr
 import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageDto;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.entity.DirectMessage;
+import com.part4.team05.sb01otbooteam05.domain.directMessage.mapper.DirectMessageMapper;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.repository.DirectMessageRepository;
 import com.part4.team05.sb01otbooteam05.domain.directMessage.service.DirectMessageService;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
-import com.part4.team05.sb01otbooteam05.domain.user.dto.UserSummary;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
@@ -32,6 +32,7 @@ public class DirectMessageServiceImpl implements DirectMessageService {
     private final DirectMessageRepository directMessageRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final DirectMessageMapper directMessageMapper;
 
     @Override
     @Transactional
@@ -61,14 +62,14 @@ public class DirectMessageServiceImpl implements DirectMessageService {
         }
 
 
-        return toDto(saved);
+        return directMessageMapper.toDto(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
     public DirectMessageDtoCursorResponse getMessages(
-            UUID currentUserId,
-            UUID opponentId,
+            UUID userId,
+            String cursor,
             UUID idAfter,
             int limit
     ) {
@@ -77,20 +78,34 @@ public class DirectMessageServiceImpl implements DirectMessageService {
             throw new OtbooException(ErrorCode.INVALID_PAGINATION_LIMIT);
         }
 
-        // 항상 id DESC 정렬
+        // cursor 우선, 없으면 idAfter 사용
+        UUID effectiveIdAfter = null;
+        if(cursor != null && !cursor.isBlank()) {
+            try {
+                effectiveIdAfter = UUID.fromString(cursor);
+            } catch (IllegalArgumentException ex) {
+                throw new OtbooException(ErrorCode.INVALID_PAGINATION_LIMIT);
+            }
+        } else {
+            effectiveIdAfter = idAfter;
+        }
+
+        // 페이징 정렬
         PageRequest page = PageRequest.of(0, limit, Sort.by(Direction.DESC, "id"));
 
-        List<DirectMessage> messages =
-                directMessageRepository.findMessages(currentUserId, opponentId, idAfter, page);
+        List<DirectMessage> messages = directMessageRepository.findByUserIdAndIdLessThan(
+                userId, effectiveIdAfter, page
+        );
 
         List<DirectMessageDto> dtoList = messages.stream()
-                .map(this::toDto)
+                .map(directMessageMapper::toDto)
                 .toList();
 
-        UUID nextId = dtoList.isEmpty() ? null : dtoList.get(dtoList.size() - 1).id();
+        UUID nextId = dtoList.isEmpty() ? null
+                : dtoList.get(dtoList.size() - 1).id();
         String nextCursor = nextId != null ? nextId.toString() : null;
 
-        long total = directMessageRepository.countByUserPair(currentUserId, opponentId);
+        long total = directMessageRepository.countByUserId(userId);
         boolean hasNext = dtoList.size() == limit;
 
         return new DirectMessageDtoCursorResponse(
@@ -101,24 +116,6 @@ public class DirectMessageServiceImpl implements DirectMessageService {
                 total,
                 "id",
                 "DESC"
-        );
-    }
-
-    private DirectMessageDto toDto(DirectMessage m) {
-        return new DirectMessageDto(
-                m.getId(),
-                m.getCreatedAt(),
-                toUserSummary(m.getSender()),
-                toUserSummary(m.getReceiver()),
-                m.getContent()
-        );
-    }
-
-    private UserSummary toUserSummary(User user) {
-        return new UserSummary(
-                user.getId(),
-                user.getName(),
-                user.getProfileImageUrl()
         );
     }
 }
