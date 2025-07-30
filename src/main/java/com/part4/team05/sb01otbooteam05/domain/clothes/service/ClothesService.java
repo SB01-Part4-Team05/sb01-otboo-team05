@@ -3,6 +3,7 @@ package com.part4.team05.sb01otbooteam05.domain.clothes.service;
 
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
@@ -12,6 +13,7 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.exception.ClothesNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -20,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -106,6 +110,15 @@ public class ClothesService {
   public ClothesDto update(UUID clothesId, ClothesUpdateRequest request, MultipartFile image) {
     Clothes clothes = clothesRepository.findById(clothesId)
         .orElseThrow(NoSuchElementException::new);
+
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
+      UUID userId = userDetails.getUserId();
+      if (!clothes.getOwnerId().equals(userId)) {
+        throw new RuntimeException("옷 소유자만 수정할 수 있습니다.");
+      }
+    }
+
 
     if (request.selectableValues() != null) {
       for (AttributeValue attributeValue : clothes.getAttributeValues()) {
