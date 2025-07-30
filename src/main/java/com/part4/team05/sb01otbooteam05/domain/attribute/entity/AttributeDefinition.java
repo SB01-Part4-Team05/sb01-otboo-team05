@@ -25,7 +25,7 @@ public class AttributeDefinition {
   @Id @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
-  @Column
+  @Column(columnDefinition="varchar(255)")
   private String name;
 
   @ElementCollection
