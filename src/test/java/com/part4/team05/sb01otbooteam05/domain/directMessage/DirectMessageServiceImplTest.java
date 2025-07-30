@@ -50,7 +50,6 @@ class DirectMessageServiceImplTest {
     DirectMessageServiceImpl service;
 
     UUID senderId   = UUID.randomUUID();
-    UUID receiverId = UUID.randomUUID();
     String content  = "Hello, world!";
 
     @BeforeEach
