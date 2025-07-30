@@ -1,6 +1,5 @@
 package com.part4.team05.sb01otbooteam05.domain.recommend.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.StyleType;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.ThicknessType;
@@ -9,7 +8,7 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
-import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationiDto;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
 import jakarta.annotation.PostConstruct;
@@ -19,7 +18,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
@@ -32,12 +30,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.ResourceAccessException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RecommendService {
   private final ClothesService clothesService;
   private final ClothesMapper clothesMapper;
@@ -47,58 +46,77 @@ public class RecommendService {
   private final Map<ThicknessType,Integer> criteria = new HashMap<>();
   private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
 
-  public RecommendationiDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
-    Map<StyleType, Map<ClothesType, List<Clothes>>> map = getMap(ownerId);
+  public RecommendationDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
+    Map<StyleType, Map<ClothesType, List<Clothes>>> styleMap = getMap(ownerId);
 
-    if (map.isEmpty()) {
-      log.info("사용자의 옷장이 비어있습니다. 빈 추천을 반환합니다.", ownerId);
-      return new RecommendationiDto(weatherId, ownerId, Collections.emptyList());
+    if (styleMap.isEmpty()) {
+      log.info("사용자의 옷장이 비어있습니다. 빈 추천을 반환합니다. ownerId={}", ownerId);
+      return new RecommendationDto(weatherId, ownerId, Collections.emptyList());
     }
 
-    List<List<Clothes>> result = new ArrayList<>();
     int weatherValue = getWeatherValue(weatherId);
+    List<List<Clothes>> allSettings = new ArrayList<>();
 
-    for (StyleType styleType : map.keySet()) {
-      Map<ClothesType, List<Clothes>> innerMap = map.get(styleType);
-      Map<Clothes, List<Integer>> scoreMap;
+    for (StyleType style : styleMap.keySet()) {
+      Map<ClothesType, List<Clothes>> inner = styleMap.get(style);
 
-      List<Clothes> tops = new ArrayList<>(innerMap.getOrDefault(ClothesType.TOP, Collections.emptyList()));
-      List<Clothes> bottoms = new ArrayList<>(innerMap.getOrDefault(ClothesType.BOTTOM, Collections.emptyList()));
-      List<Clothes> acc = new ArrayList<>(innerMap.getOrDefault(ClothesType.ACC, Collections.emptyList()));
-      acc.addAll(innerMap.getOrDefault(ClothesType.CAP, Collections.emptyList()));
-      acc.addAll(innerMap.getOrDefault(ClothesType.BAG, Collections.emptyList()));
-      acc.addAll(innerMap.getOrDefault(ClothesType.SCARF, Collections.emptyList()));
-      acc.addAll(innerMap.getOrDefault(ClothesType.SHOES, Collections.emptyList()));
-      acc.addAll(innerMap.getOrDefault(ClothesType.SOCKS, Collections.emptyList()));
-      List<Clothes> outers = new ArrayList<>(innerMap.getOrDefault(ClothesType.OUTER, Collections.emptyList()));
+      List<Clothes> tops = new ArrayList<>(inner.getOrDefault(ClothesType.TOP, Collections.emptyList()));
+      List<Clothes> bottoms = new ArrayList<>(inner.getOrDefault(ClothesType.BOTTOM, Collections.emptyList()));
+      List<Clothes> dresses = new ArrayList<>(inner.getOrDefault(ClothesType.DRESS, Collections.emptyList()));
+      List<Clothes> outers = new ArrayList<>(inner.getOrDefault(ClothesType.OUTER, Collections.emptyList()));
 
-      scoreMap = getScore(tops, bottoms, weatherValue);
-      List<List<Clothes>> settings = getSetting(scoreMap, bottoms, outers);
+      List<Clothes> acc = new ArrayList<>();
+      acc.addAll(inner.getOrDefault(ClothesType.CAP, Collections.emptyList()));
+      acc.addAll(inner.getOrDefault(ClothesType.BAG, Collections.emptyList()));
+      acc.addAll(inner.getOrDefault(ClothesType.SCARF, Collections.emptyList()));
+      acc.addAll(inner.getOrDefault(ClothesType.SHOES, Collections.emptyList()));
+      acc.addAll(inner.getOrDefault(ClothesType.SOCKS, Collections.emptyList()));
+      acc.addAll(inner.getOrDefault(ClothesType.ACC, Collections.emptyList()));
 
-      settings.addAll(getDressScore(innerMap.getOrDefault(ClothesType.DRESS, Collections.emptyList()), outers, weatherValue));
+      List<List<Clothes>> baseSettings = getBaseSettings(tops, bottoms, weatherValue);
+      List<List<Clothes>> dressSettings = getDressSettings(dresses, weatherValue);
+      List<List<Clothes>> allBase = new ArrayList<>();
+      allBase.addAll(baseSettings);
+      allBase.addAll(dressSettings);
 
-      int time = 0;
-      while (time < 3 && !settings.isEmpty() && !acc.isEmpty()) {
-        int indexList = random.nextInt(settings.size());
-        int indAcc = random.nextInt(acc.size());
+      List<List<Clothes>> extendedSettings = new ArrayList<>();
 
-        List<Clothes> setting = new ArrayList<>(settings.get(indexList));
-        setting.add(acc.get(indAcc));
-        result.add(setting);
-        time++;
+      for (List<Clothes> setting : allBase) {
+        int warmth = setting.stream().mapToInt(this::getWeight).sum();
+        List<Clothes> suitableOuters = findSuitableOuters(outers, warmth, weatherValue);
+
+        if (suitableOuters.isEmpty()) {
+          extendedSettings.add(setting);
+        } else {
+          for (Clothes outer : suitableOuters) {
+            List<Clothes> extended = new ArrayList<>(setting);
+            extended.add(outer);
+            extendedSettings.add(extended);
+          }
+        }
       }
 
-      result.addAll(settings);
+      List<List<Clothes>> finalWithAcc = new ArrayList<>();
+      int count = 0;
+      while (count < 3 && !extendedSettings.isEmpty()) {
+        List<Clothes> base = extendedSettings.get(random.nextInt(extendedSettings.size()));
+        List<Clothes> full = new ArrayList<>(base);
+        if (!acc.isEmpty()) {
+          full.add(acc.get(random.nextInt(acc.size())));
+        }
+        finalWithAcc.add(full);
+        count++;
+      }
+
+      allSettings.addAll(finalWithAcc);
     }
 
-    List<List<ClothesDto>> finalResult = result.stream()
+    List<List<ClothesDto>> dtoResult = allSettings.stream()
         .map(clothes -> {
           List<ClothesDto> dtoList = clothesMapper.toDtoList(clothes);
           if (dtoList == null) return Collections.<ClothesDto>emptyList();
           dtoList.forEach(dto -> {
-            if (dto.getAttributes() == null) {
-              dto.setAttributes(new ArrayList<>());
-            }
+            if (dto.getAttributes() == null) dto.setAttributes(new ArrayList<>());
           });
           return dtoList;
         })
@@ -107,42 +125,39 @@ public class RecommendService {
 
     try {
       String url = "http://54.180.115.86:5000/rank";
-
       RestTemplate restTemplate = new RestTemplate();
       ObjectMapper objectMapper = new ObjectMapper();
 
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
-      HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(finalResult), headers);
+      HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(dtoResult), headers);
 
       ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
 
       if (response.getStatusCode() == HttpStatus.OK) {
-        String responseBody = response.getBody();
-        if (responseBody != null && !responseBody.isBlank()) {
-          List<List<ClothesDto>> aiResult = objectMapper.readValue(responseBody,
+        String body = response.getBody();
+        if (body != null && !body.isBlank()) {
+          List<List<ClothesDto>> aiList = objectMapper.readValue(body,
               objectMapper.getTypeFactory().constructCollectionType(List.class,
                   objectMapper.getTypeFactory().constructCollectionType(List.class, ClothesDto.class)));
 
-          if (aiResult != null) {
-            List<List<ClothesDto>> aiList = aiResult.stream()
-                .map(list -> list != null ? list : Collections.<ClothesDto>emptyList())
-                .toList();
-            return new RecommendationiDto(weatherId,ownerId,aiList);
+          if (aiList != null && !aiList.isEmpty()) {
+            // AI 추천 리스트 중 첫 번째 조합만 담아 반환
+            List<ClothesDto> firstSet = aiList.get(0);
+            return new RecommendationDto(weatherId, ownerId, firstSet);
           }
         }
       }
     } catch (Exception e) {
-      if (e instanceof JsonProcessingException) {
-        log.warn("AI 서비스 응답 파싱 실패: {}", e.getMessage());
-      } else if (e instanceof ResourceAccessException) {
-        log.warn("AI 서비스 연결 실패: {}", e.getMessage());
-      } else {
-        log.error("AI 서비스 호출 중 예상치 못한 오류 발생", e);
-      }
+      log.warn("AI 서버 호출 실패: {}", e.getMessage());
     }
 
-    return new RecommendationiDto(weatherId,ownerId,finalResult);
+    // AI 서버 실패 시 기본 추천 리스트 중 첫 번째 조합만 담아 반환
+    if (!dtoResult.isEmpty()) {
+      return new RecommendationDto(weatherId, ownerId, dtoResult.get(0));
+    } else {
+      return new RecommendationDto(weatherId, ownerId, Collections.emptyList());
+    }
   }
 
   private Map<StyleType, Map<ClothesType, List<Clothes>>> getMap(UUID ownerId) {
@@ -167,6 +182,42 @@ public class RecommendService {
         ));
   }
 
+  private List<List<Clothes>> getBaseSettings(List<Clothes> tops, List<Clothes> bottoms, int weatherValue) {
+    List<List<Clothes>> result = new ArrayList<>();
+    for (Clothes top : tops) {
+      int topScore = getWeight(top);
+      for (Clothes bottom : bottoms) {
+        int bottomScore = getWeight(bottom);
+        int warmth = topScore + bottomScore;
+        if (Math.abs(warmth - weatherValue) <= 5) {
+          result.add(List.of(top, bottom));
+        }
+      }
+    }
+    return result;
+  }
+
+  private List<List<Clothes>> getDressSettings(List<Clothes> dresses, int weatherValue) {
+    List<List<Clothes>> list = new ArrayList<>();
+    for (Clothes dress : dresses) {
+      int warmth = getWeight(dress);
+      if (Math.abs(warmth - weatherValue) <= 5) {
+        list.add(List.of(dress));
+      }
+    }
+    return list;
+  }
+
+  private List<Clothes> findSuitableOuters(List<Clothes> outers, int currentWarmth, int weatherValue) {
+    return outers.stream()
+        .filter(outer -> {
+          int outerScore = getWeight(outer);
+          int total = currentWarmth + outerScore;
+          return Math.abs(total - weatherValue) <= 5;
+        })
+        .collect(Collectors.toList());
+  }
+
   private int getWeight(Clothes clothes) {
     return clothes.getAttributeValues().stream()
         .filter(attributeValue -> attributeValue.getDefinition() != null &&
@@ -186,82 +237,13 @@ public class RecommendService {
 
   private int getWeatherValue(UUID weatherId) {
     Weather weather = weatherService.getWeatherEntityByIdOrThrow(weatherId);
-    double mid = (weather.getTemperatureMax() + weather.getTemperatureMin()) / 2;
+    double mid = (weather.getTemperatureMax() + weather.getTemperatureMin()) / 2.0;
 
     return weatherCriteria.entrySet().stream()
         .filter(entry -> mid < entry.getKey() + 5 && mid >= entry.getKey())
         .map(Map.Entry::getValue)
         .findFirst()
         .orElse(0);
-  }
-
-  private List<List<Clothes>> getDressScore(List<Clothes> dresses, List<Clothes> outers, int weatherValue) {
-    List<List<Clothes>> list = new ArrayList<>();
-
-    for (Clothes dress : dresses) {
-      int totalScore = Math.abs(getWeight(dress) - weatherValue);
-
-      if (totalScore <= 5) {
-        list.add(List.of(dress));
-      } else {
-        List<Clothes> canWear = withOuter(totalScore, outers);
-        for (Clothes outer : canWear) {
-          list.add(List.of(dress, outer));
-        }
-      }
-    }
-
-    return list;
-  }
-
-  private List<List<Clothes>> getSetting(Map<Clothes, List<Integer>> map, List<Clothes> bottoms, List<Clothes> outers) {
-    List<List<Clothes>> result = new ArrayList<>();
-
-    for (Clothes top : map.keySet()) {
-      List<Integer> scores = map.get(top);
-      for (int i = 0; i < scores.size(); i++) {
-        int score = scores.get(i);
-        if (i >= bottoms.size()) continue;
-        Clothes bottom = bottoms.get(i);
-
-        if (score >= 0 && score <= 5) {
-          result.add(List.of(top, bottom));
-        } else {
-          List<Clothes> outersFit = withOuter(score, outers);
-          for (Clothes outer : outersFit) {
-            result.add(List.of(top, bottom, outer));
-          }
-        }
-      }
-    }
-
-    return result;
-  }
-
-  private List<Clothes> withOuter(int totalScore, List<Clothes> outers) {
-    return outers.stream()
-        .filter(outer -> {
-          int outerScore = getWeight(outer);
-          int combined = totalScore + outerScore;
-          return combined >= 0 && combined <= 5;
-        })
-        .collect(Collectors.toList());
-  }
-
-  private Map<Clothes, List<Integer>> getScore(List<Clothes> tops, List<Clothes> bottoms, int weatherValue) {
-    Map<Clothes, List<Integer>> map = new HashMap<>();
-
-    for (Clothes top : tops) {
-      int topScore = getWeight(top);
-      List<Integer> scores = new ArrayList<>();
-      for (Clothes bottom : bottoms) {
-        int bottomScore = getWeight(bottom);
-        scores.add(-Math.abs(topScore - bottomScore - weatherValue) - (topScore - bottomScore));
-      }
-      map.put(top, scores);
-    }
-
-    return map;
   }
 
   @PostConstruct
@@ -288,11 +270,11 @@ public class RecommendService {
 
   /*
   추천 기준
-     날씨에서 가져올 것
-     온도 최고 / 최저
-     온도 미디언 값 -> 가중치 확인
-     온도 가중치는 5도 단위로 끊고 -15 ~ 35 까지
-     -15 / -10 / -7 / -5 / 2 / 5 / 7 / 10 / 12 / 15
-     옷 가중치 + 온도 가중치가 0 ~ 5 사이가 되도록 하는 것이 추천의 목표
-   */
+  날씨에서 가져올 것
+  온도 최고 / 최저
+  온도 미디언 값 -> 가중치 확인
+  온도 가중치는 5도 단위로 끊고 -15 ~ 35 까지
+  -15 / -10 / -7 / -5 / 2 / 5 / 7 / 10 / 12 / 15
+  옷 가중치 + 온도 가중치가 0 ~ 5 사이가 되도록 하는 것이 추천의 목표
+  */
 }
