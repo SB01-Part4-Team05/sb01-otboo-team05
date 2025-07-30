@@ -154,6 +154,21 @@ public class BasicFeedService implements FeedService {
         if (!isLikeExistent) {
             feedLikeRepository.save(new FeedLike(feed, author));
             currentLikeCount++; // 좋아요 수 1 증가
+
+            // 내 피드에 좋아요 등록 알림
+            try {
+                UUID receiverId = feed.getAuthor().getId();
+                if (!receiverId.equals(userId)) {
+                    notificationService.createAndSendNotification(
+                            receiverId,
+                            "좋아요 알림",
+                            author.getName() + "님이 내 피드에 좋아요를 눌렀습니다.",
+                            NotificationLevel.INFO
+                    );
+                }
+            } catch (Exception e) {
+                log.warn("좋아요 알림 전송 실패: userId={}, feedId={}", userId, feedId, e);
+            }
         }
 
         // 5. 피드 Dto 반환
