@@ -37,4 +37,8 @@ public class AttributeValue {
   public void setValue(String value) {
     this.value = value;
   }
+
+  public void setClothes(Clothes clothes) {
+    this.clothes = clothes;
+  }
 }

@@ -40,17 +40,24 @@ public class Clothes {
   @Column @Enumerated(EnumType.STRING)
   ClothesType type;
 
-  @OneToMany(mappedBy = "clothes", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @OneToMany(
+      mappedBy = "clothes",
+      cascade = CascadeType.ALL,
+      fetch = FetchType.EAGER
+  )
   private List<AttributeValue> attributeValues;
-
 
   @Column(name = "owner_id")
   UUID ownerId;
 
-  public void setAttributeValues(
-      List<AttributeValue> attributeValues) {
-    this.attributeValues = attributeValues;
+  public void setAttributeValues(List<AttributeValue> newValues) {
+    this.attributeValues.clear();
+    for (AttributeValue av : newValues) {
+      av.setClothes(this);
+      this.attributeValues.add(av);
+    }
   }
+
 
   public void setName(String name) {
     this.name = name;
