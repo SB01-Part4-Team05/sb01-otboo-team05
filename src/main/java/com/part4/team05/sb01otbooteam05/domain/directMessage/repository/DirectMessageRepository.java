@@ -12,8 +12,8 @@ import java.util.UUID;
 public interface DirectMessageRepository extends JpaRepository<DirectMessage, UUID> {
 
     @Query("""
-        SELECT m 
-        FROM DirectMessage m 
+        SELECT m
+        FROM DirectMessage m
         WHERE (m.sender.id = :userId OR m.receiver.id = :userId)
           AND (:idAfter IS NULL OR m.id < :idAfter)
         ORDER BY m.id DESC
@@ -25,8 +25,8 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, UU
     );
 
     @Query("""
-        SELECT COUNT(m) 
-        FROM DirectMessage m 
+        SELECT COUNT(m)
+        FROM DirectMessage m
         WHERE m.sender.id = :userId OR m.receiver.id = :userId
     """)
     long countByUserId(@Param("userId") UUID userId);
