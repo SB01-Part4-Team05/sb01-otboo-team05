@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -39,7 +40,11 @@ public class Clothes {
   @Column @Enumerated(EnumType.STRING)
   ClothesType type;
 
-  @OneToMany(mappedBy = "clothes", cascade = CascadeType.ALL)
+  @OneToMany(
+      mappedBy = "clothes",
+      cascade = CascadeType.ALL,
+      fetch = FetchType.EAGER
+  )
   private List<AttributeValue> attributeValues;
 
   @Column(name = "owner_id")
