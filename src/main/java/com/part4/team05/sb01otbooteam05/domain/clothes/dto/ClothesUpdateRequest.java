@@ -16,6 +16,6 @@ import lombok.Setter;
 public class ClothesUpdateRequest {
   String name;
   String type;
-  List<AttributeDto> selectableValues;
+  List<AttributeDto> attributes;
 
 }
