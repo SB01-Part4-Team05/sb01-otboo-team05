@@ -11,8 +11,9 @@
     "containerDefinitions": [
         {
             "name": "ootd-app",
-            "image": "065301656004.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ootd:sha-a76ff60",
+            "image": "",
             "cpu": 0,
+            "memory": 0,
             "portMappings": [
                 {
                     "containerPort": 8080,
@@ -39,5 +40,6 @@
             },
             "systemControls": []
         }
-    ]
+    ],
+    "volumes": []
 }
