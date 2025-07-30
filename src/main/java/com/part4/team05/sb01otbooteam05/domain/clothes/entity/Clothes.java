@@ -46,6 +46,7 @@ public class Clothes {
       cascade = CascadeType.ALL,
       fetch = FetchType.EAGER
   )
+  @Builder.Default
   private List<AttributeValue> attributeValues = new ArrayList<>();
 
   @Column(name = "owner_id")
