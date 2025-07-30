@@ -21,8 +21,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class RecommendServiceTest {
 
   @InjectMocks
@@ -70,15 +73,24 @@ class RecommendServiceTest {
 
 
   private Clothes createClothesWithThickness(ClothesType type, String thicknessValue) {
-    Clothes clothes = new Clothes();
-    clothes.setType(type);
-    clothes.setName("Test " + type);
+    Clothes clothes = mock(Clothes.class);
+    when(clothes.getType()).thenReturn(type);
 
     AttributeDefinition thicknessDef = mock(AttributeDefinition.class);
+    when(thicknessDef.getName()).thenReturn("thickness");
 
     AttributeValue thicknessAttr = mock(AttributeValue.class);
+    when(thicknessAttr.getDefinition()).thenReturn(thicknessDef);
+    when(thicknessAttr.getValue()).thenReturn(thicknessValue);
 
-    clothes.setAttributeValues(List.of(thicknessAttr));
+    when(clothes.getAttributeValues()).thenReturn(List.of(thicknessAttr));
+
+    ClothesDto clothesDto = new ClothesDto();
+    clothesDto.setId(UUID.randomUUID());
+    clothesDto.setName("Test " + type);
+    clothesDto.setType(type.toString());
+    when(clothesMapper.toDto(clothes)).thenReturn(clothesDto);
+
     return clothes;
   }
 

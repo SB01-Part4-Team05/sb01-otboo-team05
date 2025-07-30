@@ -89,6 +89,7 @@ public class RecommendService {
     finalResult.addAll(others);
 
     List<RecommendClothesDto> convertedResult = finalResult.stream()
+        .filter(Objects::nonNull)
         .map(RecommendClothesDto::from)
         .toList();
 

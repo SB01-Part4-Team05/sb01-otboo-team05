@@ -59,9 +59,9 @@ class ClothesServiceTest {
             eq(cursor),
             eq(ClothesType.TOP),
             any(Pageable.class)
-        )).willReturn(List.of(mock(Clothes.class)));
+        )).willReturn(Collections.singletonList(mock(Clothes.class)));
 
-        given(clothesMapper.toDtoList(any(List.class))).willReturn(List.of(mock(ClothesDto.class)));
+        given(clothesMapper.toDtoList(any(List.class))).willReturn(Collections.singletonList(mock(ClothesDto.class)));
 
         // 수정된 메서드 시그니처 사용
         ClothesCursorResponse response = clothesService.get(ownerId, cursor, 10, typeEqual);
@@ -80,9 +80,9 @@ class ClothesServiceTest {
             eq(cursor),
             isNull(), // type이 null
             any(Pageable.class)
-        )).willReturn(List.of(mock(Clothes.class)));
+        )).willReturn(Collections.singletonList(mock(Clothes.class)));
 
-        given(clothesMapper.toDtoList(any(List.class))).willReturn(List.of(mock(ClothesDto.class)));
+        given(clothesMapper.toDtoList(any(List.class))).willReturn(Collections.singletonList(mock(ClothesDto.class)));
 
         ClothesCursorResponse response = clothesService.get(ownerId, cursor, 10, null);
 
@@ -92,7 +92,7 @@ class ClothesServiceTest {
     @Test
     void getClothesEntityByIdOrThrow() {
         UUID clothesId = UUID.randomUUID();
-        Clothes clothe = Clothes.builder().id(clothesId)
+        Clothes clothe = Clothes.builder()
             .name("Clothes1").build();
 
         given(clothesRepository.findById(clothesId)).willReturn(Optional.ofNullable(clothe));
@@ -116,7 +116,6 @@ class ClothesServiceTest {
         ClothesCreateRequest request = new ClothesCreateRequest(ownerId, "clothes1",
             "TOP", Collections.emptyList());
         Clothes clothes = Clothes.builder()
-            .id(clothesId)
             .ownerId(ownerId)
             .name(request.name())
             .type(ClothesType.valueOf(request.type())).build();
@@ -161,7 +160,6 @@ class ClothesServiceTest {
             "clothes2", "BOTTOM", Collections.emptyList());
 
         Clothes clothes = Clothes.builder()
-            .id(clothesId)
             .name("clothes1")
             .type(ClothesType.valueOf("TOP"))
             .attributeValues(Collections.emptyList())
@@ -169,8 +167,8 @@ class ClothesServiceTest {
 
         ClothesDto dto = new ClothesDto();
         dto.setId(clothesId);
-        dto.setType(request.getType());
-        dto.setName(request.getName());
+        dto.setType("BOTTOM");
+        dto.setName("clothes2");
 
         given(clothesRepository.findById(clothesId)).willReturn(Optional.ofNullable(clothes));
         given(clothesMapper.toDto(clothes)).willReturn(dto);
@@ -186,7 +184,7 @@ class ClothesServiceTest {
         UUID ownerID = UUID.randomUUID();
 
         given(clothesRepository.findByOwnerIdWithAttributes(ownerID))
-            .willReturn(List.of(mock(Clothes.class)));
+            .willReturn(Collections.singletonList(mock(Clothes.class)));
 
         List<Clothes> clothes = clothesService.findAllByOwnerId(ownerID);
 
