@@ -88,7 +88,13 @@ public class RecommendService {
     List<List<ClothesDto>> finalResult = result.stream()
         .map(clothes -> {
           List<ClothesDto> dtoList = clothesMapper.toDtoList(clothes);
-          return dtoList != null ? dtoList : Collections.<ClothesDto>emptyList();
+          if (dtoList == null) return Collections.<ClothesDto>emptyList();
+          dtoList.forEach(dto -> {
+            if (dto.getAttributes() == null) {
+              dto.setAttributes(new ArrayList<>());
+            }
+          });
+          return dtoList;
         })
         .filter(list -> !list.isEmpty())
         .collect(Collectors.toList());
@@ -122,7 +128,7 @@ public class RecommendService {
       }
     } catch (Exception e) {
       if (e instanceof JsonProcessingException) {
-                log.warn("AI 서비스 응답 파싱 실패: {}", e.getMessage());
+        log.warn("AI 서비스 응답 파싱 실패: {}", e.getMessage());
       } else if (e instanceof ResourceAccessException) {
         log.warn("AI 서비스 연결 실패: {}", e.getMessage());
       } else {
@@ -180,7 +186,7 @@ public class RecommendService {
         .filter(entry -> mid < entry.getKey() + 5 && mid >= entry.getKey())
         .map(Map.Entry::getValue)
         .findFirst()
-        .orElseThrow(() -> new NoSuchElementException("No weather weight found for temperature: " + mid));
+        .orElse(0);
   }
 
   private List<List<Clothes>> getDressScore(List<Clothes> dresses, List<Clothes> outers, int weatherValue) {
