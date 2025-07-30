@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.user.controller;
 
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.ChangePasswordRequest;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.ProfileDto;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.ProfileUpdateRequest;
@@ -14,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -61,12 +64,20 @@ public class UserController implements UserControllerDoc {
   }
 
   @PatchMapping("/{userId}/password")
-  @PreAuthorize("isAuthenticated() and #userId == authentication.principal.id")
+  @PreAuthorize("isAuthenticated()")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void changePassword(
       @PathVariable UUID userId,
       @RequestBody @Valid ChangePasswordRequest request
   ) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+    UUID currentUserId = userDetails.getUserId();
+
+    if (!currentUserId.equals(userId)) {
+      throw new SecurityException("자신의 비밀번호만 변경할 수 있습니다.");
+    }
+
     userService.changePassword(userId, request.password());
   }
 }
