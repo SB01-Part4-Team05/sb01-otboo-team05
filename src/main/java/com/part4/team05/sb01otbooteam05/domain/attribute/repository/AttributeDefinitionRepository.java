@@ -22,4 +22,18 @@ public interface AttributeDefinitionRepository extends JpaRepository<AttributeDe
 """)
   List<AttributeDefinition> findByCursor(UUID cursor, Pageable pageable);
 
+  @Query("""
+        SELECT a FROM AttributeDefinition a
+        WHERE (:cursor IS NULL OR a.id < :cursor)
+          AND (:idAfter IS NULL OR a.id > :idAfter)
+          AND (:keywordLike IS NULL OR LOWER(a.name) LIKE LOWER(CONCAT('%', :keywordLike, '%')))
+        ORDER BY a.id DESC
+    """)
+  List<AttributeDefinition> findByConditions(
+      @Param("cursor") UUID cursor,
+      @Param("idAfter") UUID idAfter,
+      @Param("keywordLike") String keywordLike,
+      Pageable pageable
+  );
+
 }

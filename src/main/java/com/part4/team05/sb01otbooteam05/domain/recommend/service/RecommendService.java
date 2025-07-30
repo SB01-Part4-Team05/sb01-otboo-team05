@@ -9,6 +9,7 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationiDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
 import jakarta.annotation.PostConstruct;
@@ -24,14 +25,17 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecommendService {
@@ -40,10 +44,10 @@ public class RecommendService {
   private final WeatherService weatherService;
 
   private final Random random = new Random();
-  private final Map<ThicknessType,Integer> criteria = new HashMap<>(); // 옷 두께 가중치
+  private final Map<ThicknessType,Integer> criteria = new HashMap<>();
   private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
 
-  public List<List<ClothesDto>> getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
+  public RecommendationiDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
     Map<StyleType, Map<ClothesType, List<Clothes>>> map = getMap(ownerId);
     List<List<Clothes>> result = new ArrayList<>();
     int weatherValue = getWeatherValue(weatherId);
@@ -82,11 +86,15 @@ public class RecommendService {
     }
 
     List<List<ClothesDto>> finalResult = result.stream()
-        .map(clothesMapper::toDtoList)
+        .map(clothes -> {
+          List<ClothesDto> dtoList = clothesMapper.toDtoList(clothes);
+          return dtoList != null ? dtoList : Collections.<ClothesDto>emptyList();
+        })
+        .filter(list -> !list.isEmpty())
         .collect(Collectors.toList());
 
     try {
-      String url = "http://localhost:8000/rank";
+      String url = "http://recommend-flask:5000/rank";
 
       RestTemplate restTemplate = new RestTemplate();
       ObjectMapper objectMapper = new ObjectMapper();
@@ -98,16 +106,31 @@ public class RecommendService {
       ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
 
       if (response.getStatusCode() == HttpStatus.OK) {
-        return objectMapper.readValue(response.getBody(),
-            objectMapper.getTypeFactory().constructCollectionType(List.class,
-                objectMapper.getTypeFactory().constructCollectionType(List.class, ClothesDto.class)));
+        String responseBody = response.getBody();
+        if (responseBody != null && !responseBody.isBlank()) {
+          List<List<ClothesDto>> aiResult = objectMapper.readValue(responseBody,
+              objectMapper.getTypeFactory().constructCollectionType(List.class,
+                  objectMapper.getTypeFactory().constructCollectionType(List.class, ClothesDto.class)));
+
+          if (aiResult != null) {
+            List<List<ClothesDto>> aiList = aiResult.stream()
+                .map(list -> list != null ? list : Collections.<ClothesDto>emptyList())
+                .toList();
+            return new RecommendationiDto(weatherId,ownerId,aiList);
+          }
+        }
       }
     } catch (Exception e) {
-      // 필요 시 로그 추가
-      e.printStackTrace();
+      if (e instanceof JsonProcessingException) {
+                log.warn("AI 서비스 응답 파싱 실패: {}", e.getMessage());
+      } else if (e instanceof ResourceAccessException) {
+        log.warn("AI 서비스 연결 실패: {}", e.getMessage());
+      } else {
+        log.error("AI 서비스 호출 중 예상치 못한 오류 발생", e);
+      }
     }
 
-    return finalResult;
+    return new RecommendationiDto(weatherId,ownerId,finalResult);
   }
 
   private Map<StyleType, Map<ClothesType, List<Clothes>>> getMap(UUID ownerId) {

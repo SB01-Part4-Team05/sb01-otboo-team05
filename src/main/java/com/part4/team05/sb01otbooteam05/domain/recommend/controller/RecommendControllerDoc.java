@@ -1,6 +1,7 @@
 package com.part4.team05.sb01otbooteam05.domain.recommend.controller;
 
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationiDto;
 import com.part4.team05.sb01otbooteam05.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -35,7 +36,7 @@ public interface RecommendControllerDoc {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class))
       )
   })
-  ResponseEntity<List<List<ClothesDto>>> getRecommendSet(
+  ResponseEntity<RecommendationiDto> getRecommendSet(
       @Parameter(description = "weatherId") @RequestParam UUID weatherId
   );
 }
