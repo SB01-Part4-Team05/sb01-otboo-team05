@@ -44,7 +44,7 @@ public class RecommendService {
   private final WeatherService weatherService;
 
   private final Random random = new Random();
-  private final Map<ThicknessType,Integer> criteria = new HashMap<>();
+  private final Map<String,Integer> criteria = new HashMap<>();
   private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
 
   public RecommendationDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
@@ -138,22 +138,31 @@ public class RecommendService {
       ResponseEntity<ClothesDto[][]> response =
           restTemplate.postForEntity(url, request, ClothesDto[][].class);
 
-      if (response.getBody() != null && response.getBody().length > 0) {
-        return List.of(response.getBody()[0]); // AI가 정한 첫 번째 조합만 반환
+      if (response.getBody() != null) {
+        for (ClothesDto[] arr : response.getBody()) {
+          if (arr.length > 0) {
+            log.info("AI 서버 추천 응답: {}", mapper.writeValueAsString(arr));
+            return List.of(arr);
+          }
+        }
       }
     } catch (Exception e) {
       log.warn("AI 서버 호출 실패: {}", e.getMessage());
     }
 
-    return combos.isEmpty() ? List.of() : combos.get(0); // 실패 시 첫 번째 후보 반환
+    return combos.stream()
+        .filter(list -> !list.isEmpty())
+        .findFirst()
+        .orElse(List.of());
   }
+
 
   @PostConstruct
   public void makeCriteria() {
-    criteria.put(ThicknessType.THICK, 15);
-    criteria.put(ThicknessType.SLIMTHICK, 10);
-    criteria.put(ThicknessType.SLIMTHIN, -10);
-    criteria.put(ThicknessType.THIN, -15);
+    criteria.put(ThicknessType.THICK.toString(), 15);
+    criteria.put(ThicknessType.SLIMTHICK.toString(), 10);
+    criteria.put(ThicknessType.SLIMTHIN.toString(), -10);
+    criteria.put(ThicknessType.THIN.toString(), -15);
   }
 
   @PostConstruct
