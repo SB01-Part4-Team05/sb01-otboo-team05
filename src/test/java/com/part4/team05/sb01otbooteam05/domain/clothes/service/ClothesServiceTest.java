@@ -185,7 +185,7 @@ class ClothesServiceTest {
     void findAllByOwnerId() {
         UUID ownerID = UUID.randomUUID();
 
-        given(clothesRepository.findByOwnerId(ownerID))
+        given(clothesRepository.findByOwnerIdWithAttributes(ownerID))
             .willReturn(List.of(mock(Clothes.class)));
 
         List<Clothes> clothes = clothesService.findAllByOwnerId(ownerID);
