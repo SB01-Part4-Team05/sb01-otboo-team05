@@ -52,12 +52,14 @@ public class FollowController implements FollowControllerDoc {
     public ResponseEntity<FollowListResponse> getFollowings(
             @RequestParam @NotNull UUID followerId,
             @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) UUID idAfter,
             @RequestParam @Min(1) int limit,
             @RequestParam(required = false) String nameLike
     ) {
-        log.info("팔로잉 목록 조회 요청: followerId={}, idAfter={}, limit={}, nameLike={}", followerId, idAfter, limit, nameLike);
-        FollowListResponse response = followService.getFollowings(followerId, cursor, idAfter, limit, nameLike);
+        UUID idAfter = parseCursor(cursor);
+        log.info("팔로잉 목록 조회 요청: followerId={}, cursor={}, idAfter={}, limit={}, nameLike={}",
+                followerId, cursor, idAfter, limit, nameLike);
+        FollowListResponse response =
+                followService.getFollowings(followerId, idAfter, limit, nameLike);
         return ResponseEntity.ok(response);
     }
 
@@ -65,12 +67,14 @@ public class FollowController implements FollowControllerDoc {
     public ResponseEntity<FollowListResponse> getFollowers(
             @RequestParam @NotNull UUID followeeId,
             @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) UUID idAfter,
             @RequestParam @Min(1) int limit,
             @RequestParam(required = false) String nameLike
     ) {
-        log.info("팔로워 목록 조회 요청: followeeId={}, idAfter={}, limit={}, nameLike={}", followeeId, idAfter, limit, nameLike);
-        FollowListResponse response = followService.getFollowers(followeeId, cursor, idAfter, limit, nameLike);
+        UUID idAfter = parseCursor(cursor);
+        log.info("팔로워 목록 조회 요청: followeeId={}, cursor={}, idAfter={}, limit={}, nameLike={}",
+                followeeId, cursor, idAfter, limit, nameLike);
+        FollowListResponse response =
+                followService.getFollowers(followeeId, idAfter, limit, nameLike);
         return ResponseEntity.ok(response);
     }
 
@@ -83,5 +87,15 @@ public class FollowController implements FollowControllerDoc {
 
         followService.unfollow(followId, currentUserId);
         return ResponseEntity.noContent().build();
+    }
+
+    /** cursor(String) 를 UUID idAfter 로 변환 */
+    private UUID parseCursor(String cursor) {
+        if (cursor == null || cursor.isBlank()) return null;
+        try {
+            return UUID.fromString(cursor);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("유효하지 않은 cursor: " + cursor);
+        }
     }
 }

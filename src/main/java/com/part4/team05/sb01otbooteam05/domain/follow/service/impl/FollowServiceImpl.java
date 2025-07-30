@@ -116,11 +116,10 @@ public class FollowServiceImpl implements FollowService {
 
     // 팔로잉 목록 조회
     @Override
-    public FollowListResponse getFollowings(UUID followerId, String cursor, UUID idAfter, int limit, String nameLike) {
+    public FollowListResponse getFollowings(UUID followerId, UUID idAfter, int limit, String nameLike) {
         return getFollowList(
                 followerId,
                 "팔로잉",
-                cursor,
                 idAfter,
                 limit,
                 nameLike,
@@ -130,11 +129,10 @@ public class FollowServiceImpl implements FollowService {
 
     // 팔로워 목록 조회
     @Override
-    public FollowListResponse getFollowers(UUID followeeId, String cursor, UUID idAfter, int limit, String nameLike) {
+    public FollowListResponse getFollowers(UUID followeeId, UUID idAfter, int limit, String nameLike) {
         return getFollowList(
                 followeeId,
                 "팔로워",
-                cursor,
                 idAfter,
                 limit,
                 nameLike,
@@ -145,7 +143,6 @@ public class FollowServiceImpl implements FollowService {
     private FollowListResponse getFollowList(
             UUID userId,
             String userType,
-            String cursor,
             UUID idAfter,
             int limit,
             String nameLike,

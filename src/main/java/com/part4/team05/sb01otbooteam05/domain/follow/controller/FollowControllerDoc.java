@@ -64,7 +64,6 @@ public interface FollowControllerDoc {
     ResponseEntity<FollowListResponse> getFollowings(
             @Parameter(description = "followerId") @RequestParam @NotNull UUID followerId,
             @Parameter(description = "cursor") @RequestParam(required = false) String cursor,
-            @Parameter(description = "idAfter") @RequestParam(required = false) UUID idAfter,
             @Parameter(description = "limit") @RequestParam @Min(1) int limit,
             @Parameter(description = "nameLike") @RequestParam(required = false) String nameLike
     );
@@ -79,7 +78,6 @@ public interface FollowControllerDoc {
     ResponseEntity<FollowListResponse> getFollowers(
             @Parameter(description = "followeeId") @RequestParam @NotNull UUID followeeId,
             @Parameter(description = "cursor") @RequestParam(required = false) String cursor,
-            @Parameter(description = "idAfter") @RequestParam(required = false) UUID idAfter,
             @Parameter(description = "limit") @RequestParam @Min(1) int limit,
             @Parameter(description = "nameLike") @RequestParam(required = false) String nameLike
     );
