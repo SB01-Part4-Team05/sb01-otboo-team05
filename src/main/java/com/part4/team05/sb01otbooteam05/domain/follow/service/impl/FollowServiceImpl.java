@@ -5,7 +5,6 @@ import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowDto;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowListResponse;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowSummaryDto;
 import com.part4.team05.sb01otbooteam05.domain.follow.entity.Follow;
-import com.part4.team05.sb01otbooteam05.domain.follow.exception.FollowException;
 import com.part4.team05.sb01otbooteam05.domain.follow.mapper.FollowMapper;
 import com.part4.team05.sb01otbooteam05.domain.follow.repository.FollowRepository;
 import com.part4.team05.sb01otbooteam05.domain.follow.service.FollowService;
@@ -51,38 +50,31 @@ public class FollowServiceImpl implements FollowService {
         log.info("팔로우 생성 요청: follower={}, followee={}", followerId, followeeId);
 
         // user 존재 여부 확인
-        if(!userRepository.existsById(followerId)) {
-            log.warn("팔로워 ID가 존재하지 않음: {}", followerId);
-            throw new FollowException(ErrorCode.USER_NOT_FOUND);
-        }
-
-        if(!userRepository.existsById(followeeId)) {
-            log.warn("팔로이 ID가 존재하지 않음: {}", followeeId);
-            throw new FollowException(ErrorCode.USER_NOT_FOUND);
+        if (!userRepository.existsById(followerId) || !userRepository.existsById(followeeId)) {
+            log.warn("유저가 존재하지 않음: follower={} or followee={}", followerId, followeeId);
+            throw new OtbooException(ErrorCode.USER_NOT_FOUND);
         }
 
         // 자기 자신 팔로우 금지
-        if(followerId.equals(followeeId)) {
+        if (followerId.equals(followeeId)) {
             log.warn("자기 자신을 팔로우할 수 없음: {}", followerId);
-            throw new FollowException(FOLLOW_SELF_NOT_ALLOWED);
+            throw new OtbooException(ErrorCode.FOLLOW_SELF_NOT_ALLOWED);
         }
 
         // 중복 팔로우 방지
-        boolean exists = followRepository.existsByFollowerAndFollowee(followerId, followeeId);
-        if(exists) {
+        if (followRepository.existsByFollowerAndFollowee(followerId, followeeId)) {
             log.warn("이미 팔로우된 관계: follower={}, followee={}", followerId, followeeId);
-            throw new FollowException(ALREADY_FOLLOWED);
+            throw new OtbooException(ErrorCode.ALREADY_FOLLOWED);
         }
 
         // 저장
         Follow follow = followMapper.toEntity(request);
         Follow saved = followRepository.save(follow);
-
         log.info("팔로우 저장 완료: followId={}, follower={}, followee={}", saved.getId(), followerId, followeeId);
 
+        // 알림 전송을 위해 유저 정보 조회
         Map<UUID, User> userMap = userRepository.findAllById(List.of(followerId, followeeId)).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
-
         User follower = userMap.get(followerId);
 
         // 알림 전송
@@ -124,11 +116,10 @@ public class FollowServiceImpl implements FollowService {
 
     // 팔로잉 목록 조회
     @Override
-    public FollowListResponse getFollowings(UUID followerId, String cursor, UUID idAfter, int limit, String nameLike) {
+    public FollowListResponse getFollowings(UUID followerId, UUID idAfter, int limit, String nameLike) {
         return getFollowList(
                 followerId,
                 "팔로잉",
-                cursor,
                 idAfter,
                 limit,
                 nameLike,
@@ -138,11 +129,10 @@ public class FollowServiceImpl implements FollowService {
 
     // 팔로워 목록 조회
     @Override
-    public FollowListResponse getFollowers(UUID followeeId, String cursor, UUID idAfter, int limit, String nameLike) {
+    public FollowListResponse getFollowers(UUID followeeId, UUID idAfter, int limit, String nameLike) {
         return getFollowList(
                 followeeId,
                 "팔로워",
-                cursor,
                 idAfter,
                 limit,
                 nameLike,
@@ -153,7 +143,6 @@ public class FollowServiceImpl implements FollowService {
     private FollowListResponse getFollowList(
             UUID userId,
             String userType,
-            String cursor,
             UUID idAfter,
             int limit,
             String nameLike,

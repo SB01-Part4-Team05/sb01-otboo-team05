@@ -5,7 +5,6 @@ import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowDto;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowListResponse;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowSummaryDto;
 import com.part4.team05.sb01otbooteam05.domain.follow.entity.Follow;
-import com.part4.team05.sb01otbooteam05.domain.follow.exception.FollowException;
 import com.part4.team05.sb01otbooteam05.domain.follow.mapper.FollowMapper;
 import com.part4.team05.sb01otbooteam05.domain.follow.repository.FollowRepository;
 import com.part4.team05.sb01otbooteam05.domain.follow.service.impl.FollowServiceImpl;
@@ -109,7 +108,7 @@ class FollowServiceImplTest {
         void selfFollowNotAllowed() {
             given(userRepository.existsById(followerId)).willReturn(true);
             assertThatThrownBy(() -> service.createFollow(new FollowCreateRequest(followerId, followerId)))
-                    .isInstanceOf(FollowException.class)
+                    .isInstanceOf(OtbooException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.FOLLOW_SELF_NOT_ALLOWED);
         }
 
@@ -121,7 +120,7 @@ class FollowServiceImplTest {
                     .willReturn(true);
 
             assertThatThrownBy(() -> service.createFollow(new FollowCreateRequest(followeeId, followerId)))
-                    .isInstanceOf(FollowException.class)
+                    .isInstanceOf(OtbooException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.ALREADY_FOLLOWED);
         }
     }
@@ -170,7 +169,7 @@ class FollowServiceImplTest {
             given(userRepository.findAllById(List.of(followerId, followeeId)))
                     .willReturn(List.of(u1, u2));
 
-            FollowListResponse resp = service.getFollowings(followerId, /*cursor*/null, /*idAfter*/null, 5, /*nameLike*/null);
+            FollowListResponse resp = service.getFollowings(followerId, /*idAfter*/ null, 5, /*nameLike*/ null);
 
             assertThat(resp.data()).hasSize(1);
             assertThat(resp.hasNext()).isFalse();
@@ -180,7 +179,7 @@ class FollowServiceImplTest {
         @Test @DisplayName("실패: 사용자 없음")
         void getFollowings_userNotFound() {
             given(userRepository.existsById(followerId)).willReturn(false);
-            assertThatThrownBy(() -> service.getFollowings(followerId, null, null, 5, null))
+            assertThatThrownBy(() -> service.getFollowings(followerId, /*idAfter*/ null, 5, /*nameLike*/ null))
                     .isInstanceOf(OtbooException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.USER_NOT_FOUND);
         }
@@ -201,7 +200,7 @@ class FollowServiceImplTest {
             given(userRepository.findAllById(List.of(followerId, followeeId)))
                     .willReturn(List.of(u1, u2));
 
-            FollowListResponse resp = service.getFollowers(followeeId, null, null, 3, /*nameLike*/null);
+            FollowListResponse resp = service.getFollowers(followeeId, /*idAfter*/ null, 3, /*nameLike*/ null);
 
             assertThat(resp.data()).hasSize(1);
             assertThat(resp.hasNext()).isFalse();
@@ -210,7 +209,7 @@ class FollowServiceImplTest {
         @Test @DisplayName("실패: 팔로워 사용자 없음")
         void getFollowers_userNotFound() {
             given(userRepository.existsById(followeeId)).willReturn(false);
-            assertThatThrownBy(() -> service.getFollowers(followeeId, null, null, 3, null))
+            assertThatThrownBy(() -> service.getFollowers(followeeId, /*idAfter*/ null, 3, /*nameLike*/ null))
                     .isInstanceOf(OtbooException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.USER_NOT_FOUND);
         }
@@ -265,7 +264,7 @@ class FollowServiceImplTest {
             assertThatThrownBy(() ->
                     service.createFollow(new FollowCreateRequest(followeeId, followerId))
             )
-                    .isInstanceOf(FollowException.class)
+                    .isInstanceOf(OtbooException.class)
                     .extracting("errorCode")
                     .isEqualTo(ErrorCode.USER_NOT_FOUND);
         }
@@ -277,7 +276,7 @@ class FollowServiceImplTest {
             assertThatThrownBy(() ->
                     service.createFollow(new FollowCreateRequest(followeeId, followerId))
             )
-                    .isInstanceOf(FollowException.class)
+                    .isInstanceOf(OtbooException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.USER_NOT_FOUND);
         }
 
@@ -365,7 +364,7 @@ class FollowServiceImplTest {
             given(userRepository.findAllById(List.of(followerId, followeeId)))
                     .willReturn(List.of(u1, u2));
 
-            FollowListResponse resp = service.getFollowings(followerId, null, null, 1, null);
+            FollowListResponse resp = service.getFollowings(followerId, /*idAfter*/ null, 1, /*nameLike*/ null);
 
             assertThat(resp.hasNext()).isTrue();
             assertThat(resp.nextCursor()).isEqualTo(f1.getId().toString());
@@ -391,7 +390,7 @@ class FollowServiceImplTest {
             given(userRepository.findAllById(List.of(followerId, followeeId)))
                     .willReturn(List.of(u1, u2));
 
-            FollowListResponse resp = service.getFollowers(followeeId, null, null, 1, null);
+            FollowListResponse resp = service.getFollowers(followeeId, /*idAfter*/ null, 1, /*nameLike*/ null);
 
             assertThat(resp.hasNext()).isTrue();
             assertThat(resp.nextCursor()).isEqualTo(f1.getId().toString());
