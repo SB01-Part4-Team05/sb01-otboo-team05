@@ -50,12 +50,14 @@ public class Clothes {
   @Column(name = "owner_id")
   UUID ownerId;
 
-  public void setAttributeValues(List<AttributeValue> attributeValues) {
-    this.attributeValues = attributeValues;
-    for (AttributeValue av : attributeValues) {
+  public void setAttributeValues(List<AttributeValue> newValues) {
+    this.attributeValues.clear();
+    for (AttributeValue av : newValues) {
       av.setClothes(this);
+      this.attributeValues.add(av);
     }
   }
+
 
   public void setName(String name) {
     this.name = name;
