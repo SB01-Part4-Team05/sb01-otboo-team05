@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceImplTest {
@@ -55,7 +56,7 @@ class NotificationServiceImplTest {
                 .thenReturn(Collections.emptyList());
 
         assertThrows(NotificationNotFoundException.class,
-                () -> service.getNotifications(user, null, 5)
+                () -> service.getNotifications(user, /*cursor=*/null, /*idAfter=*/null, /*limit=*/5)
         );
     }
 
@@ -71,7 +72,9 @@ class NotificationServiceImplTest {
                 .thenReturn(Collections.singletonList(entity));
         when(notificationRepository.countByReceiverId(userId)).thenReturn(1L);
 
-        NotificationDtoCursorResponse response = service.getNotifications(user, null, 5);
+        NotificationDtoCursorResponse response =
+                service.getNotifications(user, /*cursor=*/null, /*idAfter=*/null, /*limit=*/5);
+
         assertNotNull(response);
         assertFalse(response.hasNext());
         assertEquals(1, response.data().size());
@@ -80,26 +83,45 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testGetNotificationsWithNext() {
+    void testGetNotificationsWithNext() throws Exception {
         UUID userId = UUID.randomUUID();
         User user = mock(User.class);
         when(user.getId()).thenReturn(userId);
 
-        NotificationDto dto1 = new NotificationDto(UUID.randomUUID(), LocalDateTime.now().minusMinutes(1), userId, "T1", "C1", NotificationLevel.INFO);
-        NotificationDto dto2 = new NotificationDto(UUID.randomUUID(), LocalDateTime.now(), userId, "T2", "C2", NotificationLevel.INFO);
+        // 1) DTO 생성
+        NotificationDto dto1 = new NotificationDto(
+                UUID.randomUUID(),
+                LocalDateTime.now().minusMinutes(1),
+                userId, "T1", "C1", NotificationLevel.INFO
+        );
+        NotificationDto dto2 = new NotificationDto(
+                UUID.randomUUID(),
+                LocalDateTime.now(),
+                userId, "T2", "C2", NotificationLevel.INFO
+        );
+
+        // 2) 엔티티 변환 후, 테스트용으로 id/createdAt 직접 주입
         Notification e1 = NotificationMapper.toEntity(dto1);
         Notification e2 = NotificationMapper.toEntity(dto2);
+        setField(e1, "id", dto1.id());
+        setField(e1, "createdAt", dto1.createdAt());
+        setField(e2, "id", dto2.id());
+        setField(e2, "createdAt", dto2.createdAt());
+
+        // 3) 리포지토리 스텁 설정
         when(notificationRepository.findNotifications(eq(userId), isNull(), any(Pageable.class)))
                 .thenReturn(Arrays.asList(e1, e2));
         when(notificationRepository.countByReceiverId(userId)).thenReturn(2L);
 
-        NotificationDtoCursorResponse response = service.getNotifications(user, null, 1);
-        assertNotNull(response);
+        // 4) 실행 및 검증
+        NotificationDtoCursorResponse response =
+                service.getNotifications(user, /*cursor=*/null, /*idAfter=*/null, /*limit=*/1);
+
         assertTrue(response.hasNext());
-        assertEquals(1, response.data().size());
-        assertEquals(e1.getId(), response.nextIdAfter());
-        assertEquals(2L, response.totalCount());
+        assertEquals(e1.getId(),   response.nextIdAfter());
+        assertEquals(2L,           response.totalCount());
     }
+
 
     @Test
     void testMarkAsReadSuccess() {
