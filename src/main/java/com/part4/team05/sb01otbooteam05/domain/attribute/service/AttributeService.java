@@ -96,11 +96,20 @@ public class AttributeService {
       String keywordLike
   ) {
     String sortField = (sortedBy != null && !sortedBy.isBlank()) ? sortedBy : "id";
+
     Sort.Direction direction;
-    try {
-      direction = Sort.Direction.fromString(sortDirection);
-    } catch (IllegalArgumentException e) {
+    if (sortDirection == null) {
       direction = Sort.Direction.DESC;
+    } else {
+      String dir = sortDirection.toUpperCase();
+      if (dir.equals("ASCENDING")) dir = "ASC";
+      else if (dir.equals("DESCENDING")) dir = "DESC";
+
+      try {
+        direction = Sort.Direction.fromString(dir);
+      } catch (IllegalArgumentException e) {
+        direction = Sort.Direction.DESC;
+      }
     }
 
     PageRequest pageable = PageRequest.of(0, limit, Sort.by(direction, sortField));
@@ -121,7 +130,6 @@ public class AttributeService {
 
     return response;
   }
-
   public AttributeDefinition findByDefName(String name){
     return definitionRepository.findByName(name).orElseThrow(()
         -> new NoSuchDefException("해당하는 선택 항목이 없습니다."));
