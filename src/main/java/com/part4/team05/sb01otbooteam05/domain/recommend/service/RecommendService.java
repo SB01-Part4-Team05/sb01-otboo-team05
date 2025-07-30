@@ -48,59 +48,83 @@ public class RecommendService {
   private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
 
   public RecommendationDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
-    int weatherValue = getWeatherValue(weatherId);
-    List<Clothes> allClothes = clothesService.findAllByOwnerId(ownerId);
+    log.info("추천 요청 - ownerId: {}, weatherId: {}", ownerId, weatherId);
 
+    int weatherValue = getWeatherValue(weatherId);
+    log.info("계산된 weatherValue: {}", weatherValue);
+
+    List<Clothes> allClothes = clothesService.findAllByOwnerId(ownerId);
+    log.info("조회된 전체 의류 개수: {}", allClothes.size());
+
+    // 각 카테고리별로 적합한 옷 단품 리스트 추출 (최대 5개씩)
     List<Clothes> tops = filterAndSort(allClothes, ClothesType.TOP, weatherValue);
     List<Clothes> bottoms = filterAndSort(allClothes, ClothesType.BOTTOM, weatherValue);
     List<Clothes> dresses = filterAndSort(allClothes, ClothesType.DRESS, weatherValue);
     List<Clothes> outers = filterAndSort(allClothes, ClothesType.OUTER, weatherValue);
     List<Clothes> accessories = filterAndSort(allClothes, ClothesType.ACC, weatherValue);
 
-    List<List<Clothes>> outfitCombos = new ArrayList<>();
-    outfitCombos.addAll(getBaseSettings(tops, bottoms, weatherValue)); // top + bottom
-    outfitCombos.addAll(getDressSettings(dresses, weatherValue)); // dress only
+    log.info("추천된 옷 개수 - tops: {}, bottoms: {}, dresses: {}, outers: {}, accessories: {}",
+        tops.size(), bottoms.size(), dresses.size(), outers.size(), accessories.size());
 
-    // 아우터 추가
-    List<List<Clothes>> withOuters = new ArrayList<>();
-    for (List<Clothes> combo : outfitCombos) {
-      int currentWarmth = combo.stream().mapToInt(this::getWeight).sum();
-      List<Clothes> suitableOuters = findSuitableOuters(outers, currentWarmth, weatherValue);
-      if (!suitableOuters.isEmpty()) {
-        for (Clothes outer : suitableOuters) {
-          List<Clothes> newCombo = new ArrayList<>(combo);
-          newCombo.add(outer);
-          withOuters.add(newCombo);
-        }
-      } else {
-        withOuters.add(combo);
-      }
-    }
-    List<List<Clothes>> finalCombos = new ArrayList<>();
-    for (List<Clothes> combo : withOuters) {
-      List<Clothes> newCombo = new ArrayList<>(combo);
-      accessories.stream().limit(1).forEach(newCombo::add);
-      finalCombos.add(newCombo);
-    }
+    // AI 서버는 단품 리스트별로 배열 형태로 받도록 요청 (세트 조합 X)
+    List<List<ClothesDto>> dtoLists = new ArrayList<>();
+    dtoLists.add(tops.stream().map(clothesMapper::toDto).toList());
+    dtoLists.add(bottoms.stream().map(clothesMapper::toDto).toList());
+    dtoLists.add(dresses.stream().map(clothesMapper::toDto).toList());
+    dtoLists.add(outers.stream().map(clothesMapper::toDto).toList());
+    dtoLists.add(accessories.stream().map(clothesMapper::toDto).toList());
 
-    // Clothes → ClothesDto
-    List<List<ClothesDto>> dtoCombos = finalCombos.stream()
-        .map(list -> list.stream().map(clothesMapper::toDto).toList())
-        .toList();
-
-    // AI 서버 호출
-    List<ClothesDto> recommended = callAIServer(dtoCombos);
+    List<ClothesDto> recommended = callAIServer(dtoLists);
 
     return new RecommendationDto(weatherId, ownerId, recommended);
   }
 
   private List<Clothes> filterAndSort(List<Clothes> clothesList, ClothesType type, int weatherValue) {
-    return clothesList.stream()
+    List<Clothes> filtered = clothesList.stream()
         .filter(c -> c.getType() == type)
         .sorted(Comparator.comparingInt(c -> Math.abs(getWeight(c) - weatherValue)))
-        .limit(5) // 필요에 따라 조정
+        .limit(5)
         .toList();
+
+    log.debug("filterAndSort - type: {}, 결과 개수: {}", type, filtered.size());
+    return filtered;
   }
+
+  private int getWeight(Clothes clothes) {
+    int weight = clothes.getAttributeValues().stream()
+        .filter(attributeValue -> attributeValue.getDefinition() != null &&
+            "thickness".equals(attributeValue.getDefinition().getName()))
+        .map(attributeValue -> {
+          try {
+            return ThicknessType.valueOf(attributeValue.getValue());
+          } catch (IllegalArgumentException | NullPointerException e) {
+            log.debug("getWeight - ThicknessType 변환 실패: {}", attributeValue.getValue());
+            return null;
+          }
+        })
+        .filter(Objects::nonNull)
+        .map(thickness -> criteria.getOrDefault(thickness, 0))
+        .findFirst()
+        .orElse(0);
+    log.debug("getWeight - clothesId: {}, weight: {}", clothes.getId(), weight);
+    return weight;
+  }
+
+  private int getWeatherValue(UUID weatherId) {
+    Weather weather = weatherService.getWeatherEntityByIdOrThrow(weatherId);
+    double mid = (weather.getTemperatureMax() + weather.getTemperatureMin()) / 2.0;
+    log.info("getWeatherValue - weatherId: {}, temperatureMid: {}", weatherId, mid);
+
+    int value = weatherCriteria.entrySet().stream()
+        .filter(entry -> mid < entry.getKey() + 5 && mid >= entry.getKey())
+        .map(Map.Entry::getValue)
+        .findFirst()
+        .orElse(0);
+
+    log.info("getWeatherValue - mapped weatherValue: {}", value);
+    return value;
+  }
+
 
   private List<ClothesDto> callAIServer(List<List<ClothesDto>> combos) {
     try {
@@ -125,71 +149,6 @@ public class RecommendService {
     }
 
     return combos.isEmpty() ? List.of() : combos.get(0); // 실패 시 첫 번째 후보 반환
-  }
-
-
-  private List<List<Clothes>> getBaseSettings(List<Clothes> tops, List<Clothes> bottoms, int weatherValue) {
-    List<List<Clothes>> result = new ArrayList<>();
-    for (Clothes top : tops) {
-      int topScore = getWeight(top);
-      for (Clothes bottom : bottoms) {
-        int bottomScore = getWeight(bottom);
-        int warmth = topScore + bottomScore;
-        if (Math.abs(warmth - weatherValue) <= 5) {
-          result.add(List.of(top, bottom));
-        }
-      }
-    }
-    return result;
-  }
-
-  private List<List<Clothes>> getDressSettings(List<Clothes> dresses, int weatherValue) {
-    List<List<Clothes>> list = new ArrayList<>();
-    for (Clothes dress : dresses) {
-      int warmth = getWeight(dress);
-      if (Math.abs(warmth - weatherValue) <= 5) {
-        list.add(List.of(dress));
-      }
-    }
-    return list;
-  }
-
-  private List<Clothes> findSuitableOuters(List<Clothes> outers, int currentWarmth, int weatherValue) {
-    return outers.stream()
-        .filter(outer -> {
-          int outerScore = getWeight(outer);
-          int total = currentWarmth + outerScore;
-          return Math.abs(total - weatherValue) <= 5;
-        })
-        .collect(Collectors.toList());
-  }
-
-  private int getWeight(Clothes clothes) {
-    return clothes.getAttributeValues().stream()
-        .filter(attributeValue -> attributeValue.getDefinition() != null &&
-            "thickness".equals(attributeValue.getDefinition().getName()))
-        .map(attributeValue -> {
-          try {
-            return ThicknessType.valueOf(attributeValue.getValue());
-          } catch (IllegalArgumentException | NullPointerException e) {
-            return null;
-          }
-        })
-        .filter(Objects::nonNull)
-        .map(thickness -> criteria.getOrDefault(thickness, 0))
-        .findFirst()
-        .orElse(0);
-  }
-
-  private int getWeatherValue(UUID weatherId) {
-    Weather weather = weatherService.getWeatherEntityByIdOrThrow(weatherId);
-    double mid = (weather.getTemperatureMax() + weather.getTemperatureMin()) / 2.0;
-
-    return weatherCriteria.entrySet().stream()
-        .filter(entry -> mid < entry.getKey() + 5 && mid >= entry.getKey())
-        .map(Map.Entry::getValue)
-        .findFirst()
-        .orElse(0);
   }
 
   @PostConstruct
