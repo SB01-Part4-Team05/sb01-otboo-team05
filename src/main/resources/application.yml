@@ -31,6 +31,9 @@ spring:
       s3:
         bucket: team5-otboo
   security:
+    user:
+      name: ${ACTUATOR_USER}
+      password: ${ACTUATOR_PASSWORD}
     oauth2:
       client:
         registration:
@@ -62,6 +65,7 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+
 
   mail:
     host: smtp.gmail.com
