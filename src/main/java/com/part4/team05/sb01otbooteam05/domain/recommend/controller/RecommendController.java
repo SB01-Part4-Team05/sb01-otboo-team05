@@ -2,7 +2,7 @@ package com.part4.team05.sb01otbooteam05.domain.recommend.controller;
 
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
-import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationiDto;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationDto;
 import com.part4.team05.sb01otbooteam05.domain.recommend.service.RecommendService;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +27,7 @@ public class RecommendController implements RecommendControllerDoc{
   private final RecommendService recommendService;
 
   @GetMapping
-  public ResponseEntity<RecommendationiDto> getRecommendSet(@RequestParam UUID weatherId) {
+  public ResponseEntity<RecommendationDto> getRecommendSet(@RequestParam UUID weatherId) {
     UUID userId;
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
