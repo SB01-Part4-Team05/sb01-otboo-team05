@@ -80,6 +80,9 @@ public class BasicFeedService implements FeedService {
             throw new IllegalArgumentException();
         }
 
+        Feed savedFeed = feedRepository.save(newFeed);
+
+
         log.info("피드 생성 성공: feedId={}", newFeed.getId());
         return feedMapper.toFeedDto(newFeed, 0L, 0, false);
     }
