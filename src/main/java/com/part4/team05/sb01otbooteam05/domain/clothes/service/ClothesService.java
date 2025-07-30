@@ -3,6 +3,7 @@ package com.part4.team05.sb01otbooteam05.domain.clothes.service;
 
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeService;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
@@ -12,6 +13,7 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.exception.ClothesNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.repository.ClothesRepository;
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -20,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -103,35 +107,47 @@ public class ClothesService {
   }
 
   @Transactional
-  public ClothesDto update(UUID clothesId, ClothesUpdateRequest request, MultipartFile image){
-    Clothes clothes = clothesRepository.findById(clothesId).orElseThrow(NoSuchElementException::new);
+  public ClothesDto update(UUID clothesId, ClothesUpdateRequest request, MultipartFile image) {
+    Clothes clothes = clothesRepository.findById(clothesId)
+        .orElseThrow(NoSuchElementException::new);
 
-    if(request.name() != null) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
+      UUID userId = userDetails.getUserId();
+      if (!clothes.getOwnerId().equals(userId)) {
+        throw new RuntimeException("옷 소유자만 수정할 수 있습니다.");
+      }
+    }
+
+
+    if (request.selectableValues() != null) {
+      for (AttributeValue attributeValue : clothes.getAttributeValues()) {
+        request.selectableValues().stream()
+            .filter(dto -> dto.getDefinitionId().equals(attributeValue.getDefinition().getId()))
+            .findFirst()
+            .ifPresent(dto -> {
+              attributeValue.setValue(dto.getValue());
+            });
+      }
+    }
+
+    if (request.name() != null) {
       clothes.setName(request.name());
     }
-    if(request.type() != null){
+    if (request.type() != null) {
       clothes.setType(ClothesType.valueOf(request.type()));
     }
 
-    if(image != null && !image.isEmpty()){
-      String url = clothesS3Service.upload(clothesId,image);
+    if (image != null && !image.isEmpty()) {
+      String url = clothesS3Service.upload(clothesId, image);
       clothes.setImageUrl(url);
-    }
-
-    if(request.selectableValues() != null){
-      clothes.setAttributeValues(request.selectableValues().stream()
-          .map(attributeDto -> AttributeValue.builder()
-              .value(attributeDto.getValue())
-              .definition(attributeService.findByDefName(attributeDto.getDefinitionName()))
-              .clothes(clothes)
-              .build()).toList());
     }
 
     return clothesMapper.toDto(clothes);
   }
 
   public List<Clothes> findAllByOwnerId(UUID ownerId){
-    return clothesRepository.findByOwnerId(ownerId);
+    return clothesRepository.findByOwnerIdWithAttributes(ownerId);
   }
 
 }

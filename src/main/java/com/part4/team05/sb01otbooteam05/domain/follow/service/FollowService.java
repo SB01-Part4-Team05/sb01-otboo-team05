@@ -12,9 +12,9 @@ public interface FollowService {
 
     FollowSummaryDto getFollowSummary(UUID userId, UUID currentUserId);
 
-    FollowListResponse getFollowings(UUID followerId, String cursor, UUID idAfter, int limit, String nameLike);
+    FollowListResponse getFollowings(UUID followerId, UUID idAfter, int limit, String nameLike);
 
-    FollowListResponse getFollowers(UUID followerId, String cursor, UUID idAfter, int limit, String nameLike);
+    FollowListResponse getFollowers(UUID followerId, UUID idAfter, int limit, String nameLike);
 
     void unfollow(UUID followId, UUID currentUserId);
 }
