@@ -15,6 +15,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,140 +48,85 @@ public class RecommendService {
   private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
 
   public RecommendationDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
-    Map<StyleType, Map<ClothesType, List<Clothes>>> styleMap = getMap(ownerId);
-
-    if (styleMap.isEmpty()) {
-      log.info("사용자의 옷장이 비어있습니다. 빈 추천을 반환합니다. ownerId={}", ownerId);
-      return new RecommendationDto(weatherId, ownerId, Collections.emptyList());
-    }
-
     int weatherValue = getWeatherValue(weatherId);
-    List<List<Clothes>> allSettings = new ArrayList<>();
+    List<Clothes> allClothes = clothesService.findAllByOwnerId(ownerId);
 
-    for (StyleType style : styleMap.keySet()) {
-      Map<ClothesType, List<Clothes>> inner = styleMap.get(style);
+    List<Clothes> tops = filterAndSort(allClothes, ClothesType.TOP, weatherValue);
+    List<Clothes> bottoms = filterAndSort(allClothes, ClothesType.BOTTOM, weatherValue);
+    List<Clothes> dresses = filterAndSort(allClothes, ClothesType.DRESS, weatherValue);
+    List<Clothes> outers = filterAndSort(allClothes, ClothesType.OUTER, weatherValue);
+    List<Clothes> accessories = filterAndSort(allClothes, ClothesType.ACC, weatherValue);
 
-      List<Clothes> tops = new ArrayList<>(inner.getOrDefault(ClothesType.TOP, Collections.emptyList()));
-      List<Clothes> bottoms = new ArrayList<>(inner.getOrDefault(ClothesType.BOTTOM, Collections.emptyList()));
-      List<Clothes> dresses = new ArrayList<>(inner.getOrDefault(ClothesType.DRESS, Collections.emptyList()));
-      List<Clothes> outers = new ArrayList<>(inner.getOrDefault(ClothesType.OUTER, Collections.emptyList()));
+    List<List<Clothes>> outfitCombos = new ArrayList<>();
+    outfitCombos.addAll(getBaseSettings(tops, bottoms, weatherValue)); // top + bottom
+    outfitCombos.addAll(getDressSettings(dresses, weatherValue)); // dress only
 
-      List<Clothes> acc = new ArrayList<>();
-      acc.addAll(inner.getOrDefault(ClothesType.CAP, Collections.emptyList()));
-      acc.addAll(inner.getOrDefault(ClothesType.BAG, Collections.emptyList()));
-      acc.addAll(inner.getOrDefault(ClothesType.SCARF, Collections.emptyList()));
-      acc.addAll(inner.getOrDefault(ClothesType.SHOES, Collections.emptyList()));
-      acc.addAll(inner.getOrDefault(ClothesType.SOCKS, Collections.emptyList()));
-      acc.addAll(inner.getOrDefault(ClothesType.ACC, Collections.emptyList()));
-
-      List<List<Clothes>> baseSettings = getBaseSettings(tops, bottoms, weatherValue);
-      List<List<Clothes>> dressSettings = getDressSettings(dresses, weatherValue);
-      List<List<Clothes>> allBase = new ArrayList<>();
-      allBase.addAll(baseSettings);
-      allBase.addAll(dressSettings);
-
-      List<List<Clothes>> extendedSettings = new ArrayList<>();
-
-      for (List<Clothes> setting : allBase) {
-        int warmth = setting.stream().mapToInt(this::getWeight).sum();
-        List<Clothes> suitableOuters = findSuitableOuters(outers, warmth, weatherValue);
-
-        if (suitableOuters.isEmpty()) {
-          extendedSettings.add(setting);
-        } else {
-          for (Clothes outer : suitableOuters) {
-            List<Clothes> extended = new ArrayList<>(setting);
-            extended.add(outer);
-            extendedSettings.add(extended);
-          }
+    // 아우터 추가
+    List<List<Clothes>> withOuters = new ArrayList<>();
+    for (List<Clothes> combo : outfitCombos) {
+      int currentWarmth = combo.stream().mapToInt(this::getWeight).sum();
+      List<Clothes> suitableOuters = findSuitableOuters(outers, currentWarmth, weatherValue);
+      if (!suitableOuters.isEmpty()) {
+        for (Clothes outer : suitableOuters) {
+          List<Clothes> newCombo = new ArrayList<>(combo);
+          newCombo.add(outer);
+          withOuters.add(newCombo);
         }
+      } else {
+        withOuters.add(combo);
       }
-
-      List<List<Clothes>> finalWithAcc = new ArrayList<>();
-      int count = 0;
-      while (count < 3 && !extendedSettings.isEmpty()) {
-        List<Clothes> base = extendedSettings.get(random.nextInt(extendedSettings.size()));
-        List<Clothes> full = new ArrayList<>(base);
-        if (!acc.isEmpty()) {
-          full.add(acc.get(random.nextInt(acc.size())));
-        }
-        finalWithAcc.add(full);
-        count++;
-      }
-
-      allSettings.addAll(finalWithAcc);
+    }
+    List<List<Clothes>> finalCombos = new ArrayList<>();
+    for (List<Clothes> combo : withOuters) {
+      List<Clothes> newCombo = new ArrayList<>(combo);
+      accessories.stream().limit(1).forEach(newCombo::add);
+      finalCombos.add(newCombo);
     }
 
-    List<List<ClothesDto>> dtoResult = allSettings.stream()
-        .map(clothes -> {
-          List<ClothesDto> dtoList = clothesMapper.toDtoList(clothes);
-          if (dtoList == null) return Collections.<ClothesDto>emptyList();
-          dtoList.forEach(dto -> {
-            if (dto.getAttributes() == null) dto.setAttributes(new ArrayList<>());
-          });
-          return dtoList;
-        })
-        .filter(list -> !list.isEmpty())
-        .collect(Collectors.toList());
+    // Clothes → ClothesDto
+    List<List<ClothesDto>> dtoCombos = finalCombos.stream()
+        .map(list -> list.stream().map(clothesMapper::toDto).toList())
+        .toList();
 
+    // AI 서버 호출
+    List<ClothesDto> recommended = callAIServer(dtoCombos);
+
+    return new RecommendationDto(weatherId, ownerId, recommended);
+  }
+
+  private List<Clothes> filterAndSort(List<Clothes> clothesList, ClothesType type, int weatherValue) {
+    return clothesList.stream()
+        .filter(c -> c.getType() == type)
+        .sorted(Comparator.comparingInt(c -> Math.abs(getWeight(c) - weatherValue)))
+        .limit(5) // 필요에 따라 조정
+        .toList();
+  }
+
+  private List<ClothesDto> callAIServer(List<List<ClothesDto>> combos) {
     try {
       String url = "http://54.180.115.86:5000/rank";
-      RestTemplate restTemplate = new RestTemplate();
-      ObjectMapper objectMapper = new ObjectMapper();
+      ObjectMapper mapper = new ObjectMapper();
 
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
-      HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(dtoResult), headers);
 
-      ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+      String requestBody = mapper.writeValueAsString(combos);
+      HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
 
-      if (response.getStatusCode() == HttpStatus.OK) {
-        String body = response.getBody();
-        if (body != null && !body.isBlank()) {
-          List<List<ClothesDto>> aiList = objectMapper.readValue(body,
-              objectMapper.getTypeFactory().constructCollectionType(List.class,
-                  objectMapper.getTypeFactory().constructCollectionType(List.class, ClothesDto.class)));
+      RestTemplate restTemplate = new RestTemplate();
+      ResponseEntity<ClothesDto[][]> response =
+          restTemplate.postForEntity(url, request, ClothesDto[][].class);
 
-          if (aiList != null && !aiList.isEmpty()) {
-            // AI 추천 리스트 중 첫 번째 조합만 담아 반환
-            List<ClothesDto> firstSet = aiList.get(0);
-            return new RecommendationDto(weatherId, ownerId, firstSet);
-          }
-        }
+      if (response.getBody() != null && response.getBody().length > 0) {
+        return List.of(response.getBody()[0]); // AI가 정한 첫 번째 조합만 반환
       }
     } catch (Exception e) {
       log.warn("AI 서버 호출 실패: {}", e.getMessage());
     }
 
-    // AI 서버 실패 시 기본 추천 리스트 중 첫 번째 조합만 담아 반환
-    if (!dtoResult.isEmpty()) {
-      return new RecommendationDto(weatherId, ownerId, dtoResult.get(0));
-    } else {
-      return new RecommendationDto(weatherId, ownerId, Collections.emptyList());
-    }
+    return combos.isEmpty() ? List.of() : combos.get(0); // 실패 시 첫 번째 후보 반환
   }
 
-  private Map<StyleType, Map<ClothesType, List<Clothes>>> getMap(UUID ownerId) {
-    List<Clothes> allClothes = clothesService.findAllByOwnerId(ownerId);
-
-    return allClothes.stream()
-        .filter(clothes -> clothes.getAttributeValues().stream()
-            .anyMatch(av -> av.getDefinition() != null && "style".equals(av.getDefinition().getName())))
-        .collect(Collectors.groupingBy(
-            clothes -> clothes.getAttributeValues().stream()
-                .filter(av -> av.getDefinition() != null && "style".equals(av.getDefinition().getName()))
-                .map(av -> {
-                  try {
-                    return StyleType.valueOf(av.getValue());
-                  } catch (Exception e) {
-                    return StyleType.CASUAL;
-                  }
-                })
-                .findFirst()
-                .orElse(StyleType.CASUAL),
-            Collectors.groupingBy(Clothes::getType)
-        ));
-  }
 
   private List<List<Clothes>> getBaseSettings(List<Clothes> tops, List<Clothes> bottoms, int weatherValue) {
     List<List<Clothes>> result = new ArrayList<>();
@@ -267,14 +213,4 @@ public class RecommendService {
     weatherCriteria.put(25, 12);
     weatherCriteria.put(30, 15);
   }
-
-  /*
-  추천 기준
-  날씨에서 가져올 것
-  온도 최고 / 최저
-  온도 미디언 값 -> 가중치 확인
-  온도 가중치는 5도 단위로 끊고 -15 ~ 35 까지
-  -15 / -10 / -7 / -5 / 2 / 5 / 7 / 10 / 12 / 15
-  옷 가중치 + 온도 가중치가 0 ~ 5 사이가 되도록 하는 것이 추천의 목표
-  */
 }
