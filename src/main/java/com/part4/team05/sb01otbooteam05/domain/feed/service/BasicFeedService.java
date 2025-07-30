@@ -88,29 +88,8 @@ public class BasicFeedService implements FeedService {
 
         Feed savedFeed = feedRepository.save(newFeed);
 
-        log.info("피드 생성 성공: feedId={}", savedFeed.getId());
-
-        // 팔로우한 사용자가 피드를 등록하면 알림 전송
-        try {
-            List<UUID> followerIds = followService.getFollowers(userId, null, 1000, null)
-                    .data()
-                    .stream()
-                    .map(f -> f.follower().userId())
-                    .toList();
-
-            for (UUID followerId : followerIds) {
-                notificationService.createAndSendNotification(
-                        followerId,
-                        "새로운 피드",
-                        user.getName() + "님이 피드를 등록했습니다.",
-                        NotificationLevel.INFO
-                );
-            }
-        } catch (Exception e) {
-            log.warn("피드 등록 알림 전송 실패: userId={}", userId, e);
-        }
-
-        return feedMapper.toFeedDto(savedFeed, 0L, 0, false);
+        log.info("피드 생성 성공: feedId={}", newFeed.getId());
+        return feedMapper.toFeedDto(newFeed, 0L, 0, false);
     }
 
     // 피드 삭제

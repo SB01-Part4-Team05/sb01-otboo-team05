@@ -57,7 +57,7 @@ public interface FeedControllerDoc {
       @Parameter(description = "idAfter") @RequestParam(value = "idAfter", required = false) UUID idAfter,
       @Parameter(description = "limit") @RequestParam(value = "limit", defaultValue = "20", required = true) Integer limit,
       @Parameter(description = "sortBy") @RequestParam(value = "sortBy", required = false) SortType sortBy,
-      @Parameter(description = "sortDirection") @RequestParam(value = "sortDirection", defaultValue = "ASCENDING", required = true) Sort.Direction sortDirection,
+      @Parameter(description = "sortDirection") @RequestParam(value = "sortDirection", defaultValue = "DESCENDING", required = true) String sortDirection,
       @Parameter(description = "keywordLike") @RequestParam(value = "keywordLike", defaultValue = "", required = false) String keywordLike,
       @Parameter(description = "skyStatusEqual") @RequestParam(value = "skyStatusEqual", required = false) SkyStatusType skyStatusEqual,
       @Parameter(description = "precipitationTypeEqual") @RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,

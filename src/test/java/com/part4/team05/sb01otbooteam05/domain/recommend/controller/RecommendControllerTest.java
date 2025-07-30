@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationDto;
 import com.part4.team05.sb01otbooteam05.domain.recommend.service.RecommendService;
 import java.util.List;
@@ -63,9 +64,10 @@ class RecommendControllerTest {
     Authentication authentication = new UsernamePasswordAuthenticationToken(
         userDetails, null, List.of(() -> "ROLE_USER"));
 
-    ClothesDto clothesDto = new ClothesDto();
-    clothesDto.setType("TOP");
-    List<ClothesDto> mockClothes = List.of(clothesDto);
+    RecommendClothesDto clothesDto = new RecommendClothesDto(
+        UUID.randomUUID(), "Test", "test-url", "TOP", List.of()
+    );
+    List<RecommendClothesDto> mockClothes = List.of(clothesDto);
 
     RecommendationDto dto = new RecommendationDto(weatherId, userId, mockClothes);
 
@@ -88,9 +90,9 @@ class RecommendControllerTest {
     assertTrue(clothesNode.isArray());
     assertEquals(1, clothesNode.size());
 
-    List<ClothesDto> parsedClothes = objectMapper.readValue(
+    List<RecommendClothesDto> parsedClothes = objectMapper.readValue(
         clothesNode.toString(),
-        new TypeReference<List<ClothesDto>>() {}
+        new TypeReference<List<RecommendClothesDto>>() {}
     );
 
     assertEquals(1, parsedClothes.size());
