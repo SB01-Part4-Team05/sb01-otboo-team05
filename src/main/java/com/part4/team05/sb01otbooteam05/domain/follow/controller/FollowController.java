@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.follow.controller;
 
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowDto;
 import com.part4.team05.sb01otbooteam05.domain.follow.dto.FollowListResponse;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,10 +39,13 @@ public class FollowController implements FollowControllerDoc {
     @GetMapping("/summary")
     public ResponseEntity<FollowSummaryDto> getFollowSummary(
             @RequestParam UUID userId,
-            @RequestParam UUID currentUserId // 추후 로그인 사용자에서 추출하도록 수정 예정
+            @AuthenticationPrincipal CustomUserDetails me
     ) {
-        FollowSummaryDto result = followService.getFollowSummary(userId, currentUserId);
-        return ResponseEntity.ok(result);
+        UUID currentUserId = me.getUserId();
+        log.info("팔로우 요약 조회: targetUserId={}, currentUserId={}", userId, currentUserId);
+
+        FollowSummaryDto summary = followService.getFollowSummary(userId, currentUserId);
+        return ResponseEntity.ok(summary);
     }
 
     @GetMapping("/followings")
@@ -71,9 +76,11 @@ public class FollowController implements FollowControllerDoc {
 
     @DeleteMapping("/{followId}")
     public ResponseEntity<Void> unfollow(@PathVariable UUID followId,
-                                         @RequestHeader("X-USER-ID") UUID currentUserId
+                                         @AuthenticationPrincipal CustomUserDetails me
     ) {
-        log.info("팔로우 취소 요청: followId={}, currentUserId", followId, currentUserId);
+        UUID currentUserId = me.getUserId();
+        log.info("팔로우 취소 요청: followId={}, currentUserId={}", followId, currentUserId);
+
         followService.unfollow(followId, currentUserId);
         return ResponseEntity.noContent().build();
     }
