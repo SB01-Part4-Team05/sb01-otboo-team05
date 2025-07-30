@@ -80,7 +80,7 @@ public class RecommendService {
   private List<Clothes> filterAndSort(List<Clothes> clothesList, ClothesType type, int weatherValue) {
     List<Clothes> filtered = clothesList.stream()
         .filter(c -> c.getType() == type)
-        .sorted(Comparator.comparingInt(c -> Math.abs(getWeight(c) - weatherValue)))
+        .sorted(Comparator.comparingInt(c -> Math.abs(getWeight(c) + weatherValue)))
         .limit(5)
         .toList();
 
@@ -150,10 +150,10 @@ public class RecommendService {
 
   @PostConstruct
   public void makeCriteria() {
-    criteria.put(ThicknessType.THICK, 5);
-    criteria.put(ThicknessType.SLIMTHICK, 2);
-    criteria.put(ThicknessType.SLIMTHIN, -2);
-    criteria.put(ThicknessType.THIN, -5);
+    criteria.put(ThicknessType.THICK, 15);
+    criteria.put(ThicknessType.SLIMTHICK, 10);
+    criteria.put(ThicknessType.SLIMTHIN, -10);
+    criteria.put(ThicknessType.THIN, -15);
   }
 
   @PostConstruct
@@ -168,5 +168,6 @@ public class RecommendService {
     weatherCriteria.put(20, 10);
     weatherCriteria.put(25, 12);
     weatherCriteria.put(30, 15);
+    weatherCriteria.put(35, 20);
   }
 }
