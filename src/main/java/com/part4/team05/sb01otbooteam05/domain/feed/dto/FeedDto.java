@@ -1,11 +1,11 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.dto;
 
+import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherSummaryDto;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import com.part4.team05.sb01otbooteam05.domain.ootd.dto.OotdDto;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -27,7 +27,7 @@ public record FeedDto(
 
 	@NotNull
 	@Valid
-	WeatherDto weather,
+	WeatherSummaryDto weather,
 
 	@NotNull
 	@Valid

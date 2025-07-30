@@ -88,6 +88,8 @@ jobs:
             GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
             AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
             AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
+            ACTUATOR_USER=${{ secrets.ACTUATOR_USER }}
+            ACTUATOR_PASSWORD=${{ secrets.ACTUATOR_PASSWORD }}
 
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
