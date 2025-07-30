@@ -56,6 +56,11 @@ public class AttributeController implements AttributeControllerDoc{
       @RequestParam(required = false) String keywordLike
       ) {
 
+    if (keywordLike != null) {
+      keywordLike = keywordLike.trim();
+      if (keywordLike.isEmpty()) keywordLike = null;
+    }
+
     return ResponseEntity.ok(attributeService.getDef(cursor,size,idAfter,sortedBy,sortDirection,keywordLike));
   }
 }
