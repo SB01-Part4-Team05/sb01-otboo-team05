@@ -94,7 +94,7 @@ public class RecommendService {
         .collect(Collectors.toList());
 
     try {
-      String url = "http://recommend-flask:5000/rank";
+      String url = "http://54.180.115.86:5000/rank";
 
       RestTemplate restTemplate = new RestTemplate();
       ObjectMapper objectMapper = new ObjectMapper();
