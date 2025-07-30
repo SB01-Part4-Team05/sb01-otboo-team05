@@ -2,6 +2,7 @@ package com.part4.team05.sb01otbooteam05.domain.clothes.dto;
 
 
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.AttributeDto;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
@@ -13,7 +14,7 @@ public class ClothesDto{
   private UUID id;
   private String name;
   private String imageUrl;
-  private List<AttributeDto> attributes;
+  private List<AttributeDto> attributes = new ArrayList<>();
   private UUID ownerId;
   private String type;
 }
