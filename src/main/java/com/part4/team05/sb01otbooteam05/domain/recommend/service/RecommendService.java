@@ -49,6 +49,12 @@ public class RecommendService {
 
   public RecommendationiDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
     Map<StyleType, Map<ClothesType, List<Clothes>>> map = getMap(ownerId);
+
+    if (map.isEmpty()) {
+      log.info("사용자의 옷장이 비어있습니다. 빈 추천을 반환합니다.", ownerId);
+      return new RecommendationiDto(weatherId, ownerId, Collections.emptyList());
+    }
+
     List<List<Clothes>> result = new ArrayList<>();
     int weatherValue = getWeatherValue(weatherId);
 
@@ -88,13 +94,19 @@ public class RecommendService {
     List<List<ClothesDto>> finalResult = result.stream()
         .map(clothes -> {
           List<ClothesDto> dtoList = clothesMapper.toDtoList(clothes);
-          return dtoList != null ? dtoList : Collections.<ClothesDto>emptyList();
+          if (dtoList == null) return Collections.<ClothesDto>emptyList();
+          dtoList.forEach(dto -> {
+            if (dto.getAttributes() == null) {
+              dto.setAttributes(new ArrayList<>());
+            }
+          });
+          return dtoList;
         })
         .filter(list -> !list.isEmpty())
         .collect(Collectors.toList());
 
     try {
-      String url = "http://recommend-flask:5000/rank";
+      String url = "http://54.180.115.86:5000/rank";
 
       RestTemplate restTemplate = new RestTemplate();
       ObjectMapper objectMapper = new ObjectMapper();
@@ -122,7 +134,7 @@ public class RecommendService {
       }
     } catch (Exception e) {
       if (e instanceof JsonProcessingException) {
-                log.warn("AI 서비스 응답 파싱 실패: {}", e.getMessage());
+        log.warn("AI 서비스 응답 파싱 실패: {}", e.getMessage());
       } else if (e instanceof ResourceAccessException) {
         log.warn("AI 서비스 연결 실패: {}", e.getMessage());
       } else {
@@ -180,7 +192,7 @@ public class RecommendService {
         .filter(entry -> mid < entry.getKey() + 5 && mid >= entry.getKey())
         .map(Map.Entry::getValue)
         .findFirst()
-        .orElseThrow(() -> new NoSuchElementException("No weather weight found for temperature: " + mid));
+        .orElse(0);
   }
 
   private List<List<Clothes>> getDressScore(List<Clothes> dresses, List<Clothes> outers, int weatherValue) {
