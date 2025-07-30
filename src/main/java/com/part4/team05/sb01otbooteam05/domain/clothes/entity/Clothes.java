@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.util.List;
 import java.util.UUID;
@@ -26,8 +27,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Clothes {
 
-  @Id // UUID random
-  UUID id = UUID.randomUUID();
+  @Id
+  UUID id;
 
   @Column
   String name;
@@ -59,5 +60,12 @@ public class Clothes {
 
   public void setType(ClothesType type) {
     this.type = type;
+  }
+
+  @PrePersist
+  public void ensureId() {
+    if (this.id == null) {
+      this.id = UUID.randomUUID();
+    }
   }
 }
