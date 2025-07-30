@@ -8,6 +8,7 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
@@ -87,7 +88,12 @@ public class RecommendService {
     finalResult.addAll(recommended);
     finalResult.addAll(others);
 
-    return new RecommendationDto(weatherId,ownerId,finalResult);
+    List<RecommendClothesDto> convertedResult = finalResult.stream()
+        .filter(Objects::nonNull)
+        .map(RecommendClothesDto::from)
+        .toList();
+
+    return new RecommendationDto(weatherId, ownerId, convertedResult);
   }
 
   private List<Clothes> filterAndSort(List<Clothes> clothesList, ClothesType type, int weatherValue) {

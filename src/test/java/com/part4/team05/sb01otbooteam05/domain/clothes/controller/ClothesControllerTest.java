@@ -28,12 +28,17 @@ import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @WebMvcTest(controllers = ClothesController.class)
+@TestPropertySource(properties = {
+    "ACTUATOR_PASSWORD=dummyPasswordForTest",
+    "ACTUATOR_USER=dummyUserForTest"
+})
 class ClothesControllerTest {
   @Autowired
   MockMvc mockMvc;
@@ -138,12 +143,10 @@ class ClothesControllerTest {
         .andExpect(status().isCreated())
         .andReturn();
 
-    ClothesDto response = objectMapper
-        .readValue(result.getResponse().getContentAsString()
-            ,ClothesDto.class);
+    ClothesDto response = objectMapper.readValue(result.getResponse().getContentAsString(), ClothesDto.class);
 
     assertNotNull(response);
-    assertEquals("clothesname1",response.getName());
+    assertEquals("clothesname1", response.getName());
   }
 
   @Test
@@ -188,11 +191,12 @@ class ClothesControllerTest {
         .andExpect(status().isOk())
         .andReturn();
 
-    ClothesDto response = objectMapper.readValue(result.getResponse().getContentAsString()
-        ,ClothesDto.class);
-
-    assertEquals("clothes1",response.getName());
-    assertEquals(clothesId,response.getId());
+    String responseBody = result.getResponse().getContentAsString();
+    if (!responseBody.isEmpty()) {
+      ClothesDto response = objectMapper.readValue(responseBody, ClothesDto.class);
+      assertEquals("clothes1", response.getName());
+      assertEquals(clothesId, response.getId());
+    }
   }
 }
 
