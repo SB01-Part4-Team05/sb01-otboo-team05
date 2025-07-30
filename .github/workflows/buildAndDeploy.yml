@@ -1,9 +1,11 @@
 name: Build and Deploy
 
 on:
+  pull_request:
+    branches: [main, develop]
+    types: [closed]
   push:
-    branch:
-      feat/ci_68_test
+    branches: [main, develop]
 
 permissions:
   id-token: write
