@@ -47,6 +47,10 @@ public class NotificationServiceImpl implements NotificationService {
 
         List<Notification> results = notificationRepository.findNotifications(userId, idAfter, pageable);
 
+        if (cursor == null && idAfter == null && results.isEmpty()) {
+            throw new OtbooException(ErrorCode.NOTIFICATION_NOT_FOUND);
+        }
+
         boolean hasNext = results.size() > limit;
         if(hasNext) {
             results = results.subList(0, limit);
