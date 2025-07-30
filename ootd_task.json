@@ -13,7 +13,7 @@
             "name": "ootd-app",
             "image": "",
             "cpu": 0,
-            "memory": 0,
+            "memory": 1024,
             "portMappings": [
                 {
                     "containerPort": 8080,
