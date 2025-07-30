@@ -45,7 +45,7 @@ public class FeedController implements FeedControllerDoc {
         @RequestParam(value = "idAfter", required = false) UUID idAfter,
         @RequestParam(value = "limit", defaultValue = "20", required = true) Integer limit,
         @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) SortType sortBy,
-        @RequestParam(value = "sortDirection", defaultValue = "DESCENDING", required = true) String sortDirection,  // ← String으로 변경
+        @RequestParam(value = "sortDirection", defaultValue = "DESCENDING", required = true) String sortDirection,
         @RequestParam(value = "keywordLike", defaultValue = "", required = false) String keywordLike,
         @RequestParam(value = "skyStatusEqual", required = false) SkyStatusType skyStatusEqual,
         @RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,
