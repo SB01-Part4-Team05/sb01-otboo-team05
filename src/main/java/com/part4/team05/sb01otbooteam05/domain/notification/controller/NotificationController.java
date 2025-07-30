@@ -1,13 +1,10 @@
 package com.part4.team05.sb01otbooteam05.domain.notification.controller;
 
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
-import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
-import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
-import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;

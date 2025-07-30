@@ -4,7 +4,6 @@ import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDto;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.Notification;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
-import com.part4.team05.sb01otbooteam05.domain.notification.exception.NotificationNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.notification.mapper.NotificationMapper;
 import com.part4.team05.sb01otbooteam05.domain.notification.repository.NotificationRepository;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
@@ -21,7 +20,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

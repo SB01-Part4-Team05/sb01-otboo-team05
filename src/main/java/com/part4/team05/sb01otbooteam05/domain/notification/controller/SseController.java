@@ -1,7 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.notification.controller;
 
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
-import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
 import com.part4.team05.sb01otbooteam05.exception.OtbooException;
