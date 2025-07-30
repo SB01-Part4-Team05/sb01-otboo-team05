@@ -4,7 +4,7 @@
     "executionRoleArn": "arn:aws:iam::065301656004:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
     "cpu": "2048",
-    "memory": "2048",
+    "memory": "4096",
     "requiresCompatibilities": [
         "FARGATE"
     ],
