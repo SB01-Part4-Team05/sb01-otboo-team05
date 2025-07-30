@@ -143,6 +143,8 @@ public class ClothesService {
       clothes.setImageUrl(url);
     }
 
+    clothesRepository.save(clothes);
+
     return clothesMapper.toDto(clothes);
   }
 
