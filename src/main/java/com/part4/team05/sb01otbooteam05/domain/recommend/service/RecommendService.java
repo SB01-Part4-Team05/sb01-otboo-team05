@@ -32,12 +32,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RecommendService {
   private final ClothesService clothesService;
   private final ClothesMapper clothesMapper;
@@ -46,6 +48,7 @@ public class RecommendService {
   private final Random random = new Random();
   private final Map<ThicknessType,Integer> criteria = new HashMap<>();
   private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
+
 
   public RecommendationiDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
     Map<StyleType, Map<ClothesType, List<Clothes>>> map = getMap(ownerId);
