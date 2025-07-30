@@ -134,7 +134,7 @@ public class ClothesService {
   }
 
   public List<Clothes> findAllByOwnerId(UUID ownerId){
-    return clothesRepository.findByOwnerId(ownerId);
+    return clothesRepository.findByOwnerIdWithAttributes(ownerId);
   }
 
 }

@@ -27,5 +27,9 @@ public interface ClothesRepository extends JpaRepository<Clothes, UUID> {
       @Param("cursor") UUID cursor,
       @Param("type") ClothesType type,
       Pageable pageable);
+
+  @Query("SELECT c FROM Clothes c LEFT JOIN FETCH c.attributeValues WHERE c.ownerId = :ownerId")
+  List<Clothes> findByOwnerIdWithAttributes(@Param("ownerId") UUID ownerId);
+
 }
 
