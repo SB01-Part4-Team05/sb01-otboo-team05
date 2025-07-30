@@ -56,7 +56,6 @@ public class RecommendService {
     List<Clothes> allClothes = clothesService.findAllByOwnerId(ownerId);
     log.info("조회된 전체 의류 개수: {}", allClothes.size());
 
-    // 각 카테고리별로 적합한 옷 단품 리스트 추출 (최대 5개씩)
     List<Clothes> tops = filterAndSort(allClothes, ClothesType.TOP, weatherValue);
     List<Clothes> bottoms = filterAndSort(allClothes, ClothesType.BOTTOM, weatherValue);
     List<Clothes> dresses = filterAndSort(allClothes, ClothesType.DRESS, weatherValue);
@@ -66,7 +65,6 @@ public class RecommendService {
     log.info("추천된 옷 개수 - tops: {}, bottoms: {}, dresses: {}, outers: {}, accessories: {}",
         tops.size(), bottoms.size(), dresses.size(), outers.size(), accessories.size());
 
-    // AI 서버는 단품 리스트별로 배열 형태로 받도록 요청 (세트 조합 X)
     List<List<ClothesDto>> dtoLists = new ArrayList<>();
     dtoLists.add(tops.stream().map(clothesMapper::toDto).toList());
     dtoLists.add(bottoms.stream().map(clothesMapper::toDto).toList());
@@ -91,24 +89,23 @@ public class RecommendService {
   }
 
   private int getWeight(Clothes clothes) {
-    int weight = clothes.getAttributeValues().stream()
+    return clothes.getAttributeValues().stream()
         .filter(attributeValue -> attributeValue.getDefinition() != null &&
-            "thickness".equals(attributeValue.getDefinition().getName()))
+            "thickness".equalsIgnoreCase(attributeValue.getDefinition().getName()))
         .map(attributeValue -> {
           try {
-            return ThicknessType.valueOf(attributeValue.getValue());
+            return ThicknessType.valueOf(attributeValue.getValue().toUpperCase());
           } catch (IllegalArgumentException | NullPointerException e) {
             log.debug("getWeight - ThicknessType 변환 실패: {}", attributeValue.getValue());
             return null;
           }
         })
         .filter(Objects::nonNull)
-        .map(thickness -> criteria.getOrDefault(thickness, 0))
+        .mapToInt(thickness -> criteria.getOrDefault(thickness, 0))
         .findFirst()
         .orElse(0);
-    log.debug("getWeight - clothesId: {}, weight: {}", clothes.getId(), weight);
-    return weight;
   }
+
 
   private int getWeatherValue(UUID weatherId) {
     Weather weather = weatherService.getWeatherEntityByIdOrThrow(weatherId);
