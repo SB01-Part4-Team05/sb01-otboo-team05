@@ -40,37 +40,40 @@ public class FeedController implements FeedControllerDoc {
     // 피드 목록조회
     @GetMapping
     public ResponseEntity<FeedDtoCursorResponse> findFeeds(
-            @AuthenticationPrincipal CustomUserDetails user,
-            // 값이 들어왔는데 변환할 타입과 맞지않을경우(ex. 지정한 상수로 변환될 수 없는 문자 들어옴) 스프링이 400 반환)
-            @RequestParam(value = "cursor", defaultValue = "", required = false) String cursor,
-            @RequestParam(value = "idAfter", required = false) UUID idAfter,
-            @RequestParam(value = "limit", defaultValue = "20", required = true) Integer limit,
-            @RequestParam(value = "sortBy", required = false) SortType sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "ASCENDING", required = true) Sort.Direction sortDirection,
-            @RequestParam(value = "keywordLike", defaultValue = "", required = false) String keywordLike,
-            @RequestParam(value = "skyStatusEqual", required = false) SkyStatusType skyStatusEqual,
-            @RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,
-            @RequestParam(value = "authorIdEqual", required = false) UUID authorIdEqual
+        @AuthenticationPrincipal CustomUserDetails user,
+        @RequestParam(value = "cursor", defaultValue = "", required = false) String cursor,
+        @RequestParam(value = "idAfter", required = false) UUID idAfter,
+        @RequestParam(value = "limit", defaultValue = "20", required = true) Integer limit,
+        @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) SortType sortBy,
+        @RequestParam(value = "sortDirection", defaultValue = "DESCENDING", required = true) String sortDirection,  // ← String으로 변경
+        @RequestParam(value = "keywordLike", defaultValue = "", required = false) String keywordLike,
+        @RequestParam(value = "skyStatusEqual", required = false) SkyStatusType skyStatusEqual,
+        @RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,
+        @RequestParam(value = "authorIdEqual", required = false) UUID authorIdEqual
     ) {
         UUID userId = user.getUserId();
-        FindFeedsRequest request = new FindFeedsRequest(cursor, idAfter, limit, sortBy, sortDirection, keywordLike, skyStatusEqual, precipitationTypeEqual, authorIdEqual);
+
+        Sort.Direction direction = "ASCENDING".equals(sortDirection) ?
+            Sort.Direction.ASC : Sort.Direction.DESC;
+
+        FindFeedsRequest request = new FindFeedsRequest(cursor, idAfter, limit, sortBy,
+            direction, keywordLike, skyStatusEqual, precipitationTypeEqual, authorIdEqual);
+
         FeedDtoCursorResponse foundFeedsPageDto = feedService.findFeeds(userId, request);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(foundFeedsPageDto);
+        return ResponseEntity.status(HttpStatus.OK).body(foundFeedsPageDto);
     }
 
     //피드 생성
     @PostMapping
     public ResponseEntity<FeedDto> createFeed(
-            @AuthenticationPrincipal CustomUserDetails user,
-            @Validated @RequestBody FeedCreateRequest request
+        @AuthenticationPrincipal CustomUserDetails user,
+        @Validated @RequestBody FeedCreateRequest request
     ) {
         UUID userId = user.getUserId();
         FeedDto feedDto = feedService.createFeed(userId, request);
         return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(feedDto);
+            .status(HttpStatus.CREATED)
+            .body(feedDto);
     }
 
     @PostMapping("{feedId}/like")
