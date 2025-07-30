@@ -114,7 +114,7 @@ public class AttributeService {
     notificationService.createAndSendNotification(
             userId,
             "의상 속성이 변경되었어요.",
-            "[" + name + "] 속성이 확인해보세요.",
+            "[" + name + "] 속성을 확인해보세요.",
             NotificationLevel.INFO
     );
   }

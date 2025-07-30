@@ -110,7 +110,7 @@ public class BasicFeedService implements FeedService {
             log.warn("피드 등록 알림 전송 실패: userId={}", userId, e);
         }
 
-        return feedMapper.toFeedDto(newFeed, 0L, 0, false);
+        return feedMapper.toFeedDto(savedFeed, 0L, 0, false);
     }
 
     // 피드 삭제

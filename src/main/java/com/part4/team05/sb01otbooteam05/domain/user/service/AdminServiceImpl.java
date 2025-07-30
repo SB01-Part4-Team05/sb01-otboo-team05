@@ -194,12 +194,16 @@ public class AdminServiceImpl implements AdminService {
     log.info("권한 변경 완료 및 강제 로그아웃 처리: userId={}", userId);
 
     // 권한 변경 알림 전송
-    notificationService.createAndSendNotification(
-            updatedUser.getId(),
-            "권한이 변경되었습니다",
-            "관리자에 의해 귀하의 권한이 " + request.role().name() + "(으)로 변경되었습니다.",
-            NotificationLevel.INFO
-    );
+     try {
+       notificationService.createAndSendNotification(
+               updatedUser.getId(),
+               "권한이 변경되었습니다",
+               "관리자에 의해 귀하의 권한이 " + request.role().name() + "(으)로 변경되었습니다.",
+               NotificationLevel.INFO
+       );
+     } catch (Exception e) {
+       log.warn("권한 변경 알림 전송 실패: userId={}", updatedUser.getId(), e);
+     }
 
     return UserDto.from(updatedUser);
   }
