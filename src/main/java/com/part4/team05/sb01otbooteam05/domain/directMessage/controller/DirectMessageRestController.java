@@ -5,8 +5,6 @@ import com.part4.team05.sb01otbooteam05.domain.directMessage.dto.DirectMessageDt
 import com.part4.team05.sb01otbooteam05.domain.directMessage.service.DirectMessageService;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
 import com.part4.team05.sb01otbooteam05.exception.OtbooException;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

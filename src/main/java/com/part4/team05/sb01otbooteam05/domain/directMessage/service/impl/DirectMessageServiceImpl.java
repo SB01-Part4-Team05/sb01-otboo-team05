@@ -9,7 +9,6 @@ import com.part4.team05.sb01otbooteam05.domain.directMessage.repository.DirectMe
 import com.part4.team05.sb01otbooteam05.domain.directMessage.service.DirectMessageService;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
-import com.part4.team05.sb01otbooteam05.domain.user.dto.UserSummary;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
