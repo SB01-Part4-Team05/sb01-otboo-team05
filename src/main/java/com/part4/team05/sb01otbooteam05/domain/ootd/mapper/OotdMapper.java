@@ -18,7 +18,7 @@ public class OotdMapper {
 
 	public OotdDto toOotdDto(Ootd ootd) {
 		return new OotdDto(ootd.getClothes().getId(), ootd.getClothes().getName(),
-				ootd.getClothes().getImageUrl(), ootd.getClothes().getType().getLabel(),
+				ootd.getClothes().getImageUrl(), ootd.getClothes().getType().toString(),
 				ootd.getClothes().getAttributeValues().stream().map(
 						attributeValue -> new AttributeDto(attributeValue)
 				).toList());

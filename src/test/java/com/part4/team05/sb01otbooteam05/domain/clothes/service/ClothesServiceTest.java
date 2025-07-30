@@ -163,12 +163,14 @@ class ClothesServiceTest {
         Clothes clothes = Clothes.builder()
             .id(clothesId)
             .name("clothes1")
-            .type(ClothesType.valueOf("TOP")).build();
+            .type(ClothesType.valueOf("TOP"))
+            .attributeValues(Collections.emptyList())
+            .build();
 
         ClothesDto dto = new ClothesDto();
         dto.setId(clothesId);
-        dto.setType(request.type());
-        dto.setName(request.name());
+        dto.setType(request.getType());
+        dto.setName(request.getName());
 
         given(clothesRepository.findById(clothesId)).willReturn(Optional.ofNullable(clothes));
         given(clothesMapper.toDto(clothes)).willReturn(dto);
@@ -183,7 +185,7 @@ class ClothesServiceTest {
     void findAllByOwnerId() {
         UUID ownerID = UUID.randomUUID();
 
-        given(clothesRepository.findByOwnerId(ownerID))
+        given(clothesRepository.findByOwnerIdWithAttributes(ownerID))
             .willReturn(List.of(mock(Clothes.class)));
 
         List<Clothes> clothes = clothesService.findAllByOwnerId(ownerID);
