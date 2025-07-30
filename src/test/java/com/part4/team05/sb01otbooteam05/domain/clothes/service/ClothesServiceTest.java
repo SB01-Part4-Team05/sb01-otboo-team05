@@ -163,7 +163,9 @@ class ClothesServiceTest {
         Clothes clothes = Clothes.builder()
             .id(clothesId)
             .name("clothes1")
-            .type(ClothesType.valueOf("TOP")).build();
+            .type(ClothesType.valueOf("TOP"))
+            .attributeValues(Collections.emptyList())
+            .build();
 
         ClothesDto dto = new ClothesDto();
         dto.setId(clothesId);
