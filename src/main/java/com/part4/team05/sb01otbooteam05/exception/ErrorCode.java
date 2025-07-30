@@ -27,6 +27,7 @@ public enum ErrorCode {
     // Notification 관련 에러 코드
 	NOTIFICATION_NOT_FOUND("알림이 존재하지 않습니다."),
 	NOTIFICATION_UNAUTHORIZED("다른 사용자의 알림은 읽을 수 없습니다."),
+	INVALID_CURSOR("유효하지 않은 cursor 값입니다."),
 
 	// follow 관련 에러 코드
 	FOLLOW_SELF_NOT_ALLOWED("자기 자신을 팔로우할 수 없습니다."),

@@ -9,13 +9,15 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.UUID;
 
 public interface NotificationService {
-    NotificationDtoCursorResponse getNotifications(User user, UUID idAfter, int limit);
+    NotificationDtoCursorResponse getNotifications(User user, String cursor, UUID idAfter, int limit);
 
     void markAsRead(UUID notificationId, UUID userId);
 
     SseEmitter connect(UUID userId, UUID lastEventId);
 
     void sendNotification(NotificationDto notification);
+
+    void replayMissed(UUID userId, UUID lastEventId, SseEmitter emitter);
 
     void createAndSendNotification(UUID receiverId, String title, String content, NotificationLevel level);
 }

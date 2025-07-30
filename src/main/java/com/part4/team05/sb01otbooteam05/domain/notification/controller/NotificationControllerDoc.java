@@ -1,5 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.notification.controller;
 
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,8 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.UUID;
@@ -40,14 +41,21 @@ public interface NotificationControllerDoc {
       )
   })
   ResponseEntity<NotificationDtoCursorResponse> getNotifications(
-      @Parameter(description = "idAfter")
-      @RequestParam(name = "idAfter", required = false) UUID idAfter,
+          @Parameter(description = "커서 토큰", example = "eyJpZCI6IjEyMyJ9")
+          @RequestParam(name = "cursor", required = false)
+          String cursor,
 
-      @Parameter(description = "limit", example = "5")
-      @RequestParam(name = "limit", defaultValue = "5") @Min(1) @Max(50) int limit,
+          @Parameter(description = "이전 마지막 알림 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+          @RequestParam(name = "idAfter", required = false)
+          UUID idAfter,
 
-      @Parameter(description = "Authorization")
-      @RequestHeader("Authorization") String authorizationHeader
+          @Parameter(description = "한 페이지당 최대 개수", example = "5")
+          @RequestParam(name = "limit", required = true) @Min(1) @Max(50)
+          int limit,
+
+          @Parameter(hidden = true)
+          @AuthenticationPrincipal
+          CustomUserDetails me
   );
 
   @Operation(
@@ -65,6 +73,7 @@ public interface NotificationControllerDoc {
   })
   void markAsRead(
       @Parameter(description = "notificationId") @PathVariable UUID notificationId,
-      @Parameter(description = "Authorization") @RequestHeader("Authorization") String authorizationHeader
+      @Parameter(hidden = true)
+      @AuthenticationPrincipal CustomUserDetails me
   );
 }
