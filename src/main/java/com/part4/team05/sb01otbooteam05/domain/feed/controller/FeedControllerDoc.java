@@ -1,5 +1,16 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.controller;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.hibernate.query.SortDirection;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDtoCursorResponse;
@@ -12,6 +23,7 @@ import com.part4.team05.sb01otbooteam05.domain.feedComment.dto.request.CommentCr
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.PrecipitationType;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.SkyStatusType;
 import com.part4.team05.sb01otbooteam05.exception.ErrorResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,16 +32,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Tag(name = "피드 관리", description = "피드 관련 API")
 public interface FeedControllerDoc {
@@ -57,7 +59,7 @@ public interface FeedControllerDoc {
       @Parameter(description = "idAfter") @RequestParam(value = "idAfter", required = false) UUID idAfter,
       @Parameter(description = "limit") @RequestParam(value = "limit", defaultValue = "20", required = true) Integer limit,
       @Parameter(description = "sortBy") @RequestParam(value = "sortBy", required = false) SortType sortBy,
-      @Parameter(description = "sortDirection") @RequestParam(value = "sortDirection", defaultValue = "ASCENDING", required = true) Sort.Direction sortDirection,
+      @Parameter(description = "sortDirection") @RequestParam(value = "sortDirection", defaultValue = "ASCENDING", required = true) SortDirection sortDirection,
       @Parameter(description = "keywordLike") @RequestParam(value = "keywordLike", defaultValue = "", required = false) String keywordLike,
       @Parameter(description = "skyStatusEqual") @RequestParam(value = "skyStatusEqual", required = false) SkyStatusType skyStatusEqual,
       @Parameter(description = "precipitationTypeEqual") @RequestParam(value = "precipitationTypeEqual", required = false) PrecipitationType precipitationTypeEqual,

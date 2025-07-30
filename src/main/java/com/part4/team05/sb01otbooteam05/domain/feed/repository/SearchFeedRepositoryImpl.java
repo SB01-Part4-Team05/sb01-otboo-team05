@@ -1,5 +1,13 @@
 package com.part4.team05.sb01otbooteam05.domain.feed.repository;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import org.hibernate.query.SortDirection;
+import org.springframework.stereotype.Repository;
+
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDto;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.FeedDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.feed.dto.request.FindFeedsRequest;
@@ -16,15 +24,8 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import lombok.RequiredArgsConstructor;
-import org.hibernate.query.SortDirection;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
@@ -39,7 +40,7 @@ public class SearchFeedRepositoryImpl implements SearchFeedRepository {
     @Override
     public FeedDtoCursorResponse findFeedDtosWithCursor(UUID userId, FindFeedsRequest request) {
 
-        SortDirection sortDirection = (request.sortDirection() == Sort.Direction.DESC) ? SortDirection.DESCENDING : SortDirection.ASCENDING;
+        SortDirection sortDirection = (request.sortDirection() == SortDirection.DESCENDING) ? SortDirection.DESCENDING : SortDirection.ASCENDING;
         BooleanBuilder builder = new BooleanBuilder();
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException());
 
