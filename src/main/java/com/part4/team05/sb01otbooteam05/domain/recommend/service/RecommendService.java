@@ -57,48 +57,65 @@ public class RecommendService {
     List<Clothes> outers = filterAndSort(allClothes, ClothesType.OUTER, weatherValue);
     List<Clothes> accessories = filterAndSort(allClothes, ClothesType.ACC, weatherValue);
 
-    List<List<Clothes>> outfitCombos = new ArrayList<>();
-    outfitCombos.addAll(getBaseSettings(tops, bottoms, weatherValue)); // top + bottom
-    outfitCombos.addAll(getDressSettings(dresses, weatherValue)); // dress only
+    List<Clothes> canWear = new ArrayList<>();
+    canWear.addAll(tops);
+    canWear.addAll(bottoms);
+    canWear.addAll(dresses);
+    canWear.addAll(outers);
+    canWear.addAll(accessories);
 
-    // 아우터 추가
-    List<List<Clothes>> withOuters = new ArrayList<>();
-    for (List<Clothes> combo : outfitCombos) {
-      int currentWarmth = combo.stream().mapToInt(this::getWeight).sum();
-      List<Clothes> suitableOuters = findSuitableOuters(outers, currentWarmth, weatherValue);
-      if (!suitableOuters.isEmpty()) {
-        for (Clothes outer : suitableOuters) {
-          List<Clothes> newCombo = new ArrayList<>(combo);
-          newCombo.add(outer);
-          withOuters.add(newCombo);
-        }
-      } else {
-        withOuters.add(combo);
-      }
+    List<ClothesDto> canWearDto = clothesMapper.toDtoList(canWear);
+
+    List<List<ClothesDto>> toAi = new ArrayList<>();
+    toAi.add(canWearDto);
+
+    List<ClothesDto> result = callAIServer(toAi);
+
+    if(!result.isEmpty()){
+      return new RecommendationDto(weatherId,ownerId,result);
     }
-    List<List<Clothes>> finalCombos = new ArrayList<>();
-    for (List<Clothes> combo : withOuters) {
-      List<Clothes> newCombo = new ArrayList<>(combo);
-      accessories.stream().limit(1).forEach(newCombo::add);
-      finalCombos.add(newCombo);
-    }
+    else return new RecommendationDto(weatherId,ownerId,toAi.get(0));
 
-    // Clothes → ClothesDto
-    List<List<ClothesDto>> dtoCombos = finalCombos.stream()
-        .map(list -> list.stream().map(clothesMapper::toDto).toList())
-        .toList();
+//    List<List<Clothes>> outfitCombos = new ArrayList<>();
+//    outfitCombos.addAll(getBaseSettings(tops, bottoms, weatherValue));
+//    outfitCombos.addAll(getDressSettings(dresses, weatherValue));
+//
+//
+//    List<List<Clothes>> withOuters = new ArrayList<>();
+//    for (List<Clothes> combo : outfitCombos) {
+//      int currentWarmth = combo.stream().mapToInt(this::getWeight).sum();
+//      List<Clothes> suitableOuters = findSuitableOuters(outers, currentWarmth, weatherValue);
+//      if (!suitableOuters.isEmpty()) {
+//        for (Clothes outer : suitableOuters) {
+//          List<Clothes> newCombo = new ArrayList<>(combo);
+//          newCombo.add(outer);
+//          withOuters.add(newCombo);
+//        }
+//      } else {
+//        withOuters.add(combo);
+//      }
+//    }
+//    List<List<Clothes>> finalCombos = new ArrayList<>();
+//    for (List<Clothes> combo : withOuters) {
+//      List<Clothes> newCombo = new ArrayList<>(combo);
+//      accessories.stream().limit(1).forEach(newCombo::add);
+//      finalCombos.add(newCombo);
+//    }
+//
+//    List<List<ClothesDto>> dtoCombos = finalCombos.stream()
+//        .map(list -> list.stream().map(clothesMapper::toDto).toList())
+//        .toList();
+//
+//    List<ClothesDto> recommended = callAIServer(dtoCombos);
 
-    // AI 서버 호출
-    List<ClothesDto> recommended = callAIServer(dtoCombos);
-
-    return new RecommendationDto(weatherId, ownerId, recommended);
+    //return new RecommendationDto(weatherId, ownerId, recommended);
   }
 
   private List<Clothes> filterAndSort(List<Clothes> clothesList, ClothesType type, int weatherValue) {
     return clothesList.stream()
         .filter(c -> c.getType() == type)
         .sorted(Comparator.comparingInt(c -> Math.abs(getWeight(c) - weatherValue)))
-        .limit(5) // 필요에 따라 조정
+        .limit(5)
         .toList();
   }
 
@@ -118,13 +135,13 @@ public class RecommendService {
           restTemplate.postForEntity(url, request, ClothesDto[][].class);
 
       if (response.getBody() != null && response.getBody().length > 0) {
-        return List.of(response.getBody()[0]); // AI가 정한 첫 번째 조합만 반환
+        return List.of(response.getBody()[0]);
       }
     } catch (Exception e) {
       log.warn("AI 서버 호출 실패: {}", e.getMessage());
     }
 
-    return combos.isEmpty() ? List.of() : combos.get(0); // 실패 시 첫 번째 후보 반환
+    return combos.isEmpty() ? List.of() : combos.get(0);
   }
 
 
@@ -194,10 +211,10 @@ public class RecommendService {
 
   @PostConstruct
   public void makeCriteria() {
-    criteria.put(ThicknessType.THICK, 5);
-    criteria.put(ThicknessType.SLIMTHICK, 2);
-    criteria.put(ThicknessType.SLIMTHIN, -2);
-    criteria.put(ThicknessType.THIN, -5);
+    criteria.put(ThicknessType.THICK, 10);
+    criteria.put(ThicknessType.SLIMTHICK, 5);
+    criteria.put(ThicknessType.SLIMTHIN, -5);
+    criteria.put(ThicknessType.THIN, -10);
   }
 
   @PostConstruct
@@ -212,5 +229,6 @@ public class RecommendService {
     weatherCriteria.put(20, 10);
     weatherCriteria.put(25, 12);
     weatherCriteria.put(30, 15);
+    weatherCriteria.put(35, 18);
   }
 }
