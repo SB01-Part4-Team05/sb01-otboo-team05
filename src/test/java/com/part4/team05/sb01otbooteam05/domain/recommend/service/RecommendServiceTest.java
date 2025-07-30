@@ -55,12 +55,19 @@ class RecommendServiceTest {
 
     when(clothesService.findAllByOwnerId(ownerId))
         .thenReturn(List.of(top, bottom, acc, outer));
+
+    Weather weather = mock(Weather.class);
+    when(weather.getTemperatureMax()).thenReturn(20.0);
+    when(weather.getTemperatureMin()).thenReturn(10.0);
+    when(weatherService.getWeatherEntityByIdOrThrow(weatherId)).thenReturn(weather);
+
     RecommendationDto result = recommendService.getRecommend(ownerId, weatherId);
 
     assertNotNull(result);
     assertEquals(ownerId, result.userId());
     assertEquals(weatherId, result.weatherId());
   }
+
 
   private Clothes createClothesWithThickness(ClothesType type, String thicknessValue) {
     Clothes clothes = new Clothes();
