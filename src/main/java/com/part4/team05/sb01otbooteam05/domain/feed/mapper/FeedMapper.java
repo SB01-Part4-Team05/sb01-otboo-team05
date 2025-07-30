@@ -2,7 +2,6 @@ package com.part4.team05.sb01otbooteam05.domain.feed.mapper;
 
 import static com.part4.team05.sb01otbooteam05.domain.weather.mapper.WeatherMapper.*;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -16,10 +15,6 @@ import com.part4.team05.sb01otbooteam05.domain.ootd.dto.OotdDto;
 import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
 import com.part4.team05.sb01otbooteam05.domain.ootd.mapper.OotdMapper;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherAPILocation;
-import com.part4.team05.sb01otbooteam05.domain.weather.dto.WeatherDto;
-import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
-
 import lombok.RequiredArgsConstructor;
 
 
@@ -56,7 +51,7 @@ public class FeedMapper {
 				feed.getCreatedAt(),
 				feed.getUpdatedAt(),
 				toAuthorDto(feed.getAuthor()),
-				toWeatherDto(feed.getWeather()),
+				toSummaryDto(feed.getWeather()),
 				toOotdDtoList(feed.getOotds()),
 				feed.getContent(),
 				likeCount,
@@ -71,25 +66,6 @@ public class FeedMapper {
 		countFeedLikeByFeed(feed),
 		countCommentByFeed(feed),
 		isLikedByMe(feed, user)
-		);
-	}
-
-
-
-
-
-	WeatherDto toWeatherDto(Weather weather) {
-		return new WeatherDto(
-				weather.getId(),
-				weather.getForecastedAt(),
-				weather.getForecastAt(),
-				new WeatherAPILocation(Double.valueOf(weather.getLocationX()),Double.valueOf(weather.getLocationY()),
-						weather.getLocationX(),weather.getLocationY(), Collections.emptyList()),
-				weather.getSkyStatusType(),
-				toPrecipitationDto(weather),
-				toHumidityDto(weather),
-				toTemperatureDto(weather),
-				toWindSpeedDto(weather)
 		);
 	}
 

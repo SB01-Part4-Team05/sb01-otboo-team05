@@ -26,7 +26,7 @@ public interface WeatherControllerDoc {
       @ApiResponse(
           responseCode = "200",
           description = "날씨 조회 성공",
-          content = @Content(schema = @Schema(implementation = List.class))
+          content = @Content(schema = @Schema(implementation = WeatherDto.class))
       ),
       @ApiResponse(
           responseCode = "400",
