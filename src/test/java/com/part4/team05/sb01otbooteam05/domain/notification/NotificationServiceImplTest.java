@@ -4,7 +4,6 @@ import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDto;
 import com.part4.team05.sb01otbooteam05.domain.notification.dto.NotificationDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.Notification;
 import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
-import com.part4.team05.sb01otbooteam05.domain.notification.exception.NotificationNotFoundException;
 import com.part4.team05.sb01otbooteam05.domain.notification.mapper.NotificationMapper;
 import com.part4.team05.sb01otbooteam05.domain.notification.repository.NotificationRepository;
 import com.part4.team05.sb01otbooteam05.domain.notification.service.impl.NotificationServiceImpl;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
@@ -267,5 +267,57 @@ class NotificationServiceImplTest {
         assertEquals(level, dto.level());
         assertNotNull(dto.id());
         assertNotNull(dto.createdAt());
+    }
+
+    @Test
+    void testReplayMissedBatchAndTermination() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID lastEventId = UUID.randomUUID();
+        SseEmitter emitter = mock(SseEmitter.class);
+
+        // 1) DTO 생성
+        NotificationDto dto1 = new NotificationDto(
+                UUID.randomUUID(),
+                LocalDateTime.now(),
+                userId, "T1", "C1", NotificationLevel.INFO
+        );
+        NotificationDto dto2 = new NotificationDto(
+                UUID.randomUUID(),
+                LocalDateTime.now(),
+                userId, "T2", "C2", NotificationLevel.INFO
+        );
+
+        // 2) 엔티티 변환 후, id 주입
+        Notification n1 = NotificationMapper.toEntity(dto1);
+        Notification n2 = NotificationMapper.toEntity(dto2);
+        // reflection 으로 private id 필드를 채운다
+        setField(n1, "id", dto1.id());
+        setField(n2, "id", dto2.id());
+
+        // 3) 리포지토리 스텁: 첫 배치에 두 개, 두 번째는 빈 리스트
+        when(notificationRepository.findNotifications(
+                eq(userId), eq(lastEventId), any(Pageable.class))
+        ).thenReturn(Arrays.asList(n1, n2))
+                .thenReturn(Collections.emptyList());
+
+        // 4) 실행
+        service.replayMissed(userId, lastEventId, emitter);
+
+        // send(SseEventBuilder) 가 정확히 두 번 호출됐는지 확인
+         verify(emitter, times(2)).send(any(SseEmitter.SseEventBuilder.class));
+         // 그 외 추가 호출이 없는지 확인
+         verifyNoMoreInteractions(emitter);
+    }
+
+    @Test
+    void testGetNotificationsInvalidCursorThrows() {
+        UUID userId = UUID.randomUUID();
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(userId);
+
+        OtbooException ex = assertThrows(OtbooException.class,
+                () -> service.getNotifications(user, "not-base64!!", null, 5)
+        );
+        assertEquals(ErrorCode.INVALID_CURSOR, ex.getErrorCode());
     }
 }

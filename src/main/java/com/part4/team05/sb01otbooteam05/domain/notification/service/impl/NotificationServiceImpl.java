@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -39,10 +40,15 @@ public class NotificationServiceImpl implements NotificationService {
         UUID userId = user.getId();
         Pageable pageable = PageRequest.of(0, limit + 1);
 
-        if(cursor != null) {
-            byte[] decoded = Base64.getUrlDecoder().decode(cursor);
-            String decodedStr = new String(decoded, StandardCharsets.UTF_8);
-            idAfter = UUID.fromString(decodedStr);
+        if (cursor != null) {
+            try {
+                byte[] decoded = Base64.getUrlDecoder().decode(cursor);
+                String decodedStr = new String(decoded, StandardCharsets.UTF_8);
+                idAfter = UUID.fromString(decodedStr);
+            } catch (IllegalArgumentException ex) {
+                // Base64 디코딩 또는 UUID 파싱 실패 시
+                throw new OtbooException(ErrorCode.INVALID_CURSOR);
+            }
         }
 
         List<Notification> results = notificationRepository.findNotifications(userId, idAfter, pageable);
@@ -107,27 +113,43 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void replayMissed(UUID userId, UUID lastEventId, SseEmitter emitter) {
-        // lastEventId 이후(작은 ID 순) 누락된 알림 모두 조회
-        List<Notification> missed = notificationRepository.findNotifications(
-                userId,
-                lastEventId,
-                Pageable.unpaged()
+        // 배치 사이즈: 한 번에 조회할 최대 개수
+        int batchSize = 100;
+        // createdAt DESC, id DESC 순서로 정렬해서 페이지 요청 생성
+        Pageable pageable = PageRequest.of(
+                0, batchSize,
+                Sort.by(
+                        Sort.Order.desc("createdAt"),
+                        Sort.Order.desc("id")
+                )
         );
 
-        for (Notification n : missed) {
-            try {
-                emitter.send(
-                        SseEmitter.event()
-                                .id(n.getId().toString())
-                                .name("notifications")
-                                .data(NotificationMapper.toDto(n))
-                );
-            } catch (IOException e) {
-                log.warn("missed notification 전송 실패: id={}, error={}", n.getId(), e.getMessage());
-                emitter.completeWithError(e);
+        List<Notification> missed;
+        do {
+            // 마지막으로 받은 이벤트 이후의 알림을 배치 단위로 조회
+            missed = notificationRepository.findNotifications(userId, lastEventId, pageable);
+
+            // 조회된 알림을 차례로 전송
+            for (Notification n : missed) {
+                try {
+                    emitter.send(
+                            SseEmitter.event()
+                                    .id(n.getId().toString())
+                                    .name("notifications")
+                                    .data(NotificationMapper.toDto(n))
+                    );
+                } catch (IOException e) {
+                    log.warn("missed notification 전송 실패: id={}, error={}", n.getId(), e.getMessage());
+                    emitter.completeWithError(e);
+                    return;
+                }
             }
-        }
+
+            // 다음 페이지로 이동
+            pageable = pageable.next();
+        } while (missed.size() == batchSize);
     }
+
 
     @Override
     public void sendNotification(NotificationDto notification) {
