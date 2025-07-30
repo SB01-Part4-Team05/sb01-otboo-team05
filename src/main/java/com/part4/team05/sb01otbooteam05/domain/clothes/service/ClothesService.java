@@ -103,28 +103,31 @@ public class ClothesService {
   }
 
   @Transactional
-  public ClothesDto update(UUID clothesId, ClothesUpdateRequest request, MultipartFile image){
-    Clothes clothes = clothesRepository.findById(clothesId).orElseThrow(NoSuchElementException::new);
+  public ClothesDto update(UUID clothesId, ClothesUpdateRequest request, MultipartFile image) {
+    Clothes clothes = clothesRepository.findById(clothesId)
+        .orElseThrow(NoSuchElementException::new);
 
-    if(request.name() != null) {
+    if (request.selectableValues() != null) {
+      for (AttributeValue attributeValue : clothes.getAttributeValues()) {
+        request.selectableValues().stream()
+            .filter(dto -> dto.getDefinitionId().equals(attributeValue.getDefinition().getId()))
+            .findFirst()
+            .ifPresent(dto -> {
+              attributeValue.setValue(dto.getValue());
+            });
+      }
+    }
+
+    if (request.name() != null) {
       clothes.setName(request.name());
     }
-    if(request.type() != null){
+    if (request.type() != null) {
       clothes.setType(ClothesType.valueOf(request.type()));
     }
 
-    if(image != null && !image.isEmpty()){
-      String url = clothesS3Service.upload(clothesId,image);
+    if (image != null && !image.isEmpty()) {
+      String url = clothesS3Service.upload(clothesId, image);
       clothes.setImageUrl(url);
-    }
-
-    if(request.selectableValues() != null){
-      clothes.setAttributeValues(request.selectableValues().stream()
-          .map(attributeDto -> AttributeValue.builder()
-              .value(attributeDto.getValue())
-              .definition(attributeService.findByDefName(attributeDto.getDefinitionName()))
-              .clothes(clothes)
-              .build()).toList());
     }
 
     return clothesMapper.toDto(clothes);
