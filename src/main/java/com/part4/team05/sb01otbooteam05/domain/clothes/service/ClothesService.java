@@ -120,9 +120,9 @@ public class ClothesService {
     }
 
 
-    if (request.selectableValues() != null) {
+    if (request.getSelectableValues() != null) {
       for (AttributeValue attributeValue : clothes.getAttributeValues()) {
-        request.selectableValues().stream()
+        request.getSelectableValues().stream()
             .filter(dto -> dto.getDefinitionId().equals(attributeValue.getDefinition().getId()))
             .findFirst()
             .ifPresent(dto -> {
@@ -131,11 +131,11 @@ public class ClothesService {
       }
     }
 
-    if (request.name() != null) {
-      clothes.setName(request.name());
+    if (request.getName() != null) {
+      clothes.setName(request.getName());
     }
-    if (request.type() != null) {
-      clothes.setType(ClothesType.valueOf(request.type()));
+    if (request.getType() != null) {
+      clothes.setType(ClothesType.valueOf(request.getType()));
     }
 
     if (image != null && !image.isEmpty()) {
