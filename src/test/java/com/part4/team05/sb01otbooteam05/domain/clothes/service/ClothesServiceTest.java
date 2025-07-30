@@ -169,8 +169,8 @@ class ClothesServiceTest {
 
         ClothesDto dto = new ClothesDto();
         dto.setId(clothesId);
-        dto.setType(request.type());
-        dto.setName(request.name());
+        dto.setType(request.getType());
+        dto.setName(request.getName());
 
         given(clothesRepository.findById(clothesId)).willReturn(Optional.ofNullable(clothes));
         given(clothesMapper.toDto(clothes)).willReturn(dto);
