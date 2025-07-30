@@ -52,11 +52,16 @@ class NotificationServiceImplTest {
         when(user.getId()).thenReturn(userId);
         when(notificationRepository.findNotifications(eq(userId), isNull(), any(Pageable.class)))
                 .thenReturn(Collections.emptyList());
-        OtbooException ex = assertThrows(OtbooException.class,
-                () -> service.getNotifications(user, /*cursor=*/null, /*idAfter=*/null, /*limit=*/5)
-        );
-        assertEquals(ErrorCode.NOTIFICATION_NOT_FOUND, ex.getErrorCode());
+
+        NotificationDtoCursorResponse response = service.getNotifications(user, null, null, 5);
+
+        assertNotNull(response);
+        assertEquals(0, response.data().size());
+        assertFalse(response.hasNext());
+        assertNull(response.nextIdAfter());
+        assertNull(response.nextCursor());
     }
+
 
     @Test
     void testGetNotificationsNoNext() {
