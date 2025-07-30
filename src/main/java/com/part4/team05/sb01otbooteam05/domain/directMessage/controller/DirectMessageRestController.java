@@ -34,19 +34,12 @@ public class DirectMessageRestController implements DirectMessageRestControllerD
             @AuthenticationPrincipal CustomUserDetails me
     ) {
 
-        // limit 검증
-        if (limit < 1 || limit > 100) {
-            throw new OtbooException(ErrorCode.INVALID_PAGINATION_LIMIT);
-        }
+        UUID myId = me.getUserId();
 
-        // 본인 확인
-        if (!me.getUserId().equals(userId)) {
-            throw new OtbooException(ErrorCode.DM_SENDER_MISMATCH);
-        }
-
-        DirectMessageDtoCursorResponse resp = directMessageService.getMessages(
-                userId, cursor, idAfter, limit
-        );
+        DirectMessageDtoCursorResponse resp =
+                directMessageService.getMessagesBetweenUsers(
+                        myId, userId, cursor, idAfter, limit
+                );
         return ResponseEntity.ok(resp);
     }
 }

@@ -16,6 +16,7 @@ import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Sort;
@@ -116,6 +117,48 @@ public class DirectMessageServiceImpl implements DirectMessageService {
                 total,
                 "id",
                 "DESC"
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DirectMessageDtoCursorResponse getMessagesBetweenUsers(
+            UUID me,
+            UUID other,
+            String cursor,
+            UUID idAfter,
+            int limit
+    ) {
+        // 파라미터 검증
+        if (limit < 1 || limit > 100) {
+            throw new OtbooException(ErrorCode.INVALID_PAGINATION_LIMIT);
+        }
+
+        // 커서 파싱
+        UUID effective = null;
+        if (cursor != null && !cursor.isBlank()) {
+            try {
+                effective = UUID.fromString(cursor);
+            } catch (IllegalArgumentException e) {
+                throw new OtbooException(ErrorCode.INVALID_PAGINATION_LIMIT);
+            }
+        } else {
+            effective = idAfter;
+        }
+
+        Pageable page = PageRequest.of(0, limit, Sort.by(Direction.DESC, "id"));
+        List<DirectMessage> list = directMessageRepository.findBetweenUsers(me, other, effective, page);
+        List<DirectMessageDto> dtos = list.stream()
+                .map(directMessageMapper::toDto)
+                .toList();
+
+        UUID nextId = dtos.isEmpty() ? null : dtos.get(dtos.size() - 1).id();
+        String nextCursor = nextId != null ? nextId.toString() : null;
+        boolean hasNext = dtos.size() == limit;
+        long total = directMessageRepository.countBetweenUsers(me, other);
+
+        return new DirectMessageDtoCursorResponse(
+                dtos, nextCursor, nextId, hasNext, total, "id", "DESC"
         );
     }
 }
