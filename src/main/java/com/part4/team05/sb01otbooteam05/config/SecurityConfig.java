@@ -67,6 +67,7 @@ public class SecurityConfig {
                 "/api/auth/me",          // 엑세스 토큰 조회
                 "/api/auth/csrf-token",  // CSRF 토큰 조회 (토큰을 받기 위한 요청이므로 제외)
                 "/api/auth/reset-password", //비번 초기화
+//                "/api/users/*/password",
                 "/",
                 "/index.html", // 기본 페이지 및 아이콘
                 "/assets/**",       // 프론트엔드
