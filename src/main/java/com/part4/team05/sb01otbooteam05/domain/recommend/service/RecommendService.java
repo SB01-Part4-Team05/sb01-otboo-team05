@@ -74,7 +74,20 @@ public class RecommendService {
 
     List<ClothesDto> recommended = callAIServer(dtoLists);
 
-    return new RecommendationDto(weatherId, ownerId, recommended);
+    List<UUID> recommendedIds = recommended.stream()
+        .map(ClothesDto::getId)
+        .toList();
+
+    List<ClothesDto> others = dtoLists.stream()
+        .flatMap(List::stream)
+        .filter(c -> !recommendedIds.contains(c.getId()))
+        .toList();
+
+    List<ClothesDto> finalResult = new ArrayList<>();
+    finalResult.addAll(recommended);
+    finalResult.addAll(others);
+
+    return new RecommendationDto(weatherId,ownerId,finalResult);
   }
 
   private List<Clothes> filterAndSort(List<Clothes> clothesList, ClothesType type, int weatherValue) {
