@@ -49,6 +49,12 @@ public class RecommendService {
 
   public RecommendationiDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
     Map<StyleType, Map<ClothesType, List<Clothes>>> map = getMap(ownerId);
+
+    if (map.isEmpty()) {
+      log.info("사용자의 옷장이 비어있습니다. 빈 추천을 반환합니다.", ownerId);
+      return new RecommendationiDto(weatherId, ownerId, Collections.emptyList());
+    }
+
     List<List<Clothes>> result = new ArrayList<>();
     int weatherValue = getWeatherValue(weatherId);
 
