@@ -1,7 +1,6 @@
 package com.part4.team05.sb01otbooteam05.domain.recommend.controller;
 
-import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
-import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationiDto;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationDto;
 import com.part4.team05.sb01otbooteam05.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,7 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "추천 관리", description = "추천 관련 API")
@@ -36,7 +34,7 @@ public interface RecommendControllerDoc {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class))
       )
   })
-  ResponseEntity<RecommendationiDto> getRecommendSet(
+  ResponseEntity<RecommendationDto> getRecommendSet(
       @Parameter(description = "weatherId") @RequestParam UUID weatherId
   );
 }

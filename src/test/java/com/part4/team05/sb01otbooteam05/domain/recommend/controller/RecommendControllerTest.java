@@ -11,32 +11,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.jwt.JwtTokenProvider;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
-import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationiDto;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationDto;
 import com.part4.team05.sb01otbooteam05.domain.recommend.service.RecommendService;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @WebMvcTest(controllers = RecommendController.class)
+@TestPropertySource(properties = {
+    "ACTUATOR_PASSWORD=dummyPasswordForTest",
+    "ACTUATOR_USER=dummyUserForTest"
+})
 class RecommendControllerTest {
 
   @Autowired
@@ -59,7 +58,6 @@ class RecommendControllerTest {
     UUID weatherId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
 
-
     CustomUserDetails userDetails = mock(CustomUserDetails.class);
     given(userDetails.getUserId()).willReturn(userId);
     Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -67,9 +65,9 @@ class RecommendControllerTest {
 
     ClothesDto clothesDto = new ClothesDto();
     clothesDto.setType("TOP");
-    List<List<ClothesDto>> mockClothes = List.of(List.of(clothesDto));
+    List<ClothesDto> mockClothes = List.of(clothesDto);
 
-    RecommendationiDto dto = new RecommendationiDto(weatherId, userId, mockClothes);
+    RecommendationDto dto = new RecommendationDto(weatherId, userId, mockClothes);
 
     given(recommendService.getRecommend(any(), any())).willReturn(dto);
 
@@ -82,7 +80,6 @@ class RecommendControllerTest {
         .andReturn();
 
     String responseJson = result.getResponse().getContentAsString();
-    System.out.println("RESPONSE JSON: " + responseJson);
 
     JsonNode root = objectMapper.readTree(responseJson);
     JsonNode clothesNode = root.get("clothes");
@@ -91,13 +88,11 @@ class RecommendControllerTest {
     assertTrue(clothesNode.isArray());
     assertEquals(1, clothesNode.size());
 
-    List<List<ClothesDto>> parsedClothes = objectMapper.readValue(
+    List<ClothesDto> parsedClothes = objectMapper.readValue(
         clothesNode.toString(),
-        new TypeReference<List<List<ClothesDto>>>() {}
+        new TypeReference<List<ClothesDto>>() {}
     );
 
     assertEquals(1, parsedClothes.size());
-    assertEquals(1, parsedClothes.get(0).size());
   }
-
 }

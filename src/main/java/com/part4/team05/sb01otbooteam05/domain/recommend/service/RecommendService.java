@@ -1,6 +1,5 @@
 package com.part4.team05.sb01otbooteam05.domain.recommend.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.StyleType;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.ThicknessType;
@@ -9,7 +8,7 @@ import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
 import com.part4.team05.sb01otbooteam05.domain.clothes.mapper.ClothesMapper;
 import com.part4.team05.sb01otbooteam05.domain.clothes.service.ClothesService;
-import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationiDto;
+import com.part4.team05.sb01otbooteam05.domain.recommend.dto.RecommendationDto;
 import com.part4.team05.sb01otbooteam05.domain.weather.entity.Weather;
 import com.part4.team05.sb01otbooteam05.domain.weather.service.WeatherService;
 import jakarta.annotation.PostConstruct;
@@ -19,7 +18,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
@@ -33,7 +31,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
@@ -49,13 +46,12 @@ public class RecommendService {
   private final Map<ThicknessType,Integer> criteria = new HashMap<>();
   private final Map<Integer, Integer> weatherCriteria = new HashMap<>();
 
-
-  public RecommendationiDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
+  public RecommendationDto getRecommend(@NotNull UUID ownerId, @NotNull UUID weatherId) {
     Map<StyleType, Map<ClothesType, List<Clothes>>> styleMap = getMap(ownerId);
 
     if (styleMap.isEmpty()) {
       log.info("사용자의 옷장이 비어있습니다. 빈 추천을 반환합니다. ownerId={}", ownerId);
-      return new RecommendationiDto(weatherId, ownerId, Collections.emptyList());
+      return new RecommendationDto(weatherId, ownerId, Collections.emptyList());
     }
 
     int weatherValue = getWeatherValue(weatherId);
@@ -145,8 +141,10 @@ public class RecommendService {
               objectMapper.getTypeFactory().constructCollectionType(List.class,
                   objectMapper.getTypeFactory().constructCollectionType(List.class, ClothesDto.class)));
 
-          if (aiList != null) {
-            return new RecommendationiDto(weatherId, ownerId, aiList);
+          if (aiList != null && !aiList.isEmpty()) {
+            // AI 추천 리스트 중 첫 번째 조합만 담아 반환
+            List<ClothesDto> firstSet = aiList.get(0);
+            return new RecommendationDto(weatherId, ownerId, firstSet);
           }
         }
       }
@@ -154,7 +152,12 @@ public class RecommendService {
       log.warn("AI 서버 호출 실패: {}", e.getMessage());
     }
 
-    return new RecommendationiDto(weatherId, ownerId, dtoResult);
+    // AI 서버 실패 시 기본 추천 리스트 중 첫 번째 조합만 담아 반환
+    if (!dtoResult.isEmpty()) {
+      return new RecommendationDto(weatherId, ownerId, dtoResult.get(0));
+    } else {
+      return new RecommendationDto(weatherId, ownerId, Collections.emptyList());
+    }
   }
 
   private Map<StyleType, Map<ClothesType, List<Clothes>>> getMap(UUID ownerId) {
@@ -234,7 +237,7 @@ public class RecommendService {
 
   private int getWeatherValue(UUID weatherId) {
     Weather weather = weatherService.getWeatherEntityByIdOrThrow(weatherId);
-    double mid = (weather.getTemperatureMax() + weather.getTemperatureMin()) / 2;
+    double mid = (weather.getTemperatureMax() + weather.getTemperatureMin()) / 2.0;
 
     return weatherCriteria.entrySet().stream()
         .filter(entry -> mid < entry.getKey() + 5 && mid >= entry.getKey())
@@ -265,17 +268,13 @@ public class RecommendService {
     weatherCriteria.put(30, 15);
   }
 
-
-
-
-
   /*
   추천 기준
-     날씨에서 가져올 것
-     온도 최고 / 최저
-     온도 미디언 값 -> 가중치 확인
-     온도 가중치는 5도 단위로 끊고 -15 ~ 35 까지
-     -15 / -10 / -7 / -5 / 2 / 5 / 7 / 10 / 12 / 15
-     옷 가중치 + 온도 가중치가 0 ~ 5 사이가 되도록 하는 것이 추천의 목표
-   */
+  날씨에서 가져올 것
+  온도 최고 / 최저
+  온도 미디언 값 -> 가중치 확인
+  온도 가중치는 5도 단위로 끊고 -15 ~ 35 까지
+  -15 / -10 / -7 / -5 / 2 / 5 / 7 / 10 / 12 / 15
+  옷 가중치 + 온도 가중치가 0 ~ 5 사이가 되도록 하는 것이 추천의 목표
+  */
 }
