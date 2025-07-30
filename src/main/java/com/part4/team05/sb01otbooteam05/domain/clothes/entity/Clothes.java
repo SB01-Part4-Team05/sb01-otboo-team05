@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -45,7 +46,7 @@ public class Clothes {
       cascade = CascadeType.ALL,
       fetch = FetchType.EAGER
   )
-  private List<AttributeValue> attributeValues;
+  private List<AttributeValue> attributeValues = new ArrayList<>();
 
   @Column(name = "owner_id")
   UUID ownerId;
