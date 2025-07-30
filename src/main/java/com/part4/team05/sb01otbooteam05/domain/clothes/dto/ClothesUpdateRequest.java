@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClothesUpdateRequest{
+public class ClothesUpdateRequest {
   String name;
   String type;
   List<AttributeDto> selectableValues;
