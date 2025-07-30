@@ -15,6 +15,9 @@ import com.part4.team05.sb01otbooteam05.domain.feed.repository.SearchFeedReposit
 import com.part4.team05.sb01otbooteam05.domain.feedComment.repository.FeedCommentRepository;
 import com.part4.team05.sb01otbooteam05.domain.feedLike.entity.FeedLike;
 import com.part4.team05.sb01otbooteam05.domain.feedLike.repository.FeedLikeRepository;
+import com.part4.team05.sb01otbooteam05.domain.follow.service.FollowService;
+import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
+import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.ootd.entity.Ootd;
 import com.part4.team05.sb01otbooteam05.domain.user.entity.User;
 import com.part4.team05.sb01otbooteam05.domain.user.service.UserService;
@@ -25,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -43,6 +47,8 @@ public class BasicFeedService implements FeedService {
     private final FeedCommentRepository feedCommentRepository;
     private final FeedMapper feedMapper;
     private final SearchFeedRepository searchFeedRepository;
+    private final NotificationService notificationService;
+    private final FollowService followService;
 
     @Override
     @Transactional(readOnly = true)
@@ -80,8 +86,31 @@ public class BasicFeedService implements FeedService {
             throw new IllegalArgumentException();
         }
 
-        log.info("피드 생성 성공: feedId={}", newFeed.getId());
-        return feedMapper.toFeedDto(newFeed, 0L, 0, false);
+        Feed savedFeed = feedRepository.save(newFeed);
+
+        log.info("피드 생성 성공: feedId={}", savedFeed.getId());
+
+        // 팔로우한 사용자가 피드를 등록하면 알림 전송
+        try {
+            List<UUID> followerIds = followService.getFollowers(userId, null, 1000, null)
+                    .data()
+                    .stream()
+                    .map(f -> f.follower().userId())
+                    .toList();
+
+            for (UUID followerId : followerIds) {
+                notificationService.createAndSendNotification(
+                        followerId,
+                        "새로운 피드",
+                        user.getName() + "님이 피드를 등록했습니다.",
+                        NotificationLevel.INFO
+                );
+            }
+        } catch (Exception e) {
+            log.warn("피드 등록 알림 전송 실패: userId={}", userId, e);
+        }
+
+        return feedMapper.toFeedDto(savedFeed, 0L, 0, false);
     }
 
     // 피드 삭제

@@ -2,6 +2,8 @@ package com.part4.team05.sb01otbooteam05.domain.user.service;
 
 import com.part4.team05.sb01otbooteam05.domain.auth.repository.RefreshTokenRepository;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
+import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
+import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserDto;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserLockUpdateRequest;
@@ -33,6 +35,7 @@ public class AdminServiceImpl implements AdminService {
 
   private final UserRepository userRepository;
   private final RefreshTokenRepository refreshTokenRepository;
+  private final NotificationService notificationService;
 
   // 슈퍼 어드민 판별 헬퍼 메서드
   private boolean isSuperAdmin(User user) {
@@ -189,6 +192,14 @@ public class AdminServiceImpl implements AdminService {
 
     refreshTokenRepository.revokeAllByUserId(userId);
     log.info("권한 변경 완료 및 강제 로그아웃 처리: userId={}", userId);
+
+    // 권한 변경 알림 전송
+    notificationService.createAndSendNotification(
+            updatedUser.getId(),
+            "권한이 변경되었습니다",
+            "관리자에 의해 귀하의 권한이 " + request.role().name() + "(으)로 변경되었습니다.",
+            NotificationLevel.INFO
+    );
 
     return UserDto.from(updatedUser);
   }
