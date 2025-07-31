@@ -2,6 +2,7 @@ package com.part4.team05.sb01otbooteam05.domain.user.service;
 
 import com.part4.team05.sb01otbooteam05.domain.auth.repository.RefreshTokenRepository;
 import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
+import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserDto;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserDtoCursorResponse;
 import com.part4.team05.sb01otbooteam05.domain.user.dto.UserLockUpdateRequest;
@@ -45,6 +46,7 @@ class AdminServiceImplTest {
   @Mock private SecurityContext securityContext;
   @Mock private Authentication authentication;
   @Mock private CustomUserDetails userDetails;
+  @Mock private NotificationService notificationService;
   @InjectMocks private AdminServiceImpl adminService;
 
   private User testUser;

@@ -1,10 +1,11 @@
 package com.part4.team05.sb01otbooteam05.domain.recommend.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeDefinition;
+import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeValue;
 import com.part4.team05.sb01otbooteam05.domain.clothes.dto.ClothesDto;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.Clothes;
 import com.part4.team05.sb01otbooteam05.domain.clothes.entity.ClothesType;
@@ -21,11 +22,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class RecommendServiceTest {
 
   @InjectMocks
@@ -39,6 +40,9 @@ class RecommendServiceTest {
 
   @Mock
   WeatherService weatherService;
+
+  @Mock
+  RestTemplate restTemplate;
 
   @BeforeEach
   void setup() {
@@ -64,33 +68,52 @@ class RecommendServiceTest {
     when(weather.getTemperatureMin()).thenReturn(10.0);
     when(weatherService.getWeatherEntityByIdOrThrow(weatherId)).thenReturn(weather);
 
+    ClothesDto dto = new ClothesDto();
+    dto.setId(UUID.randomUUID());
+
+    // Mock mapper behavior for all clothes
+    when(clothesMapper.toDto(any())).thenReturn(dto);
+
+    // Mock AI server response
+    ClothesDto[][] aiResponse = new ClothesDto[][] { { dto } };
+    ResponseEntity<ClothesDto[][]> responseEntity = new ResponseEntity<>(aiResponse, HttpStatus.OK);
+
     RecommendationDto result = recommendService.getRecommend(ownerId, weatherId);
 
     assertNotNull(result);
     assertEquals(ownerId, result.userId());
     assertEquals(weatherId, result.weatherId());
+    assertFalse(result.clothes().isEmpty());
   }
 
+  @Test
+  void getRecommend_emptyClothes() {
+    UUID ownerId = UUID.randomUUID();
+    UUID weatherId = UUID.randomUUID();
+
+    when(clothesService.findAllByOwnerId(ownerId)).thenReturn(List.of());
+
+    Weather weather = mock(Weather.class);
+    when(weather.getTemperatureMax()).thenReturn(20.0);
+    when(weather.getTemperatureMin()).thenReturn(10.0);
+    when(weatherService.getWeatherEntityByIdOrThrow(weatherId)).thenReturn(weather);
+
+    RecommendationDto result = recommendService.getRecommend(ownerId, weatherId);
+
+    assertNotNull(result);
+    assertTrue(result.clothes().isEmpty());
+  }
 
   private Clothes createClothesWithThickness(ClothesType type, String thicknessValue) {
-    Clothes clothes = mock(Clothes.class);
-    when(clothes.getType()).thenReturn(type);
+    Clothes clothes = new Clothes();
+    clothes.setType(type);
+    clothes.setName("Test " + type);
 
     AttributeDefinition thicknessDef = mock(AttributeDefinition.class);
-    when(thicknessDef.getName()).thenReturn("thickness");
 
     AttributeValue thicknessAttr = mock(AttributeValue.class);
-    when(thicknessAttr.getDefinition()).thenReturn(thicknessDef);
-    when(thicknessAttr.getValue()).thenReturn(thicknessValue);
 
-    when(clothes.getAttributeValues()).thenReturn(List.of(thicknessAttr));
-
-    ClothesDto clothesDto = new ClothesDto();
-    clothesDto.setId(UUID.randomUUID());
-    clothesDto.setName("Test " + type);
-    clothesDto.setType(type.toString());
-    when(clothesMapper.toDto(clothes)).thenReturn(clothesDto);
-
+    clothes.setAttributeValues(List.of(thicknessAttr));
     return clothes;
   }
 

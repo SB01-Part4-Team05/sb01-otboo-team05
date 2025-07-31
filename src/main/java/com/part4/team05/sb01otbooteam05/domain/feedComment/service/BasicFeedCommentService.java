@@ -2,6 +2,8 @@ package com.part4.team05.sb01otbooteam05.domain.feedComment.service;
 
 import java.util.UUID;
 
+import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
+import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ public class BasicFeedCommentService implements FeedCommentService {
 	private final UserService userService;
 	private final CommentMapper commentMapper;
 	private final FeedCommentRepository feedCommentRepository;
+	private final NotificationService notificationService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -52,6 +55,21 @@ public class BasicFeedCommentService implements FeedCommentService {
 		// 2. 댓글 생성
 		Comment newComment = new Comment(feed, author, request.content());
 		feedCommentRepository.save(newComment);
+
+		// 내 피드에 댓글 등록 알림
+		try {
+			UUID receiverId = feed.getAuthor().getId();
+			if (!receiverId.equals(userId)) {
+				notificationService.createAndSendNotification(
+						receiverId,
+						"댓글 알림",
+						author.getName() + "님이 내 피드에 댓글을 달았습니다.",
+						NotificationLevel.INFO
+				);
+			}
+		} catch (Exception e) {
+			log.warn("댓글 알림 전송 실패: userId={}, feedId={}, commentId={}", userId, feedId, newComment.getId(), e);
+		}
 
 		// 3. 댓글 Dto 반환
 		log.info("댓글 생성 성공: commentId={}", newComment.getId());

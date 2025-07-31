@@ -120,9 +120,9 @@ public class ClothesService {
     }
 
 
-    if (request.getSelectableValues() != null) {
+    if (request.getAttributes() != null) {
       for (AttributeValue attributeValue : clothes.getAttributeValues()) {
-        request.getSelectableValues().stream()
+        request.getAttributes().stream()
             .filter(dto -> dto.getDefinitionId().equals(attributeValue.getDefinition().getId()))
             .findFirst()
             .ifPresent(dto -> {
@@ -142,6 +142,8 @@ public class ClothesService {
       String url = clothesS3Service.upload(clothesId, image);
       clothes.setImageUrl(url);
     }
+
+    clothesRepository.save(clothes);
 
     return clothesMapper.toDto(clothes);
   }

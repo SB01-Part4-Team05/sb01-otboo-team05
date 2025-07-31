@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import com.part4.team05.sb01otbooteam05.domain.notification.entity.NotificationLevel;
+import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.query.SortDirection;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +32,7 @@ public class AttributeService {
   private final AttributeRepository attributeRepository;
   private final AttributeDefinitionRepository definitionRepository;
   private final AttributeDefinitionMapper definitionMapper;
+  private final NotificationService notificationService;
 
   @Transactional
   public List<AttributeValue> createAndReturnList(List<ClothesAttributeDto> attributes, Clothes clothes){
@@ -60,7 +64,7 @@ public class AttributeService {
   }
 
   @Transactional
-  public AttributeDefinition createDef(ClothesAttributeDefCreateRequest request){
+  public AttributeDefinition createDef(ClothesAttributeDefCreateRequest request, UUID userId){
       AttributeDefinition attributeDefinition = AttributeDefinition.builder()
           .name(request.name())
           .selectableValues(request.selectableValues())
@@ -68,23 +72,51 @@ public class AttributeService {
 
       definitionRepository.save(attributeDefinition);
 
+    // 알림 전송
+    notificationService.createAndSendNotification(
+            userId,
+            "새로운 의상 속성이 추가되었어요.",
+            "내 의상에 [" + request.name() + "] 속성을 추가해보세요.",
+            NotificationLevel.INFO
+    );
+
       return attributeDefinition;
   }
 
   @Transactional
-  public AttributeDefinition updateDef(UUID definitionId,ClothesAttributeDefUpdateRequest request){
+  public AttributeDefinition updateDef(UUID definitionId,ClothesAttributeDefUpdateRequest request, UUID userId){
     AttributeDefinition attributeDefinition = definitionRepository.findById(definitionId)
         .orElseThrow(() -> new NoSuchDefException("해당하는 속성이 없습니다."));
 
     attributeDefinition.setName(request.name());
     attributeDefinition.setSelectableValues(request.selectableValues());
 
+    notificationService.createAndSendNotification(
+            userId,
+            "의상 속성이 변경되었어요.",
+            "[" + request.name() + "] 속성을 확인해보세요.",
+            NotificationLevel.INFO
+    );
+
     return attributeDefinition;
   }
 
   @Transactional
-  public void deleteDef(UUID definitionId){
+  public void deleteDef(UUID definitionId, UUID userId){
+
+    AttributeDefinition definition = definitionRepository.findById(definitionId)
+            .orElseThrow(() -> new NoSuchDefException("해당하는 속성이 없습니다."));
+
+    String name = definition.getName();
+
     definitionRepository.deleteById(definitionId);
+
+    notificationService.createAndSendNotification(
+            userId,
+            "의상 속성이 변경되었어요.",
+            "[" + name + "] 속성을 확인해보세요.",
+            NotificationLevel.INFO
+    );
   }
 
   public ClothesAttributeDefDtoCursorResponse getDef(
