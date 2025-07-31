@@ -6,11 +6,14 @@ import com.part4.team05.sb01otbooteam05.domain.attribute.service.AttributeServic
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefUpdateRequest;
 import java.util.UUID;
+
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.query.SortDirection;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -29,20 +32,23 @@ public class AttributeController implements AttributeControllerDoc{
 
   @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
-  public ResponseEntity<AttributeDefinition> createDef(@RequestBody ClothesAttributeDefCreateRequest request){
-    return ResponseEntity.status(HttpStatus.CREATED).body(attributeService.createDef(request));
+  public ResponseEntity<AttributeDefinition> createDef(@RequestBody ClothesAttributeDefCreateRequest request,
+                                                       @AuthenticationPrincipal CustomUserDetails me){
+    return ResponseEntity.status(HttpStatus.CREATED).body(attributeService.createDef(request, me.getUserId()));
   }
 
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{definitionId}")
-  public ResponseEntity<AttributeDefinition> update(@PathVariable UUID definitionId, @RequestBody ClothesAttributeDefUpdateRequest request){
-    return ResponseEntity.ok(attributeService.updateDef(definitionId,request));
+  public ResponseEntity<AttributeDefinition> update(@PathVariable UUID definitionId, @RequestBody ClothesAttributeDefUpdateRequest request,
+                                                    @AuthenticationPrincipal CustomUserDetails me){
+    return ResponseEntity.ok(attributeService.updateDef(definitionId,request, me.getUserId()));
   }
 
   @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{definitionId}")
-  public ResponseEntity<Void> deleteDef(@PathVariable UUID definitionId){
-    attributeService.deleteDef(definitionId);
+  public ResponseEntity<Void> deleteDef(@PathVariable UUID definitionId,
+                                        @AuthenticationPrincipal CustomUserDetails me){
+    attributeService.deleteDef(definitionId, me.getUserId());
     return ResponseEntity.noContent().build();
   }
 
