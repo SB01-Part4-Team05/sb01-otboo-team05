@@ -30,4 +30,33 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, UU
         WHERE m.sender.id = :userId OR m.receiver.id = :userId
     """)
     long countByUserId(@Param("userId") UUID userId);
+
+    @Query("""
+        SELECT m
+        FROM DirectMessage m
+        WHERE (
+            (m.sender.id = :userA AND m.receiver.id = :userB)
+            OR
+            (m.sender.id = :userB AND m.receiver.id = :userA)
+        )
+        AND (:idAfter IS NULL OR m.id < :idAfter)
+        ORDER BY m.id DESC
+    """)
+    List<DirectMessage> findBetweenUsers(
+            @Param("userA") UUID userA,
+            @Param("userB") UUID userB,
+            @Param("idAfter") UUID idAfter,
+            Pageable pageable
+    );
+
+    @Query("""
+        SELECT COUNT(m)
+        FROM DirectMessage m
+        WHERE (m.sender.id = :userA AND m.receiver.id = :userB)
+           OR (m.sender.id = :userB AND m.receiver.id = :userA)
+    """)
+    long countBetweenUsers(
+            @Param("userA") UUID userA,
+            @Param("userB") UUID userB
+    );
 }

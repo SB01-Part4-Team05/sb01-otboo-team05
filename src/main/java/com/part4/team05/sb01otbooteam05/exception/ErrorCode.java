@@ -14,6 +14,9 @@ public enum ErrorCode {
 	//Auth 관련 에러 코드
 	UNAUTHORIZED("인증이 필요합니다"),
 	INVALID_TOKEN("유효하지 않은 토큰입니다"),
+	MISSING_TOKEN("Authorization 헤더에 토큰이 없습니다."),
+	AUTHENTICATION_FAILED("인증 처리 중 오류가 발생했습니다."),
+	INVALID_AUTHENTICATION("인증 정보가 유효하지 않습니다."),
 
 	// Feed 관련 에러 코드
 	FEED_NOT_FOUND("해당 피드를 찾을 수 없습니다."),

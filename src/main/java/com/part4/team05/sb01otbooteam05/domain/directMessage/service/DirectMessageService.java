@@ -11,4 +11,12 @@ public interface DirectMessageService {
     DirectMessageDto sendMessage(DirectMessageCreateRequest request);
 
     DirectMessageDtoCursorResponse getMessages(UUID userId, String cursor, UUID idAfter, int limit);
+
+    DirectMessageDtoCursorResponse getMessagesBetweenUsers(
+            UUID me,
+            UUID other,
+            String cursor,
+            UUID idAfter,
+            int limit
+    );
 }

@@ -11,10 +11,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,24 +29,46 @@ public class DirectMessageController {
     private final DirectMessageService directMessageService;
 
     @MessageMapping("/direct-messages_send")
-    public void send(@Valid DirectMessageCreateRequest request) {
-        // 현재 로그인한 사용자 정보
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        UUID authenticatedUserId = userDetails.getUserId();
-
-        // 클라이언트에서 남긴 senderId와 일치하는지 확인
-        if (!authenticatedUserId.equals(request.senderId())) {
-            log.warn("인증된 사용자와 senderId 불일치! senderId={}, authenticated={}",
-                    request.senderId(), authenticatedUserId);
-            throw new OtbooException(ErrorCode.DM_SENDER_MISMATCH);
+    public void send(
+           @Valid DirectMessageCreateRequest request,
+            Principal principal    // ChannelInterceptor에서 setUser(auth) 해둔 Authentication
+    ) {
+        // Principal null 체크
+        if (principal == null) {
+            log.error("인증되지 않은 사용자의 메시지 전송 시도");
+            throw new OtbooException(ErrorCode.UNAUTHORIZED);
         }
 
-        DirectMessageDto saved = directMessageService.sendMessage(request);
-        String dmKey = generateDmKey(request.senderId(), request.receiverId());
+        // 1) 빈 메시지면 무시
+        if (request.content() == null || request.content().trim().isEmpty()) {
+            log.debug("빈 메시지 요청 무시");
+            return;
+        }
+
+        // 2) principal에서 꺼낸 실제 로그인 사용자 ID만 사용
+        if (!(principal instanceof Authentication auth)) {
+            throw new OtbooException(ErrorCode.INVALID_AUTHENTICATION);
+        }
+        if (!(auth.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new OtbooException(ErrorCode.INVALID_AUTHENTICATION);
+        }
+        UUID actualSenderId = userDetails.getUserId();
+
+        // 3) 클라이언트가 보낸 request.senderId는 무시하고, 항상 actualSenderId로 재구성
+        DirectMessageCreateRequest safeReq = new DirectMessageCreateRequest(
+                actualSenderId,
+                request.receiverId(),
+                request.content()
+        );
+
+        // 4) 서비스 호출
+        DirectMessageDto saved = directMessageService.sendMessage(safeReq);
+
+        // 5) DM Key 만들고 발행
+        String dmKey = generateDmKey(actualSenderId, request.receiverId());
         messagingTemplate.convertAndSend("/sub/direct-messages_" + dmKey, saved);
 
-        log.info("DM 전송 완료: sender={}, receiver={}", request.senderId(), request.receiverId());
+        log.info("DM 전송 완료: sender={}, receiver={}", actualSenderId, request.receiverId());
     }
 
     private String generateDmKey(UUID id1, UUID id2) {
