@@ -6,12 +6,14 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -39,16 +41,25 @@ public class Clothes {
   @Column @Enumerated(EnumType.STRING)
   ClothesType type;
 
-  @OneToMany(mappedBy = "clothes", cascade = CascadeType.ALL)
-  private List<AttributeValue> attributeValues;
+  @OneToMany(
+      mappedBy = "clothes",
+      cascade = CascadeType.ALL,
+      fetch = FetchType.EAGER
+  )
+  @Builder.Default
+  private List<AttributeValue> attributeValues = new ArrayList<>();
 
   @Column(name = "owner_id")
   UUID ownerId;
 
-  public void setAttributeValues(
-      List<AttributeValue> attributeValues) {
-    this.attributeValues = attributeValues;
+  public void setAttributeValues(List<AttributeValue> newValues) {
+    this.attributeValues.clear();
+    for (AttributeValue av : newValues) {
+      av.setClothes(this);
+      this.attributeValues.add(av);
+    }
   }
+
 
   public void setName(String name) {
     this.name = name;
