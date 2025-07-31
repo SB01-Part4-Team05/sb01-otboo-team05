@@ -30,9 +30,15 @@ public class DirectMessageController {
 
     @MessageMapping("/direct-messages_send")
     public void send(
-            DirectMessageCreateRequest request,
+           @Valid DirectMessageCreateRequest request,
             Principal principal    // ChannelInterceptor에서 setUser(auth) 해둔 Authentication
     ) {
+        // Principal null 체크
+        if (principal == null) {
+            log.error("인증되지 않은 사용자의 메시지 전송 시도");
+            throw new OtbooException(ErrorCode.UNAUTHORIZED);
+        }
+
         // 1) 빈 메시지면 무시
         if (request.content() == null || request.content().trim().isEmpty()) {
             log.debug("빈 메시지 요청 무시");
@@ -40,9 +46,13 @@ public class DirectMessageController {
         }
 
         // 2) principal에서 꺼낸 실제 로그인 사용자 ID만 사용
-        UUID actualSenderId = ((CustomUserDetails)
-                ((org.springframework.security.core.Authentication) principal).getPrincipal()
-        ).getUserId();
+        if (!(principal instanceof Authentication auth)) {
+            throw new OtbooException(ErrorCode.INVALID_AUTHENTICATION);
+        }
+        if (!(auth.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new OtbooException(ErrorCode.INVALID_AUTHENTICATION);
+        }
+        UUID actualSenderId = userDetails.getUserId();
 
         // 3) 클라이언트가 보낸 request.senderId는 무시하고, 항상 actualSenderId로 재구성
         DirectMessageCreateRequest safeReq = new DirectMessageCreateRequest(
@@ -55,9 +65,7 @@ public class DirectMessageController {
         DirectMessageDto saved = directMessageService.sendMessage(safeReq);
 
         // 5) DM Key 만들고 발행
-        String dmKey = Stream.of(actualSenderId.toString(), request.receiverId().toString())
-                .sorted()
-                .collect(Collectors.joining("_"));
+        String dmKey = generateDmKey(actualSenderId, request.receiverId());
         messagingTemplate.convertAndSend("/sub/direct-messages_" + dmKey, saved);
 
         log.info("DM 전송 완료: sender={}, receiver={}", actualSenderId, request.receiverId());

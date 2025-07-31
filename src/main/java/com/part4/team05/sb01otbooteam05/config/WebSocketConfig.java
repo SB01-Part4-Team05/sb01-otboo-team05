@@ -8,6 +8,7 @@ import com.part4.team05.sb01otbooteam05.domain.user.repository.UserRepository;
 import com.part4.team05.sb01otbooteam05.exception.ErrorCode;
 import com.part4.team05.sb01otbooteam05.exception.OtbooException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -25,6 +26,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSocketMessageBroker
@@ -62,25 +64,46 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                     String rawToken = accessor.getFirstNativeHeader("Authorization");
-                    if (rawToken != null && rawToken.startsWith("Bearer ")) {
-                        String token = rawToken.substring(7);
-                        if (jwtTokenProvider.validateToken(token)) {
-                            UUID userId = jwtTokenProvider.getUserIdFromToken(token);
-                            // User 조회 후 UserDetails 생성
-                            User user = userRepository.findById(userId)
-                                    .orElseThrow(() -> new OtbooException(ErrorCode.USER_NOT_FOUND));
-                            CustomUserDetails userDetails = new CustomUserDetails(
-                                    user.getId(), user.getEmail(), user.getRole().name()
-                            );
-                            UsernamePasswordAuthenticationToken auth =
-                                    new UsernamePasswordAuthenticationToken(
-                                            userDetails, null, userDetails.getAuthorities()
-                                    );
-                            // STOMP 세션의 Principal로 설정
-                            accessor.setUser(auth);
+
+                    try {
+                        // 1) 헤더 존재 & Bearer 포맷 확인
+                        if (rawToken == null || !rawToken.startsWith("Bearer ")) {
+                            log.warn("Authorization 헤더가 없거나 형식이 잘못됨");
+                            throw new OtbooException(ErrorCode.MISSING_TOKEN);
                         }
+
+                        // 2) 토큰 유효성 검사
+                        String token = rawToken.substring(7);
+                        if (!jwtTokenProvider.validateToken(token)) {
+                            log.warn("유효하지 않은 JWT 토큰으로 WebSocket 연결 시도");
+                            throw new OtbooException(ErrorCode.INVALID_TOKEN);
+                        }
+
+                        // 3) 토큰에서 userId 추출·조회
+                        UUID userId = jwtTokenProvider.getUserIdFromToken(token);
+                        User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new OtbooException(ErrorCode.USER_NOT_FOUND));
+
+                        // 4) Principal 설정
+                        CustomUserDetails userDetails = new CustomUserDetails(
+                                user.getId(), user.getEmail(), user.getRole().name());
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails, null, userDetails.getAuthorities()
+                                );
+                        accessor.setUser(auth);
+
+                        log.debug("WebSocket 인증 성공 - userId={}", userId);
+
+                    } catch (OtbooException e) {
+                        // STOMP ERROR 프레임 전송을 위해 예외 재전파
+                        throw e;
+                    } catch (Exception e) {
+                        log.error("WebSocket 인증 중 오류 발생: {}", e.getMessage(), e);
+                        throw new OtbooException(ErrorCode.AUTHENTICATION_FAILED);
                     }
                 }
+
                 return message;
             }
         });

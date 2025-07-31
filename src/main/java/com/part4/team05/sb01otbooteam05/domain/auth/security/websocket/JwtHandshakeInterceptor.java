@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,37 +29,56 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     private final UserRepository userRepository;
 
     @Override
-    public boolean beforeHandshake(ServerHttpRequest request, org.springframework.http.server.ServerHttpResponse response,
-                                   WebSocketHandler wsHandler, Map<String, Object> attributes) {
+    public boolean beforeHandshake(ServerHttpRequest request,
+                                   ServerHttpResponse response,
+                                   WebSocketHandler wsHandler,
+                                   Map<String, Object> attributes) {
 
-        if (request instanceof ServletServerHttpRequest servletRequest) {
-            HttpServletRequest httpRequest = servletRequest.getServletRequest();
-            String token = httpRequest.getHeader("Authorization");
-
-            if (token != null && token.startsWith("Bearer ")) {
-                token = token.substring(7);
-                if (jwtTokenProvider.validateToken(token)) {
-                    UUID userId = jwtTokenProvider.getUserIdFromToken(token);
-                    Optional<User> userOpt = userRepository.findById(userId);
-
-                    if (userOpt.isPresent()) {
-                        User user = userOpt.get();
-                        // CustomUserDetails 생성자 호출부 수정
-                        CustomUserDetails userDetails = new CustomUserDetails(
-                                user.getId(),
-                                user.getEmail(),
-                                user.getRole().name()  // role 필드가 String 타입이므로 .name() 또는 직접 String 전달
-                        );
-                        UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                        log.info("WebSocket 인증 완료: userId={}", user.getId());
-                    }
-                }
-            }
+        // 1. HTTP‐based SockJS fallback 요청(skip)
+        if (!(request instanceof ServletServerHttpRequest servlet)) {
+            return true;
+        }
+        HttpServletRequest req = servlet.getServletRequest();
+        // 실제 WebSocket 업그레이드 요청인지 Sec-WebSocket-Key 헤더로 체크
+        if (req.getHeader("Sec-WebSocket-Key") == null) {
+            // XHR-polling, info, htmlfile 등 핸드쉐이크가 아닌 요청은 그냥 패스
+            return true;
         }
 
+        // 2. 이제 진짜 WebSocket 업그레이드만 검사
+        String raw = req.getHeader("Authorization");
+        if (raw == null || !raw.startsWith("Bearer ")) {
+            log.warn("WebSocket Handshake 실패: Authorization 헤더 없음/형식 오류");
+            return false;
+        }
+
+        String token = raw.substring(7);
+        if (!jwtTokenProvider.validateToken(token)) {
+            log.warn("WebSocket Handshake 실패: 유효하지 않은 토큰");
+            return false;
+        }
+
+        UUID userId;
+        try {
+            userId = jwtTokenProvider.getUserIdFromToken(token);
+        } catch (Exception e) {
+            log.error("WebSocket Handshake 실패: 토큰 파싱 오류", e);
+            return false;
+        }
+
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            log.warn("WebSocket Handshake 실패: 사용자 없음 (id={})", userId);
+            return false;
+        }
+
+        // 3. 성공하면 attributes 에만 담기
+        CustomUserDetails userDetails = new CustomUserDetails(
+                user.getId(), user.getEmail(), user.getRole().name()
+        );
+        attributes.put("userDetails", userDetails);
+
+        log.info("WebSocket Handshake 인증 성공: userId={}", userId);
         return true;
     }
 
