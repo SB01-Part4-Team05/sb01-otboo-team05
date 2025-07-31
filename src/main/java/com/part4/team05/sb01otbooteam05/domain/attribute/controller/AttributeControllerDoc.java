@@ -4,6 +4,7 @@ import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDef
 import com.part4.team05.sb01otbooteam05.domain.attribute.entity.AttributeDefinition;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefUpdateRequest;
+import com.part4.team05.sb01otbooteam05.domain.auth.security.CustomUserDetails;
 import com.part4.team05.sb01otbooteam05.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,7 +43,8 @@ public interface AttributeControllerDoc {
       )
   })
   ResponseEntity<AttributeDefinition> createDef(
-      @Parameter(description = "의상 속성 정의 등록 요청") @RequestBody ClothesAttributeDefCreateRequest request
+      @Parameter(description = "의상 속성 정의 등록 요청") @RequestBody ClothesAttributeDefCreateRequest request,
+      @AuthenticationPrincipal CustomUserDetails me
   );
 
   @Operation(
@@ -63,7 +66,8 @@ public interface AttributeControllerDoc {
   })
   ResponseEntity<AttributeDefinition> update(
       @Parameter(description = "definitionId") @PathVariable UUID definitionId,
-      @Parameter(description = "의상 속성 정의 수정 요청") @RequestBody ClothesAttributeDefUpdateRequest request
+      @Parameter(description = "의상 속성 정의 수정 요청") @RequestBody ClothesAttributeDefUpdateRequest request,
+      @AuthenticationPrincipal CustomUserDetails me
   );
 
   @Operation(
@@ -80,7 +84,8 @@ public interface AttributeControllerDoc {
       )
   })
   ResponseEntity<Void> deleteDef(
-      @Parameter(description = "definitionId") @PathVariable UUID definitionId
+      @Parameter(description = "definitionId") @PathVariable UUID definitionId,
+      @AuthenticationPrincipal CustomUserDetails me
   );
 
   @Operation(

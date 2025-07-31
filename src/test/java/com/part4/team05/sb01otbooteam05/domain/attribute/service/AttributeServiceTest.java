@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.part4.team05.sb01otbooteam05.config.SecurityConfig;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefCreateRequest;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefDto;
 import com.part4.team05.sb01otbooteam05.domain.attribute.dto.ClothesAttributeDefDtoCursorResponse;
@@ -26,14 +25,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.part4.team05.sb01otbooteam05.domain.notification.service.NotificationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -52,6 +50,9 @@ class AttributeServiceTest {
 
   @Mock
   JwtTokenProvider jwtTokenProvider;
+
+  @Mock
+  NotificationService notificationService;
 
   @Test
   void createAndReturnList() {
@@ -110,11 +111,17 @@ class AttributeServiceTest {
         .selectableValues(Collections.emptyList())
         .build();
 
+    UUID userId = UUID.randomUUID();
+
+    doNothing().when(notificationService).createAndSendNotification(
+            any(), any(), any(), any()
+    );
+
     given(attributeDefinitionRepository.save(any(AttributeDefinition.class)))
         .willReturn(savedDefinition);
 
     AttributeDefinition definition=
-        attributeService.createDef(request);
+        attributeService.createDef(request,userId);
 
     assertEquals("name1",definition.getName());
   }
@@ -123,6 +130,7 @@ class AttributeServiceTest {
   void updateDef() {
 
     UUID id = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
 
     ClothesAttributeDefUpdateRequest request = new ClothesAttributeDefUpdateRequest("name1"
     ,List.of("test1"));
@@ -130,10 +138,14 @@ class AttributeServiceTest {
     AttributeDefinition attributeDefinition = AttributeDefinition.builder().id(id)
         .name("test2").build();
 
+    doNothing().when(notificationService).createAndSendNotification(
+            any(), any(), any(), any()
+    );
+
     given(attributeDefinitionRepository.findById(id)).willReturn(
         Optional.ofNullable(attributeDefinition));
 
-    AttributeDefinition definition = attributeService.updateDef(id,request);
+    AttributeDefinition definition = attributeService.updateDef(id,request,userId);
 
     assertEquals("name1",definition.getName());
     assertEquals(List.of("test1"),definition.getSelectableValues());
@@ -142,10 +154,19 @@ class AttributeServiceTest {
   @Test
   void deleteDef() {
     UUID id = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    AttributeDefinition definition = AttributeDefinition.builder()
+            .id(id)
+            .name("test")
+            .selectableValues(List.of("a", "b"))
+            .build();
+
+    given(attributeDefinitionRepository.findById(id)).willReturn(Optional.of(definition));
 
     doNothing().when(attributeDefinitionRepository).deleteById(id);
 
-    attributeService.deleteDef(id);
+    attributeService.deleteDef(id,userId);
 
     verify(attributeDefinitionRepository, times(1))
         .deleteById(any(UUID.class));
